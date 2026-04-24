@@ -11,3 +11,8 @@ jest.mock('react-native-safe-area-context', () => ({
 	SafeAreaProvider: ({ children }: { children: React.ReactNode }) =>
 		children,
 }));
+
+jest.mock('react-native-plaid-link-sdk', () => ({
+	create: jest.fn(),
+	LinkTokenConfiguration: jest.fn(),
+}));

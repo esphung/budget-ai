@@ -36,6 +36,7 @@ const config: Config = {
 		'src/enums/.*\\.ts$',
 		'src/screens/TestScreen/.*',
 		'src/hooks/useDevMenu\\.ts',
+		'server/.*',
 	],
 
 	// Indicates which provider should be used to instrument code for coverage
