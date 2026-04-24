@@ -1,0 +1,8 @@
+/vendor/
+/coverage/
+.github/**
+node_modules/
+.yarn/*
+/ios/Pods/
+/ios/**/*.xcassets/*
+.yarn**

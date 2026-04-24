@@ -7,6 +7,5 @@
 	"semi": true,
 	"bracketSameLine": true,
 	"bracketSpacing": true,
-	"objectWrap": "preserve",
 	"arrowParens": "always"
 }

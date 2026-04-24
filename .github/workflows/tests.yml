@@ -1,0 +1,79 @@
+name: Tests
+
+on:
+    push:
+        branches-ignore:
+            - main
+
+# Reusable setup steps shared across jobs via YAML anchors
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    format_check:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24.11.0
+                  cache: yarn
+
+            - name: Enable Corepack
+              run: corepack enable
+
+            - name: Install dependencies
+              run: yarn install --immutable
+
+            - name: Check formatting
+              run: yarn format:check
+
+    lint:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24.11.0
+                  cache: yarn
+
+            - name: Enable Corepack
+              run: corepack enable
+
+            - name: Install dependencies
+              run: yarn install --immutable
+
+            - name: Run lint
+              run: yarn lint
+
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        needs: [format_check, lint]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24.11.0
+                  cache: yarn
+
+            - name: Enable Corepack
+              run: corepack enable
+
+            - name: Install dependencies
+              run: yarn install --immutable
+
+            - name: Run tests
+              run: yarn test --ci --runInBand
