@@ -1,8 +1,30 @@
 {
-  "extends": "@react-native/typescript-config",
-  "compilerOptions": {
-    "types": ["jest"]
-  },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["**/node_modules", "**/Pods"]
+	"extends": "@react-native/typescript-config",
+	"compilerOptions": {
+		"types": ["jest"],
+		"ignoreDeprecations": "6.0", // Deprecation warning for alias modules
+		"paths": {
+			"@components/*": ["./src/components/*"],
+			"@screens/*": ["./src/screens/*"],
+			"@assets/*": ["./src/assets/*"],
+			"@utils/*": ["./src/utils/*"],
+			"@hooks/*": ["./src/hooks/*"],
+			"@services/*": ["./src/services/*"],
+			"@models/*": ["./src/models/*"],
+			"@context/*": ["./src/context/*"],
+			"@navigation/*": ["./src/navigation/*"],
+			"@theme/*": ["./src/theme/*"],
+			"@enums/*": ["./src/enums/*"],
+			"@stores/*": ["./src/stores/*"],
+			"@providers/*": ["./src/providers/*"]
+		}
+	},
+	"include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "*.json"],
+	"exclude": [
+		"**/node_modules",
+		"**/Pods",
+		"**/build",
+		"**/dist",
+		"**/coverage"
+	]
 }
