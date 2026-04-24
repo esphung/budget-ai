@@ -22,6 +22,7 @@ module.exports = {
 					'@enums': './src/enums',
 					'@stores': './src/stores',
 					'@providers': './src/providers',
+					'@mocks': './src/mocks',
 				},
 			},
 		],

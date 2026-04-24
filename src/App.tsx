@@ -4,6 +4,7 @@ import { AuthProvider, useAuthStore } from '@providers/AuthProvider';
 import { createAuthStore } from '@stores/AuthStore';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+// init stores
 const authStore = createAuthStore();
 
 const AppContent = () => {

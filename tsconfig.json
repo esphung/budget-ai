@@ -2,7 +2,6 @@
 	"extends": "@react-native/typescript-config",
 	"compilerOptions": {
 		"types": ["jest"],
-		"ignoreDeprecations": "6.0", // Deprecation warning for alias modules
 		"paths": {
 			"@components/*": ["./src/components/*"],
 			"@screens/*": ["./src/screens/*"],
@@ -16,7 +15,8 @@
 			"@theme/*": ["./src/theme/*"],
 			"@enums/*": ["./src/enums/*"],
 			"@stores/*": ["./src/stores/*"],
-			"@providers/*": ["./src/providers/*"]
+			"@providers/*": ["./src/providers/*"],
+			"@mocks/*": ["./src/mocks/*"]
 		}
 	},
 	"include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "*.json"],

@@ -6,11 +6,15 @@
 	"scripts": {
 		"android": "react-native run-android",
 		"clean": "sh ./.scripts/clean.sh",
+		"format:check": "npx prettier --check ./",
+		"format:fix": "npx prettier --write ./",
 		"ios": "react-native run-ios",
-		"lint": "eslint .",
+		"lint": "npx eslint .",
 		"start": "react-native start --client-logs",
-		"test": "jest",
-		"test:coverage": "jest --coverage"
+		"test": "npx jest",
+		"test:coverage": "npx jest --coverage",
+		"typecheck": "npx tsc --noEmit",
+		"precommit": "yarn lint && yarn typecheck && yarn test"
 	},
 	"dependencies": {
 		"react": "19.2.3",
