@@ -1,5 +1,5 @@
 ---
-name: "React Native Architect"
+name: "react-native-architect"
 description: "Use when building scalable, smart, maintainable React Native apps; applies SOLID design, state/storage architecture, API client patterns, performance optimization, and clear code comments. Keywords: react native architecture, scalable mobile app, state management, offline storage, networking, performance profiling, maintainability."
 tools: [read, search, edit, execute, todo]
 user-invocable: true

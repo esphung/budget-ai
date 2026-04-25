@@ -17,6 +17,8 @@ end
 target 'BudgetAI' do
   config = use_native_modules!
 
+  pod 'Plaid', '~> 6.4.3'
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.

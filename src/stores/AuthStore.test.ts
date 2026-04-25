@@ -1,13 +1,16 @@
 import { createAuthStore } from '@stores/AuthStore';
+import { StorageService } from '@services/StorageService';
 
 describe('AuthStore', () => {
+	const storage = StorageService.getInstance('@test_storage_key');
+
 	it('initializes with null token', () => {
-		const store = createAuthStore();
+		const store = createAuthStore(storage);
 		expect(store.getInitialState().token).toBeNull();
 	});
 
 	it('sets token correctly', () => {
-		const store = createAuthStore();
+		const store = createAuthStore(storage);
 		const state = store.reducer(store.getInitialState(), {
 			type: 'SET_TOKEN',
 			token: 'test-token',
@@ -16,15 +19,18 @@ describe('AuthStore', () => {
 	});
 
 	it('logs out correctly by resetting token to null', () => {
-		const store = createAuthStore({ token: 'existing-token' });
-		const state = store.reducer(store.getInitialState(), {
-			type: 'LOGOUT',
-		});
+		const store = createAuthStore(storage);
+		const state = store.reducer(
+			{ token: 'existing-token' },
+			{
+				type: 'LOGOUT',
+			},
+		);
 		expect(state.token).toBeNull();
 	});
 
 	it('creates typed actions that dispatch reducer events', () => {
-		const store = createAuthStore();
+		const store = createAuthStore(storage);
 		const dispatch = jest.fn();
 		const actions = store.createActions(dispatch);
 

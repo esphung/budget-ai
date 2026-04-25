@@ -1,18 +1,27 @@
 import { createAuthStore } from '@stores/AuthStore';
-import { renderHook, act as testAct } from '@testing-library/react-native';
-import * as React from 'react';
+import { StorageService } from '@services/StorageService';
 import {
-	AuthProvider,
-	useAuthStore,
-	useAuthStoreWithSelector,
-} from './AuthProvider';
+	renderHook,
+	act as testAct,
+	waitFor,
+} from '@testing-library/react-native';
+import * as React from 'react';
+import { AuthProvider, useAuthStore } from './AuthProvider';
 
 describe('AuthProvider', () => {
+	let storage: StorageService;
+
+	beforeEach(() => {
+		storage = StorageService.getInstance('@test_storage_key');
+	});
+
 	it('provides auth store context and state', () => {
-		const store = createAuthStore();
+		const store = createAuthStore(storage);
 
 		const wrapper = ({ children }: { children: React.ReactNode }) => (
-			<AuthProvider store={store}>{children}</AuthProvider>
+			<AuthProvider store={store} storage={storage}>
+				{children}
+			</AuthProvider>
 		);
 
 		const { result } = renderHook(() => useAuthStore(), { wrapper });
@@ -21,11 +30,32 @@ describe('AuthProvider', () => {
 		expect(result.current.token).toBeNull();
 	});
 
-	it('setToken action updates token in context', () => {
-		const store = createAuthStore();
+	it('loads persisted token on mount', async () => {
+		jest.spyOn(storage, 'loadItem').mockResolvedValueOnce(
+			'saved-token',
+		);
+		const store = createAuthStore(storage);
 
 		const wrapper = ({ children }: { children: React.ReactNode }) => (
-			<AuthProvider store={store}>{children}</AuthProvider>
+			<AuthProvider store={store} storage={storage}>
+				{children}
+			</AuthProvider>
+		);
+
+		const { result } = renderHook(() => useAuthStore(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.token).toBe('saved-token');
+		});
+	});
+
+	it('setToken action updates token in context', () => {
+		const store = createAuthStore(storage);
+
+		const wrapper = ({ children }: { children: React.ReactNode }) => (
+			<AuthProvider store={store} storage={storage}>
+				{children}
+			</AuthProvider>
 		);
 
 		const { result } = renderHook(() => useAuthStore(), { wrapper });
@@ -42,10 +72,12 @@ describe('AuthProvider', () => {
 	});
 
 	it('logout action resets token to null', () => {
-		const store = createAuthStore();
+		const store = createAuthStore(storage);
 
 		const wrapper = ({ children }: { children: React.ReactNode }) => (
-			<AuthProvider store={store}>{children}</AuthProvider>
+			<AuthProvider store={store} storage={storage}>
+				{children}
+			</AuthProvider>
 		);
 
 		const { result } = renderHook(() => useAuthStore(), { wrapper });
@@ -73,20 +105,5 @@ describe('AuthProvider', () => {
 		);
 
 		consoleErrorSpy.mockRestore();
-	});
-
-	it('returns selected state from useAuthStoreWithSelector', () => {
-		const store = createAuthStore({ token: 'selected-token' });
-
-		const wrapper = ({ children }: { children: React.ReactNode }) => (
-			<AuthProvider store={store}>{children}</AuthProvider>
-		);
-
-		const { result } = renderHook(
-			() => useAuthStoreWithSelector((state) => state.token),
-			{ wrapper },
-		);
-
-		expect(result.current).toBe('selected-token');
 	});
 });

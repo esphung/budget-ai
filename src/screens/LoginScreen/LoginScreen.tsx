@@ -1,4 +1,4 @@
-import ThemedScreen from '@components/ThemedScreen';
+import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import { TestID } from '@enums/TestID';
 import { useAuthStoreWithSelector } from '@providers/AuthProvider';
 import { Button, StyleSheet, Text, View } from 'react-native';

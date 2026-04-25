@@ -1,3 +1,4 @@
+import type { StorageService } from '@services/StorageService';
 import type { Dispatch } from 'react';
 
 export type AuthState = {
@@ -22,11 +23,10 @@ export type AuthStoreFactory = {
 };
 
 export const createAuthStore = (
-	initialStateOverrides?: Partial<AuthState>,
+	storage: StorageService,
 ): AuthStoreFactory => {
 	const initialState: AuthState = {
 		token: null,
-		...initialStateOverrides,
 	};
 
 	return {
@@ -47,9 +47,11 @@ export const createAuthStore = (
 			return {
 				setToken(token: string | null) {
 					dispatch({ type: 'SET_TOKEN', token });
+					storage.saveItem(token);
 				},
 				logout() {
 					dispatch({ type: 'LOGOUT' });
+					storage.clearItem();
 				},
 			};
 		},

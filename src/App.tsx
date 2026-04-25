@@ -1,29 +1,20 @@
-import { useDevMenu } from '@hooks/useDevMenu';
 import RootStack from '@navigation/RootStack/RootStack';
-import { AuthProvider, useAuthStore } from '@providers/AuthProvider';
+import { AuthProvider } from '@providers/AuthProvider';
+import { StorageService } from '@services/StorageService';
 import { createAuthStore } from '@stores/AuthStore';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-// init stores
-const authStore = createAuthStore();
+//  services
+const authStorage = StorageService.getInstance('@budgetai_auth_token');
 
-const AppContent = () => {
-	const store = useAuthStore();
-
-	/* istanbul ignore next */
-	useDevMenu({
-		onLogout: store.logout,
-		getDebugState: () => ({ token: store.token }),
-	});
-
-	return <RootStack />;
-};
+//  stores
+const authStore = createAuthStore(authStorage);
 
 const App = () => {
 	return (
 		<SafeAreaProvider>
-			<AuthProvider store={authStore}>
-				<AppContent />
+			<AuthProvider store={authStore} storage={authStorage}>
+				<RootStack />
 			</AuthProvider>
 		</SafeAreaProvider>
 	);

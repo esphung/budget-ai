@@ -1,3 +1,4 @@
+import { StorageService } from '@services/StorageService';
 import { type AuthStore, type AuthStoreFactory } from '@stores/AuthStore';
 import React, {
 	createContext,
@@ -12,9 +13,11 @@ AuthContext.displayName = 'AuthContext';
 export function AuthProvider({
 	store,
 	children,
+	storage,
 }: {
 	store: AuthStoreFactory;
 	children: React.ReactNode;
+	storage: StorageService;
 }) {
 	const [state, dispatch] = useReducer(
 		store.reducer,
@@ -28,6 +31,21 @@ export function AuthProvider({
 		}),
 		[state, actions],
 	);
+
+	// Load persisted token on mount
+	React.useEffect(() => {
+		async function loadPersisted() {
+			const persistedToken = await storage.loadItem();
+			console.debug(
+				'[AuthProvider] Loaded persisted token:',
+				persistedToken,
+			);
+			if (persistedToken) {
+				actions.setToken(persistedToken);
+			}
+		}
+		loadPersisted();
+	}, [storage, actions]);
 
 	return (
 		<AuthContext.Provider value={value}>

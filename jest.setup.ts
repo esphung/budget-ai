@@ -11,3 +11,17 @@ jest.mock('react-native-safe-area-context', () => ({
 	SafeAreaProvider: ({ children }: { children: React.ReactNode }) =>
 		children,
 }));
+
+jest.mock('react-native-plaid-link-sdk', () => ({
+	create: jest.fn(),
+	LinkTokenConfiguration: jest.fn(),
+}));
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+	__esModule: true,
+	default: {
+		setItem: jest.fn().mockResolvedValue(undefined),
+		getItem: jest.fn().mockResolvedValue(null),
+		removeItem: jest.fn().mockResolvedValue(undefined),
+	},
+}));

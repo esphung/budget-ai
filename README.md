@@ -1,97 +1,96 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# BudgetAI
 
-# Getting Started
+A React Native showcase app demonstrating two key capabilities:
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+1. **Connecting to a financial institution** — uses Plaid to authenticate users and pull in real account and transaction data from their bank or credit union.
+2. **Practical AI suggestions** — surfaces actionable, context-aware spending insights and budget recommendations powered by an AI backend, grounded in the user's actual financial data rather than generic advice.
+3. **Custom App State** - no libraries oor extra weight. increased understanding of how React renders state vs everything else
 
-## Step 1: Start Metro
+The goal of this project is to show how these two pieces — real financial data and AI-driven analysis — can be combined into a mobile experience that is genuinely useful rather than just technically impressive.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+---
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## Project Highlights ❤️
+
+### Financial Institution Connection
+
+-   Integrates with **Plaid Link** to let users securely connect their bank accounts.
+-   Retrieves account balances and transaction history via the Plaid API.
+-   Credentials and tokens are stored in encrypted secure storage — never in plain state or AsyncStorage.
+
+### AI Suggestions 🤬
+
+-   Transaction data is sent to an AI service that categorizes spending and identifies patterns.
+-   Suggestions are surfaced contextually (e.g., after a high-spend week, after a new recurring charge is detected).
+-   Responses are scoped to the user's actual data to avoid generic or irrelevant recommendations.
+
+### Custom State Management
+
+-   Built a lightweight state management library modeled after Zustand's API, adapted for dependency injection.
+-   Allows stores and services to be injected and swapped at any layer — useful for testing, feature flags, and environment-specific implementations — without coupling components to concrete dependencies.
+
+---
+
+## Build and Run 👮‍♀️
+
+### Install dependencies
 
 ```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+yarn install -immutable
 ```
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+For iOS, install CocoaPods dependencies:
 
 ```sh
 bundle install
+npx pod-install
 ```
 
-Then, and every time you update your native dependencies, run:
+### Start Metro
 
 ```sh
-bundle exec pod install
+yarn start
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### Run the app
+
+**Android**
 
 ```sh
-# Using npm
-npm run ios
+yarn android
+```
 
-# OR using Yarn
+**iOS**
+
+```sh
 yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### Running Tests 🍥
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```sh
+yarn test
 
-## Step 3: Modify your app
+# if you need reporting
+yarn test:coverage
+# optional viewing
+open coverage/lcov-report/index.html
+```
 
-Now that you have successfully run the app, let's make changes!
+### Formatting Code 🎭
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+```sh
+# RIP
+yarn format:fix
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+# non-destructive
+yarn format:check
+```
 
--   **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
--   **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### Starting Local Server 🎉
 
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
--   If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
--   If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
--   [React Native Website](https://reactnative.dev) - learn more about React Native.
--   [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
--   [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
--   [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
--   [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+```sh
+cd server
+cp .env.example .env   # fill in your keys
+yarn dev               # ts-node-dev with hot reload
+```
