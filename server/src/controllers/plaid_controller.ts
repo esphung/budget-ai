@@ -24,7 +24,15 @@ const configuration = new Configuration({
 const plaidApi = new PlaidApi(configuration);
 
 export class PlaidController {
-	/** Persists the access token after a successful public-token exchange. */
+	/**
+	 * Stores the Plaid access token in-memory after a successful public-token
+	 * exchange. This is sufficient for a single-user POC running locally.
+	 *
+	 * TODO: Replace with a secure, per-user token store (e.g. an encrypted DB
+	 * keyed by authenticated user ID) before adding multi-user or production
+	 * support. The controller is a module-level singleton, so the token is
+	 * shared for the lifetime of the server process.
+	 */
 	private accessToken: string | null = null;
 
 	async createLinkToken() {

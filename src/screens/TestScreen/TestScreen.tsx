@@ -8,7 +8,7 @@ import { useAuthStore } from '@providers/AuthProvider';
 import { useInsightsStore } from '@providers/InsightsProvider';
 import { apiClient, type PlaidTransaction } from '@services/ApiClient';
 import styles from '@screens/TestScreen/TestScreen.styles';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
 ActivityIndicator,
 Button,
@@ -48,22 +48,21 @@ null,
 );
 const [fetchError, setFetchError] = useState<string | null>(null);
 
-const { isStarting, startPlaidLink } = usePlaidLink({
-onLinkedAccounts: async (linkedAccounts) => {
-setAccounts(linkedAccounts);
+/**
+ * Fetches the latest transactions and balances from the server, updates
+ * the local table state, and triggers insight generation. Shared by
+ * both the post-link handler and the manual refresh button.
+ */
+const loadData = useCallback(async () => {
 setFetchError(null);
-clearInsights();
-
 try {
 const [txnResponse, balanceResponse] = await Promise.all([
 apiClient.plaid.getTransactions(),
 apiClient.plaid.getBalances(),
 ]);
-
 setTransactions(
 txnResponse.transactions.map(mapPlaidTransaction),
 );
-
 await fetchInsights(
 txnResponse.transactions,
 balanceResponse.accounts,
@@ -75,6 +74,13 @@ err instanceof Error
 : 'Failed to load financial data';
 setFetchError(message);
 }
+}, [fetchInsights]);
+
+const { isStarting, startPlaidLink } = usePlaidLink({
+onLinkedAccounts: async (linkedAccounts) => {
+setAccounts(linkedAccounts);
+clearInsights();
+await loadData();
 },
 onExit: (linkExit) => {
 console.debug('[Plaid Link] Exit:', linkExit);
@@ -86,26 +92,7 @@ if (!accounts) {
 return;
 }
 clearInsights();
-setFetchError(null);
-try {
-const [txnResponse, balanceResponse] = await Promise.all([
-apiClient.plaid.getTransactions(),
-apiClient.plaid.getBalances(),
-]);
-setTransactions(
-txnResponse.transactions.map(mapPlaidTransaction),
-);
-await fetchInsights(
-txnResponse.transactions,
-balanceResponse.accounts,
-);
-} catch (err: unknown) {
-const message =
-err instanceof Error
-? err.message
-: 'Failed to refresh insights';
-setFetchError(message);
-}
+await loadData();
 };
 
 return (
