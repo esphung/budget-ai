@@ -25,6 +25,7 @@
 		"**/Pods",
 		"**/build",
 		"**/dist",
-		"**/coverage"
+		"**/coverage",
+		"server"
 	]
 }

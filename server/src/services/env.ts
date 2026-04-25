@@ -29,4 +29,8 @@ export const env = {
 		// Defaults to sandbox so a missing value never accidentally hits production.
 		environment: optional('PLAID_ENV', 'sandbox'),
 	},
+
+	openai: {
+		apiKey: required('OPENAI_API_KEY'),
+	},
 } as const;

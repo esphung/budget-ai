@@ -100,4 +100,44 @@ export default StyleSheet.create({
 		fontSize: 12,
 		color: '#555',
 	},
+	insightsSection: {
+		width: '100%',
+		gap: 10,
+	},
+	insightsSectionHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	insightsSectionTitle: {
+		fontSize: 16,
+		fontWeight: '700',
+		color: '#111',
+	},
+	refreshText: {
+		fontSize: 14,
+		color: '#007AFF',
+	},
+	loadingContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+	},
+	loadingText: {
+		fontSize: 14,
+		color: '#555',
+	},
+	errorCard: {
+		width: '100%',
+		backgroundColor: '#ffebee',
+		borderWidth: 1,
+		borderColor: '#e53935',
+		borderRadius: 6,
+		padding: 14,
+	},
+	errorText: {
+		fontSize: 14,
+		color: '#b71c1c',
+		lineHeight: 20,
+	},
 });
