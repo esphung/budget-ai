@@ -8,8 +8,6 @@ import {
 } from 'plaid';
 import { env } from '../services/env';
 
-const CLIENT_NAME = 'BudgetAI';
-
 const configuration = new Configuration({
 	basePath:
 		env.plaid.environment === 'sandbox'
@@ -28,7 +26,7 @@ const plaidApi = new PlaidApi(configuration);
 export class PlaidController {
 	async createLinkToken() {
 		const response = await plaidApi.linkTokenCreate({
-			client_name: CLIENT_NAME,
+			client_name: 'BudgetAI',
 			client_id: env.plaid.clientId,
 			secret: env.plaid.secret,
 			country_codes: [CountryCode.Us],

@@ -1,14 +1,16 @@
 import { TestID } from '@enums/TestID';
 import AuthStack from '@navigation/AuthStack/AuthStack';
 import { AuthProvider } from '@providers/AuthProvider';
+import { StorageService } from '@services/StorageService';
 import { createAuthStore } from '@stores/AuthStore';
 import { render } from '@testing-library/react-native';
 
 describe('AuthStack - Login Flow', () => {
 	it('renders LoginScreen with login button', () => {
-		const store = createAuthStore();
+		const storage = StorageService.getInstance('@test_storage_key');
+		const store = createAuthStore(storage);
 		const { getByTestId, getByText } = render(
-			<AuthProvider store={store}>
+			<AuthProvider store={store} storage={storage}>
 				<AuthStack />
 			</AuthProvider>,
 		);

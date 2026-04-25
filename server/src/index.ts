@@ -1,6 +1,6 @@
 import cors from 'cors';
 import express, { Request, Response } from 'express';
-import { plaidRouter } from './routes/plaid';
+import { plaid } from './routes';
 import { env } from './services/env';
 
 const app = express();
@@ -16,8 +16,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // ── Routes will be registered here ───────────────────────────
-// app.use('/plaid', plaidRouter);
-app.use('/plaid', plaidRouter);
+app.use('/plaid', plaid);
 
 app.listen(Number(PORT), () => {
 	console.log(`BudgetAI server running on http://localhost:${PORT}`);

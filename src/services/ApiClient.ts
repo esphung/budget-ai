@@ -43,11 +43,12 @@ function normalizeError(err: unknown): ApiError {
 		return { status: 0, message: 'Request cancelled', cause: err };
 	}
 	if (axios.isAxiosError(err)) {
+		const data = err.response?.data as
+			| { message?: string; error?: string }
+			| undefined;
 		return {
 			status: err.response?.status ?? 0,
-			message:
-				(err.response?.data as { message?: string })?.message ??
-				err.message,
+			message: data?.message ?? data?.error ?? err.message,
 			cause: err,
 		};
 	}

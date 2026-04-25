@@ -96,4 +96,8 @@ export default StyleSheet.create({
 		flexDirection: 'row',
 		gap: 20,
 	},
+	linkTokenText: {
+		fontSize: 12,
+		color: '#555',
+	},
 });

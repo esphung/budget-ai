@@ -1,12 +1,12 @@
 import express, { Request, Response } from 'express';
-import { PlaidController } from '../controllers/plaidController';
+import { PlaidController } from '../controllers/plaid_controller';
 
-const plaidRouter = express.Router();
-const plaidController = new PlaidController();
+const router = express.Router();
+const controller = new PlaidController();
 
-plaidRouter.get('/link-token', async (_req: Request, res: Response) => {
+router.get('/link-token', async (_req: Request, res: Response) => {
 	try {
-		const result = await plaidController.createLinkToken();
+		const result = await controller.createLinkToken();
 		res.json(result);
 	} catch (error: any) {
 		res.status(500).json({
@@ -15,7 +15,7 @@ plaidRouter.get('/link-token', async (_req: Request, res: Response) => {
 	}
 });
 
-plaidRouter.post('/exchange-token', async (req: Request, res: Response) => {
+router.post('/exchange-token', async (req: Request, res: Response) => {
 	const { publicToken } = req.body;
 	if (!publicToken) {
 		res.status(400).json({
@@ -25,9 +25,7 @@ plaidRouter.post('/exchange-token', async (req: Request, res: Response) => {
 	}
 
 	try {
-		const result = await plaidController.exchangePublicToken(
-			publicToken,
-		);
+		const result = await controller.exchangePublicToken(publicToken);
 		res.json(result);
 	} catch (error: any) {
 		res.status(500).json({
@@ -36,4 +34,4 @@ plaidRouter.post('/exchange-token', async (req: Request, res: Response) => {
 	}
 });
 
-export { plaidRouter };
+export default router;

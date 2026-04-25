@@ -52,6 +52,13 @@ function makeAxiosError(status: number, message: string) {
 	return err;
 }
 
+function makeAxiosErrorWithErrorField(status: number, error: string) {
+	const err = new Error(error) as any;
+	err.response = { status, data: { error } };
+	(axios.isAxiosError as unknown as jest.Mock).mockReturnValueOnce(true);
+	return err;
+}
+
 // ── plaid.getLinkToken ────────────────────────────────────────────────────────
 
 describe('apiClient.plaid.getLinkToken', () => {
@@ -158,6 +165,24 @@ describe('apiClient.plaid.exchangePublicToken', () => {
 		).rejects.toMatchObject<Partial<ApiError>>({
 			status: 500,
 			message: 'Internal server error',
+		});
+	});
+
+	it('normalizes backend payloads that return an error field', async () => {
+		mockAxiosInstance.post.mockRejectedValueOnce(
+			makeAxiosErrorWithErrorField(
+				400,
+				'Missing publicToken in request body',
+			),
+		);
+
+		await expect(
+			apiClient.plaid.exchangePublicToken({
+				publicToken: '',
+			}),
+		).rejects.toMatchObject<Partial<ApiError>>({
+			status: 400,
+			message: 'Missing publicToken in request body',
 		});
 	});
 
