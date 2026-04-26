@@ -4,7 +4,7 @@ import { useAuthStoreWithSelector } from '@providers/AuthProvider';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
 const LoginScreen = () => {
-	const setToken = useAuthStoreWithSelector((store) => store.setToken);
+	const setToken = useAuthStoreWithSelector((s) => s.setToken);
 
 	return (
 		<ThemedScreen>

@@ -1,4 +1,5 @@
 import RootStack from '@navigation/RootStack/RootStack';
+import { ApiClientProvider } from '@providers/ApiClientProvider';
 import { AuthProvider } from '@providers/AuthProvider';
 import { ApiClient } from '@services/ApiClient';
 import { StorageService } from '@services/StorageService';
@@ -15,9 +16,11 @@ const authStore = createAuthStore(authStorage);
 const App = () => {
 	return (
 		<SafeAreaProvider>
-			<AuthProvider store={authStore} storage={authStorage}>
-				<RootStack apiClient={apiClient} />
-			</AuthProvider>
+			<ApiClientProvider apiClient={apiClient}>
+				<AuthProvider store={authStore} storage={authStorage}>
+					<RootStack />
+				</AuthProvider>
+			</ApiClientProvider>
 		</SafeAreaProvider>
 	);
 };

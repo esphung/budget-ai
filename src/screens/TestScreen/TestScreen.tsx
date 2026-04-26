@@ -3,9 +3,9 @@ import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { TestID } from '@enums/TestID';
 import { usePlaidLink } from '@hooks/usePlaidLink';
+import { useApiClient } from '@providers/ApiClientProvider';
 import { useAuthStore } from '@providers/AuthProvider';
 import styles from '@screens/TestScreen/TestScreen.styles';
-import type { ApiClient } from '@services/ApiClient';
 import { useState } from 'react';
 import {
 	Button,
@@ -24,8 +24,12 @@ interface Transaction {
 	category: string[];
 }
 
-const TestScreen = ({ apiClient }: { apiClient: ApiClient }) => {
+const TestScreen = () => {
 	const { logout } = useAuthStore();
+	const { exchangePublicToken, getLinkToken } = useApiClient((s) => ({
+		exchangePublicToken: s.plaid.exchangePublicToken,
+		getLinkToken: s.plaid.getLinkToken,
+	}));
 
 	const [accounts, setAccounts] = useState<LinkAccount[] | null>(null);
 	const [transactions, setTransactions] = useState<Transaction[] | null>(
@@ -60,8 +64,8 @@ const TestScreen = ({ apiClient }: { apiClient: ApiClient }) => {
 		onExit: (linkExit) => {
 			console.debug('[Plaid Link] Exit:', linkExit);
 		},
-		exchangePublicToken: apiClient.plaid.exchangePublicToken,
-		getLinkToken: apiClient.plaid.getLinkToken,
+		exchangePublicToken: exchangePublicToken,
+		getLinkToken: getLinkToken,
 	});
 
 	return (
