@@ -1,5 +1,6 @@
 import { TestID } from '@enums/TestID';
 import TestScreen from '@screens/TestScreen/TestScreen';
+import type { ApiClient } from '@services/ApiClient';
 import { StyleSheet, View } from 'react-native';
 
 const styles = StyleSheet.create({
@@ -10,10 +11,10 @@ const styles = StyleSheet.create({
 	},
 });
 
-const AppStack = () => {
+const AppStack = ({ apiClient }: { apiClient: ApiClient }) => {
 	return (
 		<View testID={TestID.AppStack} style={styles.container}>
-			<TestScreen />
+			<TestScreen apiClient={apiClient} />
 		</View>
 	);
 };

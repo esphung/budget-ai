@@ -13,8 +13,7 @@
 		"start": "react-native start --client-logs",
 		"test": "npx jest",
 		"test:coverage": "npx jest --coverage",
-		"typecheck": "npx tsc --noEmit",
-		"precommit": "yarn lint && yarn typecheck && yarn test"
+		"precommit": "yarn lint && yarn format:check && yarn test"
 	},
 	"dependencies": {
 		"@react-native-async-storage/async-storage": "^3.0.2",

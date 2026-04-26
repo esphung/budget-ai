@@ -1,4 +1,8 @@
-import { apiClient } from '@services/ApiClient';
+import {
+	ExchangePublicTokenRequest,
+	ExchangePublicTokenResponse,
+	GetLinkTokenResponse,
+} from '@services/ApiClient';
 import { useCallback, useState } from 'react';
 import {
 	create,
@@ -14,6 +18,13 @@ const TOKEN_MAX_AGE_MS = 25 * 60 * 1000;
 interface UsePlaidLinkOptions {
 	onLinkedAccounts?: (accounts: LinkAccount[]) => void;
 	onExit?: (linkExit: LinkExit) => void;
+	exchangePublicToken: (
+		body: ExchangePublicTokenRequest,
+		signal?: AbortSignal,
+	) => Promise<ExchangePublicTokenResponse>;
+	getLinkToken: (
+		signal?: AbortSignal | undefined,
+	) => Promise<GetLinkTokenResponse>;
 }
 
 interface UsePlaidLinkResult {
@@ -25,7 +36,16 @@ interface UsePlaidLinkResult {
 }
 
 export function usePlaidLink(
-	options: UsePlaidLinkOptions = {},
+	options: UsePlaidLinkOptions = {
+		onLinkedAccounts: () => {},
+		onExit: () => {},
+		exchangePublicToken: async () => {
+			throw new Error('exchangePublicToken function not provided');
+		},
+		getLinkToken: async () => {
+			throw new Error('getLinkToken function not provided');
+		},
+	},
 ): UsePlaidLinkResult {
 	const [linkToken, setLinkToken] = useState<string | null>(null);
 	const [tokenFetchedAt, setTokenFetchedAt] = useState<number | null>(
@@ -39,11 +59,11 @@ export function usePlaidLink(
 	}, []);
 
 	const fetchLinkToken = useCallback(async () => {
-		const result = await apiClient.plaid.getLinkToken();
+		const result = await options.getLinkToken();
 		setLinkToken(result.link_token ?? null);
 		setTokenFetchedAt(Date.now());
 		return result.link_token ?? null;
-	}, []);
+	}, [options]);
 
 	const isTokenFresh = useCallback(() => {
 		if (!linkToken || !tokenFetchedAt) {
@@ -81,7 +101,7 @@ export function usePlaidLink(
 			open({
 				onSuccess: async (success: LinkSuccess) => {
 					try {
-						await apiClient.plaid.exchangePublicToken({
+						await options.exchangePublicToken({
 							publicToken: success.publicToken,
 						});
 						options.onLinkedAccounts?.(

@@ -2,9 +2,6 @@ import dotenv from 'dotenv';
 
 /**
  * Central environment config service.
- *
- * dotenv.config() is called here so that process.env is populated
- * before any required() validation runs, regardless of import order.
  */
 dotenv.config();
 
@@ -21,12 +18,16 @@ function optional(key: string, defaultValue: string): string {
 }
 
 export const env = {
-	port: optional('PORT', '3000'),
+	port: optional('PORT', '3001'),
 
 	plaid: {
 		clientId: required('PLAID_CLIENT_ID'),
 		secret: required('PLAID_SECRET'),
-		// Defaults to sandbox so a missing value never accidentally hits production.
 		environment: optional('PLAID_ENV', 'sandbox'),
+	},
+	openAi: {
+		apiKey: required('OPENAI_API_KEY'),
+		baseUrl: optional('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+		model: optional('OPENAI_MODEL', 'gpt-4.1-nano'),
 	},
 } as const;

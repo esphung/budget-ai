@@ -24,8 +24,8 @@ export interface GetLinkTokenResponse {
 	link_token: string;
 	expiration: string;
 	request_id: string;
-	hosted_link_url?: string; // Optional URL for Plaid-hosted Link flow (if supported by the backend)
-	user_id?: string; // Optional user ID if returned by the server for client-side use
+	hosted_link_url?: string;
+	user_id?: string;
 }
 
 export interface ExchangePublicTokenRequest {
@@ -57,7 +57,7 @@ function normalizeError(err: unknown): ApiError {
 
 // ── Client ────────────────────────────────────────────────────────────────────
 
-class ApiClient {
+export class ApiClient {
 	private static instance: ApiClient;
 	private readonly http: AxiosInstance;
 
@@ -133,5 +133,3 @@ class ApiClient {
 			),
 	};
 }
-
-export const apiClient = ApiClient.getInstance();

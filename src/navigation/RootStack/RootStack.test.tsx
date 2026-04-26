@@ -37,7 +37,7 @@ describe('RootStack', () => {
 		const store = createAuthStore(storage);
 		const { getByTestId } = render(
 			<AuthProvider store={store} storage={storage}>
-				<RootStack />
+				<RootStack apiClient={{} as any} />
 			</AuthProvider>,
 		);
 		const authStack = getByTestId(TestID.AuthStack);
@@ -49,7 +49,7 @@ describe('RootStack', () => {
 		const store = createAuthStore(storage);
 		const { getByTestId } = render(
 			<AuthProvider store={store} storage={storage}>
-				<RootStack />
+				<RootStack apiClient={{} as any} />
 			</AuthProvider>,
 		);
 

@@ -5,6 +5,7 @@ import { TestID } from '@enums/TestID';
 import { usePlaidLink } from '@hooks/usePlaidLink';
 import { useAuthStore } from '@providers/AuthProvider';
 import styles from '@screens/TestScreen/TestScreen.styles';
+import type { ApiClient } from '@services/ApiClient';
 import { useState } from 'react';
 import {
 	Button,
@@ -23,7 +24,7 @@ interface Transaction {
 	category: string[];
 }
 
-const TestScreen = () => {
+const TestScreen = ({ apiClient }: { apiClient: ApiClient }) => {
 	const { logout } = useAuthStore();
 
 	const [accounts, setAccounts] = useState<LinkAccount[] | null>(null);
@@ -59,6 +60,8 @@ const TestScreen = () => {
 		onExit: (linkExit) => {
 			console.debug('[Plaid Link] Exit:', linkExit);
 		},
+		exchangePublicToken: apiClient.plaid.exchangePublicToken,
+		getLinkToken: apiClient.plaid.getLinkToken,
 	});
 
 	return (
