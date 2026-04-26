@@ -1,9 +1,9 @@
 import { TestID } from '@enums/TestID';
-import { createAuthStore } from '@stores/AuthStore';
-import { render, waitFor } from '@testing-library/react-native';
 import RootStack from '@navigation/RootStack/RootStack';
 import { AuthProvider } from '@providers/AuthProvider';
 import { StorageService } from '@services/StorageService';
+import { createAuthStore } from '@stores/AuthStore';
+import { render, waitFor } from '@testing-library/react-native';
 
 jest.mock('@navigation/AppStack/AppStack', () => {
 	const ids = require('@enums/TestID');
@@ -23,34 +23,45 @@ jest.mock('@navigation/AuthStack/AuthStack', () => {
 	};
 });
 
-function createStorageMock(loadValue: string | null): StorageService {
+jest.mock('@services/StorageService', () => {
 	return {
-		saveItem: jest.fn().mockResolvedValue(undefined),
-		loadItem: jest.fn().mockResolvedValue(loadValue),
-		clearItem: jest.fn().mockResolvedValue(undefined),
-	} as unknown as StorageService;
+		StorageService: {
+			getInstance: jest.fn(() => ({
+				saveItem: jest.fn(),
+				loadItem: jest.fn().mockResolvedValue('mock-token'),
+				clearItem: jest.fn(),
+			})),
+		},
+	};
+});
+
+function renderWithAuthProvider(
+	ui: React.ReactElement,
+	token: string | null = null,
+) {
+	const store = createAuthStore();
+	const mockStorage = StorageService.getInstance('@auth');
+	const actions = store.createActions(jest.fn(), mockStorage);
+
+	// Set the token if provided
+	if (token) {
+		actions.setToken(token);
+	}
+
+	return render(<AuthProvider store={store}>{ui}</AuthProvider>);
 }
 
 describe('RootStack', () => {
 	it('renders AuthStack when token is null', () => {
-		const storage = createStorageMock(null);
-		const store = createAuthStore(storage);
-		const { getByTestId } = render(
-			<AuthProvider store={store} storage={storage}>
-				<RootStack apiClient={{} as any} />
-			</AuthProvider>,
-		);
+		const { getByTestId } = renderWithAuthProvider(<RootStack />);
 		const authStack = getByTestId(TestID.AuthStack);
 		expect(authStack).toBeVisible();
 	});
 
 	it('renders AppStack when persisted token exists', async () => {
-		const storage = createStorageMock('persisted-token');
-		const store = createAuthStore(storage);
-		const { getByTestId } = render(
-			<AuthProvider store={store} storage={storage}>
-				<RootStack apiClient={{} as any} />
-			</AuthProvider>,
+		const { getByTestId } = renderWithAuthProvider(
+			<RootStack />,
+			'mock-token',
 		);
 
 		await waitFor(() => {

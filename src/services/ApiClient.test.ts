@@ -6,7 +6,7 @@ import {
 	ApiClient,
 } from '@services/ApiClient';
 
-const apiClient = ApiClient.getInstance();
+const apiClient = new ApiClient('http://localhost:3001');
 
 // ── Axios mock setup ──────────────────────────────────────────────────────────
 

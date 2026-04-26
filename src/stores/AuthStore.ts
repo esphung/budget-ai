@@ -1,3 +1,4 @@
+import { StorageKey } from '@enums/StorageKey';
 import type { StorageService } from '@services/StorageService';
 import type { Dispatch } from 'react';
 
@@ -19,12 +20,13 @@ export type AuthAction =
 export type AuthStoreFactory = {
 	getInitialState: () => AuthState;
 	reducer: (state: AuthState, action: AuthAction) => AuthState;
-	createActions: (dispatch: Dispatch<AuthAction>) => AuthActions;
+	createActions: (
+		dispatch: Dispatch<AuthAction>,
+		storage: StorageService,
+	) => AuthActions;
 };
 
-export const createAuthStore = (
-	storage: StorageService,
-): AuthStoreFactory => {
+export const createAuthStore = (): AuthStoreFactory => {
 	const initialState: AuthState = {
 		token: null,
 	};
@@ -43,17 +45,21 @@ export const createAuthStore = (
 			}
 		},
 
-		createActions(dispatch: Dispatch<AuthAction>): AuthActions {
-			return {
-				setToken(token: string | null) {
-					dispatch({ type: 'SET_TOKEN', token });
-					storage.saveItem(token);
-				},
-				logout() {
-					dispatch({ type: 'LOGOUT' });
-					storage.clearItem();
-				},
-			};
+		createActions(
+			dispatch: Dispatch<AuthAction>,
+			storage: StorageService,
+		): AuthActions {
+			function setToken(token: string | null) {
+				dispatch({ type: 'SET_TOKEN', token });
+				storage.saveItem(token, StorageKey.AuthToken);
+			}
+
+			function logout() {
+				dispatch({ type: 'LOGOUT' });
+				storage.clearItem(StorageKey.AuthToken);
+			}
+
+			return { setToken, logout };
 		},
 	};
 };

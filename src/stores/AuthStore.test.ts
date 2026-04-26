@@ -1,16 +1,28 @@
 import { createAuthStore } from '@stores/AuthStore';
 import { StorageService } from '@services/StorageService';
+import { act } from '@testing-library/react-native';
+
+// @react-native-async-storage/async-storage
+jest.mock('@react-native-async-storage/async-storage', () => {
+	return {
+		AsyncStorage: {
+			setItem: jest.fn(),
+			getItem: jest.fn().mockResolvedValue('mock-token'),
+			removeItem: jest.fn(),
+		},
+	};
+});
 
 describe('AuthStore', () => {
-	const storage = StorageService.getInstance('@test_storage_key');
+	const storage = StorageService.getInstance('@auth');
 
 	it('initializes with null token', () => {
-		const store = createAuthStore(storage);
+		const store = createAuthStore();
 		expect(store.getInitialState().token).toBeNull();
 	});
 
 	it('sets token correctly', () => {
-		const store = createAuthStore(storage);
+		const store = createAuthStore();
 		const state = store.reducer(store.getInitialState(), {
 			type: 'SET_TOKEN',
 			token: 'test-token',
@@ -19,7 +31,7 @@ describe('AuthStore', () => {
 	});
 
 	it('logs out correctly by resetting token to null', () => {
-		const store = createAuthStore(storage);
+		const store = createAuthStore();
 		const state = store.reducer(
 			{ token: 'existing-token' },
 			{
@@ -30,12 +42,14 @@ describe('AuthStore', () => {
 	});
 
 	it('creates typed actions that dispatch reducer events', () => {
-		const store = createAuthStore(storage);
+		const store = createAuthStore();
 		const dispatch = jest.fn();
-		const actions = store.createActions(dispatch);
+		const actions = store.createActions(dispatch, storage);
 
-		actions.setToken('token-from-action');
-		actions.logout();
+		act(() => {
+			actions.setToken('token-from-action');
+			actions.logout();
+		});
 
 		expect(dispatch).toHaveBeenCalledWith({
 			type: 'SET_TOKEN',

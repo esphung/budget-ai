@@ -1,18 +1,43 @@
 import { TestID } from '@enums/TestID';
 import AuthStack from '@navigation/AuthStack/AuthStack';
 import { AuthProvider } from '@providers/AuthProvider';
-import { StorageService } from '@services/StorageService';
 import { createAuthStore } from '@stores/AuthStore';
 import { render } from '@testing-library/react-native';
 
+// @react-native-async-storage/async-storage
+jest.mock('@react-native-async-storage/async-storage', () => {
+	return {
+		AsyncStorage: {
+			setItem: jest.fn(),
+			getItem: jest.fn().mockResolvedValue('mock-token'),
+			removeItem: jest.fn(),
+		},
+	};
+});
+
+// mock storage service to avoid actual async storage calls
+jest.mock('@services/StorageService', () => {
+	return {
+		StorageService: {
+			getInstance: jest.fn(() => ({
+				saveItem: jest.fn(),
+				loadItem: jest.fn().mockResolvedValue('mock-token'),
+				clearItem: jest.fn(),
+			})),
+		},
+	};
+});
+
+// render with auth provider to provide necessary context
+function renderWithAuthProvider(ui: React.ReactElement) {
+	const store = createAuthStore();
+	return render(<AuthProvider store={store}>{ui}</AuthProvider>);
+}
+
 describe('AuthStack - Login Flow', () => {
 	it('renders LoginScreen with login button', () => {
-		const storage = StorageService.getInstance('@test_storage_key');
-		const store = createAuthStore(storage);
-		const { getByTestId, getByText } = render(
-			<AuthProvider store={store} storage={storage}>
-				<AuthStack />
-			</AuthProvider>,
+		const { getByTestId, getByText } = renderWithAuthProvider(
+			<AuthStack />,
 		);
 
 		const loginScreen = getByTestId(TestID.LoginScreen);

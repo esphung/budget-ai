@@ -5,13 +5,6 @@ import axios, {
 	InternalAxiosRequestConfig,
 } from 'axios';
 
-// ── Shared config ─────────────────────────────────────────────────────────────
-
-const BASE_URL = 'http://localhost:3001';
-const DEFAULT_TIMEOUT_MS = 15_000;
-
-// ── Request / response contracts ─────────────────────────────────────────────
-
 export interface ApiError {
 	status: number;
 	message: string;
@@ -36,8 +29,6 @@ export interface ExchangePublicTokenResponse {
 	accessToken: string;
 }
 
-// ── Error normalizer ──────────────────────────────────────────────────────────
-
 function normalizeError(err: unknown): ApiError {
 	if (err instanceof CanceledError) {
 		return { status: 0, message: 'Request cancelled', cause: err };
@@ -55,16 +46,13 @@ function normalizeError(err: unknown): ApiError {
 	return { status: 0, message: 'Unknown error', cause: err };
 }
 
-// ── Client ────────────────────────────────────────────────────────────────────
-
 export class ApiClient {
-	private static instance: ApiClient;
 	private readonly http: AxiosInstance;
 
-	private constructor(baseUrl: string = BASE_URL) {
+	constructor(baseUrl: string) {
 		this.http = axios.create({
 			baseURL: baseUrl,
-			timeout: DEFAULT_TIMEOUT_MS,
+			timeout: 15_000,
 		});
 
 		// Attach auth token from store on every request when available
@@ -76,15 +64,6 @@ export class ApiClient {
 			},
 		);
 	}
-
-	static getInstance(): ApiClient {
-		if (!ApiClient.instance) {
-			ApiClient.instance = new ApiClient();
-		}
-		return ApiClient.instance;
-	}
-
-	// ── Helpers ───────────────────────────────────────────────────────────────
 
 	/**
 	 * Wraps an axios call and normalizes errors into ApiError.
