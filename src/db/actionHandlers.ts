@@ -11,6 +11,7 @@ type NewTransactionParams = {
 	merchant: string | null;
 	category: string | null;
 	date: string;
+	transactionType: 'expense' | 'income' | 'transfer' | null;
 };
 
 const mapActionPayloadToTxnParams = (
@@ -22,6 +23,7 @@ const mapActionPayloadToTxnParams = (
 		merchant: payload.merchant || null,
 		category: payload.category || null,
 		date: payload.date || new Date().toISOString(),
+		transactionType: payload.transaction_type || null,
 	};
 };
 
@@ -49,16 +51,18 @@ export const actionHandlers: Record<
 				  amount,
 				  merchant,
 				  category,
+				  transaction_type,
 				  date,
 				  created_at
 				)
-				VALUES (?, ?, ?, ?, ?, ?)
+				VALUES (?, ?, ?, ?, ?, ?, ?)
 				`,
 				args: [
 					transactionId,
 					mappedPayload.amount,
 					mappedPayload.merchant,
 					mappedPayload.category,
+					mappedPayload.transactionType,
 					mappedPayload.date,
 					now,
 				],

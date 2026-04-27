@@ -112,6 +112,16 @@ Rules:
 													additionalProperties:
 														false,
 													properties: {
+														transaction_type: {
+															type: [
+																'string',
+																'null',
+															],
+															enum: [
+																'expense',
+																'income',
+															],
+														},
 														amount: {
 															type: [
 																'number',
@@ -149,6 +159,7 @@ Rules:
 														'category',
 														'date',
 														'screen',
+														'transaction_type',
 													],
 												},
 											},

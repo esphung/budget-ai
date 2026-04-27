@@ -3,7 +3,6 @@ import PrimaryButton from '@components/PrimaryButton';
 import { AIMessage } from '@db/types';
 import { useOpenAiService } from '@providers/OpenAiServiceProvider';
 import LoadingView from '@screens/HomeScreen/LoadingView';
-import { homeScreenLog } from '@utils/logUtils';
 import { useCallback, useMemo, useState } from 'react';
 import { TextInput, View } from 'react-native';
 
@@ -18,7 +17,6 @@ const AiChatView = ({
 	const { aiService } = useOpenAiService();
 
 	const onSend = useCallback(async () => {
-		homeScreenLog.debug('[onSend] Sending message:', { text });
 		const trimmed = text.trim();
 		if (!trimmed) return;
 		setText('');

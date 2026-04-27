@@ -84,6 +84,9 @@ export async function runAIMigrations(db: DB) {
         amount REAL NOT NULL,
         merchant TEXT,
         category TEXT,
+        transaction_type TEXT CHECK (
+          transaction_type IN ('expense', 'income', 'transfer')
+        ),
         date TEXT NOT NULL,
         created_at TEXT NOT NULL
       );
