@@ -3,7 +3,7 @@ import {
 	ExchangePublicTokenResponse,
 	GetLinkTokenResponse,
 } from '@services/ApiClient';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
 	create,
 	LinkAccount,
@@ -31,7 +31,7 @@ interface UsePlaidLinkResult {
 	hasLinkToken: boolean;
 	isStarting: boolean;
 	startPlaidLink: () => Promise<void>;
-	refreshLinkToken: () => Promise<void>;
+	refreshLinkToken: () => Promise<string | null>;
 	clearLinkToken: () => void;
 }
 
@@ -65,21 +65,18 @@ export function usePlaidLink(
 		return result.link_token ?? null;
 	}, [options]);
 
-	const isTokenFresh = useCallback(() => {
-		if (!linkToken || !tokenFetchedAt) {
-			return false;
-		}
-		return Date.now() - tokenFetchedAt < TOKEN_MAX_AGE_MS;
-	}, [linkToken, tokenFetchedAt]);
+	const isTokenFresh = useMemo(
+		() => () =>
+			linkToken && tokenFetchedAt
+				? Date.now() - tokenFetchedAt < TOKEN_MAX_AGE_MS
+				: false,
+		[linkToken, tokenFetchedAt],
+	);
 
-	const refreshLinkToken = useCallback(async () => {
-		await fetchLinkToken();
-	}, [fetchLinkToken]);
+	const refreshLinkToken = useCallback(fetchLinkToken, [fetchLinkToken]);
 
 	const startPlaidLink = useCallback(async () => {
-		if (isStarting) {
-			return;
-		}
+		if (isStarting) return;
 
 		setIsStarting(true);
 
@@ -107,7 +104,6 @@ export function usePlaidLink(
 						options.onLinkedAccounts?.(
 							success.metadata.accounts,
 						);
-						// Token is single-use for opening Link flow; force refresh next time.
 						clearLinkToken();
 					} catch (error) {
 						console.error(

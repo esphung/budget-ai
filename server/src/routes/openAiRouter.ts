@@ -19,11 +19,6 @@ type Message = {
 	content: string;
 };
 
-export type AssistantResponse = {
-	message: string;
-	actions?: Array<Action>;
-};
-
 router.post('/generate-text', async (req: Request, res: Response) => {
 	const { content, max_completion_tokens } = req.body;
 	if (!content) {

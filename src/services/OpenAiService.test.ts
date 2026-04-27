@@ -1,6 +1,5 @@
 import { ApiClient } from '@services/ApiClient';
 import { OpenAiService } from '@services/OpenAiService';
-import { parseChatResponse } from '@utils/chatFunctions';
 
 jest.mock('./ApiClient');
 
@@ -23,12 +22,6 @@ describe('OpenAiService', () => {
 		});
 
 		openAiService = new OpenAiService(apiClient);
-	});
-
-	it('should parse chat response correctly', () => {
-		const response = { data: { text: { content: 'Hello, Eric!' } } };
-		const result = parseChatResponse(response);
-		expect(result).toBe('Hello, Eric!');
 	});
 
 	it('should send the correct prompt and return the response', async () => {

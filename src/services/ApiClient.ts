@@ -47,8 +47,8 @@ function normalizeError(err: unknown): ApiError {
 	return { status: 0, message: 'Unknown error', cause: err };
 }
 
-export class ApiClient {
-	private readonly http: AxiosInstance;
+class BaseService {
+	protected readonly http: AxiosInstance;
 
 	constructor(baseUrl: string) {
 		this.http = axios.create({
@@ -56,21 +56,15 @@ export class ApiClient {
 			timeout: 15_000,
 		});
 
-		// Attach auth token from store on every request when available
 		this.http.interceptors.request.use(
 			(config: InternalAxiosRequestConfig) => {
-				// TODO: read token from secure storage or auth store when implemented
-				// config.headers.Authorization = `Bearer ${token}`;
+				// TODO: Attach auth token dynamically
 				return config;
 			},
 		);
 	}
 
-	/**
-	 * Wraps an axios call and normalizes errors into ApiError.
-	 * Pass an AbortSignal for cancellation support.
-	 */
-	private async request<T>(
+	protected async request<T>(
 		call: () => Promise<AxiosResponse<T>>,
 	): Promise<T> {
 		try {
@@ -80,13 +74,16 @@ export class ApiClient {
 			throw normalizeError(err);
 		}
 	}
+}
+
+export class ApiClient extends BaseService {
+	constructor(baseUrl: string) {
+		super(baseUrl);
+	}
 
 	// ── Plaid ─────────────────────────────────────────────────────────────────
 
 	readonly plaid = {
-		/**
-		 * Creates a Plaid Link token to initialize the Link flow on the client.
-		 */
 		getLinkToken: (
 			signal?: AbortSignal,
 		): Promise<GetLinkTokenResponse> =>
@@ -96,10 +93,6 @@ export class ApiClient {
 				}),
 			),
 
-		/**
-		 * Exchanges a public token (returned by Plaid Link) for a persistent
-		 * access token stored server-side.
-		 */
 		exchangePublicToken: (
 			body: ExchangePublicTokenRequest,
 			signal?: AbortSignal,
@@ -113,7 +106,9 @@ export class ApiClient {
 			),
 	};
 
-	openai = {
+	// ── OpenAI ────────────────────────────────────────────────────────────────
+
+	readonly openai = {
 		generateText: (
 			content: string,
 			max_completion_tokens?: number,
@@ -128,10 +123,7 @@ export class ApiClient {
 			),
 
 		sendMessage: (
-			messages: {
-				role: string;
-				content: string;
-			}[],
+			messages: { role: string; content: string }[],
 			signal?: AbortSignal,
 		): Promise<{ data: AssistantResponse }> =>
 			this.request(() =>

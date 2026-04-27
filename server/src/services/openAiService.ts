@@ -71,10 +71,10 @@ You must return JSON that matches the requested schema.
 Rules:
 - Return a short friendly message.
 - If the user clearly describes an expense, include a save_transaction action.
+- if the user asks to go somewhere in the app, include a navigate action with the destination in the payload.
 - If the user does not clearly describe an expense, return actions as an empty array.
 - Do not say the transaction was saved. Say you can save it or that it is ready to save.
 - Use null for missing fields.
-- Today's date is 2026-04-27.
           `.trim(),
 						},
 						...messages.map((message) => ({

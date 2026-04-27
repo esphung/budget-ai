@@ -217,6 +217,10 @@ export class OpenAiService {
 
 		// 5. Save any structured actions.
 		for (const action of assistantResponse.actions ?? []) {
+			chatLog.debug('[sendAIMessage] Saving assistant action to DB', {
+				actionType: action.type,
+				payload: action.payload,
+			});
 			await repo.saveMessage({
 				threadId: input.threadId,
 				role: 'assistant',
@@ -238,7 +242,6 @@ export class OpenAiService {
 		}
 	}
 
-	// TODO: Fill out this function
 	async callAI(params: {
 		messages: Array<{
 			role: string;

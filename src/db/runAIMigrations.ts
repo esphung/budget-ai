@@ -77,5 +77,16 @@ export async function runAIMigrations(db: DB) {
       CREATE INDEX IF NOT EXISTS idx_ai_actions_status
       ON ai_actions(status);
     `);
+
+		await tx.execute(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id TEXT PRIMARY KEY,
+        amount REAL NOT NULL,
+        merchant TEXT,
+        category TEXT,
+        date TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+    `);
 	});
 }
