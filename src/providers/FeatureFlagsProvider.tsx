@@ -1,3 +1,4 @@
+import { flagsLog } from '@utils/logUtils';
 import React, {
 	createContext,
 	useContext,
@@ -24,7 +25,12 @@ const FeatureFlagsContext = createContext<
 export const FeatureFlagsProvider: React.FC<{
 	children: ReactNode;
 	initialFlags?: Record<string, boolean>;
-}> = ({ children, initialFlags = {} }) => {
+}> = ({
+	children,
+	initialFlags = {
+		isChatEnabled: true,
+	},
+}) => {
 	const [flags, setFlags] =
 		useState<Record<string, boolean>>(initialFlags);
 
@@ -42,14 +48,11 @@ export const FeatureFlagsProvider: React.FC<{
 	// add dev menu options for toggling flags
 	useEffect(() => {
 		if (__DEV__) {
-			DevSettings.addMenuItem('Toggle newChatEnabled', () => {
-				setFlag('newChatEnabled', !flags.newChatEnabled);
-			});
 			DevSettings.addMenuItem('Show All Flags', () => {
 				const allFlags = Object.entries(flags)
 					.map(([key, value]) => `${key}: ${value}`)
 					.join('\n');
-				console.log('Current Feature Flags:\n', allFlags);
+				flagsLog.debug('Current Feature Flags:\n', allFlags);
 			});
 		}
 	}, [flags, setFlag]);

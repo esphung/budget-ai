@@ -9,7 +9,13 @@ export const useDevMenu = () => {
 	useEffect(() => {
 		if (!__DEV__) return;
 		DevSettings.addMenuItem('Show Benchmarks', () => {
-			console.log(benchmarkService.getResults());
+			console.log(
+				`[DevMenu] Benchmark Results:\n${JSON.stringify(
+					benchmarkService.getResults(),
+					null,
+					2,
+				)}`,
+			);
 		});
 	}, []);
 };

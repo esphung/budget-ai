@@ -2,9 +2,25 @@ import { TestID } from '@enums/TestID';
 import RootStack from '@navigation/RootStack/RootStack';
 import { ApiClientProvider } from '@providers/ApiClientProvider';
 import { AuthProvider } from '@providers/AuthProvider';
+import { DatabaseProvider } from '@providers/DatabaseProvider';
 import { StorageService } from '@services/StorageService';
 import { createAuthStore } from '@stores/AuthStore';
 import { render, waitFor } from '@testing-library/react-native';
+
+// @op-engineering/op-sqlite
+jest.mock('@op-engineering/op-sqlite', () => ({
+	__esModule: true,
+	open: jest.fn().mockReturnValue({
+		close: jest.fn(),
+		transaction: jest.fn().mockImplementation((cb) => {
+			const tx = {
+				execute: jest.fn(), // Add execute function
+				executeSql: jest.fn(),
+			};
+			cb(tx);
+		}),
+	}),
+}));
 
 jest.mock('@navigation/AppStack/AppStack', () => {
 	const ids = require('@enums/TestID');
@@ -50,9 +66,19 @@ function renderWithProviders(
 	}
 
 	return render(
-		<ApiClientProvider apiClient={jest.fn() as any}>
-			<AuthProvider store={store}>{ui}</AuthProvider>
-		</ApiClientProvider>,
+		<DatabaseProvider
+			service={
+				{
+					init: jest.fn(),
+					addListener: jest.fn(),
+					removeListener: jest.fn(),
+				} as any
+			}>
+			<ApiClientProvider apiClient={jest.fn() as any}>
+				<AuthProvider store={store}>{ui}</AuthProvider>
+			</ApiClientProvider>
+			,
+		</DatabaseProvider>,
 	);
 }
 

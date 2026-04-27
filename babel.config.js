@@ -23,6 +23,8 @@ module.exports = {
 					'@stores': './src/stores',
 					'@providers': './src/providers',
 					'@mocks': './src/mocks',
+					'@repositories': './src/repositories',
+					'@db': './src/db',
 				},
 			},
 		],

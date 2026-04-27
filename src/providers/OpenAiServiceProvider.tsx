@@ -1,33 +1,38 @@
-import { ApiClient } from '@services/ApiClient';
 import { OpenAiService } from '@services/OpenAiService';
-import React, { createContext, ReactNode, useContext } from 'react';
+import React, {
+	createContext,
+	ReactNode,
+	useContext,
+	useMemo,
+} from 'react';
+import { useApiClient } from '@providers/ApiClientProvider';
 
 // Define the shape of the context state
 interface OpenAiServiceContext {
-	openAiService: OpenAiService;
+	aiService: OpenAiService;
 }
 
 // Create the context
-const OpenAiServiceContext = createContext<OpenAiService | undefined>(
-	undefined,
-);
+const OpenAiServiceContext = createContext<
+	OpenAiServiceContext | undefined
+>(undefined);
 
 // Provider component
 export const OpenAiServiceProvider: React.FC<{
 	children: ReactNode;
-	apiClient: ApiClient;
-}> = ({ children, apiClient }) => {
-	const openAiService = new OpenAiService(apiClient);
+}> = ({ children }) => {
+	const api = useApiClient();
+	const aiService = useMemo(() => new OpenAiService(api), [api]);
 
 	return (
-		<OpenAiServiceContext.Provider value={openAiService}>
+		<OpenAiServiceContext.Provider value={{ aiService }}>
 			{children}
 		</OpenAiServiceContext.Provider>
 	);
 };
 
 // Custom hook for consuming the context
-export const useOpenAiService = (): OpenAiService => {
+export const useOpenAiService = (): OpenAiServiceContext => {
 	const context = useContext(OpenAiServiceContext);
 	if (!context) {
 		throw new Error(

@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 
 const AuthContext = createContext<AuthStore | null>(null);
+
 AuthContext.displayName = 'AuthContext';
 
 // Storage instance for auth persistence

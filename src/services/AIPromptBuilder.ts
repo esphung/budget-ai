@@ -10,12 +10,12 @@ const AI_PROCEDURES: Record<AIProcedureName, string> = {
   `,
 };
 
-export class ChatPromptBuilder {
+export class AIPromptBuilder {
 	private buildPromptForProcedure(
 		procedure: AIProcedureName,
-		context?: Record<string, unknown>,
+		context: Record<string, unknown> = {},
 	) {
-		const formattedContext = context
+		const formattedContext = Object.keys(context).length
 			? `\nContext:\n${JSON.stringify(context, null, 2)}`
 			: '';
 

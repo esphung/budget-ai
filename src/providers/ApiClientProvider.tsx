@@ -1,14 +1,14 @@
-import React, { createContext, useContext } from 'react';
 import { ApiClient } from '@services/ApiClient';
+import React, { createContext } from 'react';
+
+const apiClient = new ApiClient('http://localhost:3001');
 
 const ApiClientContext = createContext<ApiClient | null>(null);
 
 export const ApiClientProvider = ({
 	children,
-	apiClient,
 }: {
 	children: React.ReactNode;
-	apiClient: ApiClient;
 }) => {
 	return (
 		<ApiClientContext.Provider value={apiClient}>
@@ -20,7 +20,6 @@ export const ApiClientProvider = ({
 export const useApiClient = <T = undefined,>(
 	selector?: (apiClient: ApiClient) => T,
 ): T extends undefined ? ApiClient : T => {
-	const apiClient = useContext(ApiClientContext);
 	if (!apiClient) {
 		throw new Error(
 			'useApiClient must be used within an ApiClientProvider',

@@ -1932,6 +1932,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@op-engineering/op-sqlite@npm:^15.2.12":
+  version: 15.2.12
+  resolution: "@op-engineering/op-sqlite@npm:15.2.12"
+  peerDependencies:
+    "@sqlite.org/sqlite-wasm": "*"
+    react: "*"
+    react-native: "*"
+  peerDependenciesMeta:
+    "@sqlite.org/sqlite-wasm":
+      optional: true
+  checksum: 10c0/86f67cf6a9cb4342a1a088bdb35f26424174b38449911546f6ede73c3569b9fc1aa92d57d09f3459ae9e6c11ed9ebdd6e6ed3998d1944ee8db88aca420d6436c
+  languageName: node
+  linkType: hard
+
 "@react-native-async-storage/async-storage@npm:^3.0.2":
   version: 3.0.2
   resolution: "@react-native-async-storage/async-storage@npm:3.0.2"
@@ -3392,6 +3406,7 @@ __metadata:
     "@babel/core": "npm:^7.25.2"
     "@babel/preset-env": "npm:^7.25.3"
     "@babel/runtime": "npm:^7.25.0"
+    "@op-engineering/op-sqlite": "npm:^15.2.12"
     "@react-native-async-storage/async-storage": "npm:^3.0.2"
     "@react-native-community/cli": "npm:20.1.0"
     "@react-native-community/cli-platform-android": "npm:20.1.0"
@@ -3412,6 +3427,7 @@ __metadata:
     prettier: "npm:2.8.8"
     react: "npm:19.2.3"
     react-native: "npm:0.85.2"
+    react-native-logs: "npm:^5.6.0"
     react-native-plaid-link-sdk: "npm:^12.8.0"
     react-native-safe-area-context: "npm:5.5.2"
     react-test-renderer: "npm:19.2.3"
@@ -7588,6 +7604,13 @@ __metadata:
   version: 19.2.5
   resolution: "react-is@npm:19.2.5"
   checksum: 10c0/58c28ab2f7f868f9836c728fa164a16dcf20246ab84a3ae6a09e617b0e4d9bbb3acdddfdc40452f0134d27b121d3359227602a050c0be554cb20069cb52a67f4
+  languageName: node
+  linkType: hard
+
+"react-native-logs@npm:^5.6.0":
+  version: 5.6.0
+  resolution: "react-native-logs@npm:5.6.0"
+  checksum: 10c0/2532a965053819ae9209fe59c1e1511397425f86a98ce2f1a28b34bdf0618b055248c5b59b7d382d6a8e422b4c647601cd24f68b401a322f48ed2e6aaf5ce806
   languageName: node
   linkType: hard
 

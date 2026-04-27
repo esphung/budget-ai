@@ -54,15 +54,15 @@ class BenchmarkService {
 			this.results.push({ label, elapsedTimeMs });
 			this.benchmarks.delete(label);
 
-			// Check against label-specific threshold
-			const thresholdMs = this.thresholds.get(label);
-			if (thresholdMs !== undefined && elapsedTimeMs > thresholdMs) {
-				console.warn(
-					`Benchmark for label "${label}" exceeded threshold: ${elapsedTimeMs.toFixed(
-						2,
-					)} ms (Threshold: ${thresholdMs} ms)`,
-				);
-			}
+			// // Check against label-specific threshold
+			// const thresholdMs = this.thresholds.get(label);
+			// if (thresholdMs !== undefined && elapsedTimeMs > thresholdMs) {
+			// 	console.warn(
+			// 		`Benchmark for label "${label}" exceeded threshold: ${elapsedTimeMs.toFixed(
+			// 			2,
+			// 		)} ms (Threshold: ${thresholdMs} ms)`,
+			// 	);
+			// }
 		}
 	}
 

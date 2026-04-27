@@ -4,6 +4,7 @@ import axios, {
 	CanceledError,
 	InternalAxiosRequestConfig,
 } from 'axios';
+import { AssistantResponse } from '../types/AssistantResponse';
 
 export interface ApiError {
 	status: number;
@@ -122,6 +123,21 @@ export class ApiClient {
 				this.http.post<{ data: { text: { content: string } } }>(
 					'/openai/generate-text',
 					{ content, max_completion_tokens },
+					{ signal },
+				),
+			),
+
+		sendMessage: (
+			messages: {
+				role: string;
+				content: string;
+			}[],
+			signal?: AbortSignal,
+		): Promise<{ data: AssistantResponse }> =>
+			this.request(() =>
+				this.http.post<{ data: AssistantResponse }>(
+					'/openai/send-message',
+					{ messages },
 					{ signal },
 				),
 			),

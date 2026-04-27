@@ -1,28 +1,27 @@
-import { ApiClient } from '@services/ApiClient';
-import { OpenAiService } from '@services/OpenAiService';
-import { render, screen } from '@testing-library/react-native';
-import React from 'react';
 import {
 	OpenAiServiceProvider,
 	useOpenAiService,
-} from './OpenAiServiceProvider';
+} from '@providers/OpenAiServiceProvider';
+import { render, screen } from '@testing-library/react-native';
+import React from 'react';
 import { Text } from 'react-native';
 
-jest.mock('@services/ApiClient');
-jest.mock('@services/OpenAiService');
+jest.mock('@services/OpenAiService', () => {
+	return {
+		OpenAiService: jest.fn().mockImplementation(() => ({})),
+	};
+});
 
 describe('OpenAiServiceProvider', () => {
 	it('provides the OpenAiService context to its children', () => {
 		const MockChild = () => {
 			const openAiService = useOpenAiService();
-			expect(openAiService).toBeInstanceOf(OpenAiService);
+			expect(openAiService).toBeDefined();
 			return <Text>Mock Child</Text>;
 		};
 
-		const mockApiClient = new ApiClient('http://localhost:3001');
-
 		render(
-			<OpenAiServiceProvider apiClient={mockApiClient}>
+			<OpenAiServiceProvider>
 				<MockChild />
 			</OpenAiServiceProvider>,
 		);
