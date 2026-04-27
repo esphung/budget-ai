@@ -1,6 +1,11 @@
 import { executeTransaction } from '@db/executeTransaction';
 import { AIAction } from '@db/types';
-import { navigateToScreen } from '@navigation/navigateToScreen';
+import { AppStackScreens } from '@navigation/AppStack/AppStack';
+import {
+	isSameScreen,
+	mapToAppStackScreen,
+	NavigationService,
+} from '@navigation/navigationService';
 import { DB } from '@op-engineering/op-sqlite';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
 import { generateUniqueId } from '@utils/randomIdUtils';
@@ -25,6 +30,22 @@ const mapActionPayloadToTxnParams = (
 		date: payload.date || new Date().toISOString(),
 		transactionType: payload.transaction_type || null,
 	};
+};
+
+const goToScreen = ({ screen }: { screen: string }) => {
+	const screenToNavigate = mapToAppStackScreen(screen);
+	if (isSameScreen(screen)) {
+		console.warn(`Already on the requested screen: ${screen}`);
+		return;
+	}
+	console.log('Navigating to screen:', screenToNavigate);
+	if (screenToNavigate) {
+		NavigationService.navigateToScreen(
+			screenToNavigate,
+			undefined,
+			screen === AppStackScreens.Home, // reset stack if navigating to Home
+		);
+	}
 };
 
 // ActionHandlers.ts
@@ -90,10 +111,6 @@ export const actionHandlers: Record<
 	navigate: async (_db, repo, action, threadId) => {
 		const payload = action.payload as { screen: string };
 
-		// navigate to the specified screen HERE
-		// Alert.alert(`Navigate to ${payload.screen}`);
-		navigateToScreen(payload.screen);
-
 		await repo.markActionApplied({
 			actionId: action.id,
 			result: { navigated_to: payload.screen },
@@ -109,5 +126,7 @@ export const actionHandlers: Record<
 				screen: payload.screen,
 			},
 		});
+
+		goToScreen(payload);
 	},
 };

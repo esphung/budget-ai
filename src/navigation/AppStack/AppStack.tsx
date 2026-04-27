@@ -1,17 +1,36 @@
-import { TestID } from '@enums/TestID';
 import HomeScreen from '@screens/HomeScreen/HomeScreen';
-import { StyleSheet, View } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import TestScreen from '@screens/TestScreen/TestScreen';
+
+export enum AppStackScreens {
+	Home = 'HomeScreen',
+	Test = 'TestScreen',
+}
+
+export type AppStackParamList = {
+	[AppStackScreens.Home]: undefined;
+	[AppStackScreens.Test]: undefined;
+};
+
+const Stack = createNativeStackNavigator<AppStackParamList, 'AppStack'>();
 
 const AppStack = () => {
 	return (
-		<View testID={TestID.AppStack} style={styles.container}>
-			<HomeScreen />
-		</View>
+		<Stack.Navigator
+			id="AppStack"
+			initialRouteName={AppStackScreens.Home}
+			// screenOptions={{ headerShown: false }}
+		>
+			<Stack.Screen
+				name={AppStackScreens.Home}
+				component={HomeScreen}
+			/>
+			<Stack.Screen
+				name={AppStackScreens.Test}
+				component={TestScreen}
+			/>
+		</Stack.Navigator>
 	);
 };
-
-const styles = StyleSheet.create({
-	container: { flex: 1 },
-});
 
 export default AppStack;

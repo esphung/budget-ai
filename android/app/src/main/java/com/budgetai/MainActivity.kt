@@ -13,6 +13,12 @@ class MainActivity : ReactActivity() {
    */
   override fun getMainComponentName(): String = "BudgetAI"
 
+  // react navigation
+  override fun onCreate(savedInstanceState: Bundle?) {
+    supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
+    super.onCreate(savedInstanceState)
+  }
+
   /**
    * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
    * which allows you to enable New Architecture with a single boolean flags [fabricEnabled]

@@ -4,13 +4,31 @@ import { AIAction, Message } from '@db/types';
 import { DB } from '@op-engineering/op-sqlite';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
 import { ApiClient } from '@services/ApiClient';
-import {
-	mapAIMessageForAI,
-	parseAssistantResponse,
-} from '@utils/messageUtils';
-import type { AssistantResponse } from 'types/AssistantResponse';
+import { mapAIMessageForAI } from '@utils/messageUtils';
+import { OpenAIChatCompletion, Action } from '../../shared/types/openai';
 
 const GPT_MODEL = 'gpt-4.1-nano';
+
+function parseActionsFromContent(content: string | null): Action[] {
+	try {
+		// Parse the JSON content
+		const parsedContent = JSON.parse(content || '{}');
+
+		// Extract the actions array
+		const actions = parsedContent.actions;
+
+		// Check if actions exist and return them
+		if (actions && Array.isArray(actions)) {
+			return actions;
+		} else {
+			console.warn('No actions found in the content.');
+			return [];
+		}
+	} catch (error) {
+		console.error('Failed to parse content:', error);
+		return [];
+	}
+}
 
 export class OpenAiService {
 	private api: ApiClient;
@@ -74,7 +92,7 @@ export class OpenAiService {
 		const messages = await this.repo.getMessages(threadId);
 
 		// 3. Send to your backend/OpenAI.
-		const assistantResponse = await this.callAI({
+		const response: OpenAIChatCompletion = await this.callAI({
 			messages: messages.map(mapAIMessageForAI),
 		});
 
@@ -83,12 +101,21 @@ export class OpenAiService {
 			threadId,
 			role: 'assistant',
 			messageType: 'text',
-			content: assistantResponse.message,
+			content: response.choices[0].message.content,
 			model: GPT_MODEL,
 		});
 
+		// @ts-ignore
+		const actions = parseActionsFromContent(
+			response.choices[0].message.content,
+		);
+		console.log(
+			'[OpenAIService] sendAIMessage - extracted actions:',
+			JSON.stringify(actions, null, 2),
+		);
+
 		// 5. Save any structured actions.
-		for (const action of assistantResponse.actions || []) {
+		for (const action of actions || []) {
 			await this.repo.saveMessage({
 				threadId,
 				role: 'assistant',
@@ -112,9 +139,9 @@ export class OpenAiService {
 
 	async callAI(params: {
 		messages: Message[];
-	}): Promise<AssistantResponse> {
+	}): Promise<OpenAIChatCompletion> {
 		const response = await this.api.openai.sendMessage(params.messages);
-		return parseAssistantResponse(response);
+		return response;
 	}
 
 	sendMessageAndApplyActions = async ({

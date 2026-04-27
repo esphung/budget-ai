@@ -50,6 +50,9 @@ const AiChatView = ({
 						marginBottom: 8,
 						marginTop: 8,
 					}}
+					onSubmitEditing={onSend}
+					returnKeyType="send"
+					submitBehavior="submit"
 				/>
 				<PrimaryButton title="Send" onPress={onSend} width="100%" />
 			</View>

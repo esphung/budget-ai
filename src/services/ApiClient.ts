@@ -4,7 +4,7 @@ import axios, {
 	CanceledError,
 	InternalAxiosRequestConfig,
 } from 'axios';
-import { AssistantResponse } from 'types/AssistantResponse';
+import { OpenAIChatCompletion } from '../../shared/types/openai';
 
 export interface ApiError {
 	status: number;
@@ -109,25 +109,12 @@ export class ApiClient extends BaseService {
 	// ── OpenAI ────────────────────────────────────────────────────────────────
 
 	readonly openai = {
-		generateText: (
-			content: string,
-			max_completion_tokens?: number,
-			signal?: AbortSignal,
-		): Promise<{ data: { text: { content: string } } }> =>
-			this.request(() =>
-				this.http.post<{ data: { text: { content: string } } }>(
-					'/openai/generate-text',
-					{ content, max_completion_tokens },
-					{ signal },
-				),
-			),
-
 		sendMessage: (
 			messages: { role: string; content: string }[],
 			signal?: AbortSignal,
-		): Promise<{ data: AssistantResponse }> =>
+		): Promise<OpenAIChatCompletion> =>
 			this.request(() =>
-				this.http.post<{ data: AssistantResponse }>(
+				this.http.post(
 					'/openai/send-message',
 					{ messages },
 					{ signal },

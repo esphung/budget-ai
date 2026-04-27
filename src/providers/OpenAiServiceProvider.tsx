@@ -37,6 +37,7 @@ export const OpenAiServiceProvider: React.FC<{
 }> = ({ children }) => {
 	const api = useApiClient();
 	const { db } = useDatabase();
+
 	const aiService = useOpenAiServiceInstance(api, db);
 
 	return (

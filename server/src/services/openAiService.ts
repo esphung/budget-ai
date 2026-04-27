@@ -1,5 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { env } from './env';
+import { responseFormat } from './responseFormat';
+import type { OpenAI } from 'openai';
 
 class OpenAiService {
 	private static instance: OpenAiService;
@@ -24,37 +26,9 @@ class OpenAiService {
 		return OpenAiService.instance;
 	}
 
-	async generateText({
-		content,
-		max_completion_tokens,
-	}: {
-		content: string;
-		max_completion_tokens?: number;
-	}) {
-		try {
-			const response = await axios({
-				...this.config,
-				method: 'POST',
-				url: '/chat/completions',
-				data: {
-					model: env.openAi.model,
-					messages: [{ role: 'user', content }],
-					max_tokens: max_completion_tokens ?? 50,
-				},
-			});
-			return response.data.choices[0].message;
-		} catch (error: any) {
-			console.error(
-				'Error generating text:',
-				error.response?.data ?? error.message,
-			);
-			throw error;
-		}
-	}
-
 	async sendAIMessage(messages: { role: string; content: string }[]) {
 		try {
-			const response = await axios({
+			const response = await axios<OpenAI.ChatCompletion>({
 				...this.config,
 				method: 'POST',
 				url: '/chat/completions',
@@ -82,98 +56,10 @@ Rules:
 							content: message.content ?? '',
 						})),
 					],
-					response_format: {
-						type: 'json_schema',
-						json_schema: {
-							name: 'budget_ai_response',
-							strict: true,
-							schema: {
-								type: 'object',
-								additionalProperties: false,
-								properties: {
-									message: {
-										type: 'string',
-									},
-									actions: {
-										type: 'array',
-										items: {
-											type: 'object',
-											additionalProperties: false,
-											properties: {
-												type: {
-													type: 'string',
-													enum: [
-														'save_transaction',
-														'navigate',
-													],
-												},
-												payload: {
-													type: 'object',
-													additionalProperties:
-														false,
-													properties: {
-														transaction_type: {
-															type: [
-																'string',
-																'null',
-															],
-															enum: [
-																'expense',
-																'income',
-															],
-														},
-														amount: {
-															type: [
-																'number',
-																'null',
-															],
-														},
-														merchant: {
-															type: [
-																'string',
-																'null',
-															],
-														},
-														category: {
-															type: [
-																'string',
-																'null',
-															],
-														},
-														date: {
-															type: [
-																'string',
-																'null',
-															],
-														},
-														screen: {
-															type: [
-																'string',
-																'null',
-															],
-														},
-													},
-													required: [
-														'amount',
-														'merchant',
-														'category',
-														'date',
-														'screen',
-														'transaction_type',
-													],
-												},
-											},
-											required: ['type', 'payload'],
-										},
-									},
-								},
-								required: ['message', 'actions'],
-							},
-						},
-					},
+					response_format: responseFormat,
 				},
 			});
-			return response.data.choices[0].message;
+			return response.data;
 		} catch (error: any) {
 			console.error(
 				'Error sending AI message:',
