@@ -5,12 +5,28 @@ import {
 import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 import { Text } from 'react-native';
+import { DatabaseProvider } from './DatabaseProvider';
 
 jest.mock('@services/OpenAiService', () => {
 	return {
 		OpenAiService: jest.fn().mockImplementation(() => ({})),
 	};
 });
+
+// @op-engineering/op-sqlite
+jest.mock('@op-engineering/op-sqlite', () => ({
+	__esModule: true,
+	open: jest.fn().mockReturnValue({
+		close: jest.fn(),
+		transaction: jest.fn().mockImplementation((cb) => {
+			const tx = {
+				execute: jest.fn(), // Add execute function
+				executeSql: jest.fn(),
+			};
+			cb(tx);
+		}),
+	}),
+}));
 
 describe('OpenAiServiceProvider', () => {
 	it('provides the OpenAiService context to its children', () => {
@@ -21,9 +37,11 @@ describe('OpenAiServiceProvider', () => {
 		};
 
 		render(
-			<OpenAiServiceProvider>
-				<MockChild />
-			</OpenAiServiceProvider>,
+			<DatabaseProvider>
+				<OpenAiServiceProvider>
+					<MockChild />
+				</OpenAiServiceProvider>
+			</DatabaseProvider>,
 		);
 
 		expect(screen.getByText('Mock Child')).toBeTruthy();

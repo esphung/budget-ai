@@ -1,9 +1,10 @@
-import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
-import HomeScreen from './HomeScreen';
 import { TestID } from '@enums/TestID';
 import { useAuthStore } from '@providers/AuthProvider';
 import { DatabaseProvider } from '@providers/DatabaseProvider';
+import { OpenAiServiceProvider } from '@providers/OpenAiServiceProvider';
+import { render } from '@testing-library/react-native';
+import React from 'react';
+import HomeScreen from './HomeScreen';
 
 jest.mock('@providers/AuthProvider', () => ({
 	useAuthStore: jest.fn(),
@@ -20,7 +21,13 @@ jest.mock('@services/DatabaseService', () => ({
 }));
 
 function renderWithProviders(ui: React.ReactElement) {
-	return render(<DatabaseProvider>{ui}</DatabaseProvider>);
+	return render(
+		<DatabaseProvider>
+			<OpenAiServiceProvider>
+				<DatabaseProvider>{ui}</DatabaseProvider>
+			</OpenAiServiceProvider>
+		</DatabaseProvider>,
+	);
 }
 
 describe('HomeScreen', () => {
@@ -34,17 +41,18 @@ describe('HomeScreen', () => {
 		expect(homeScreen).toBeVisible();
 	});
 
-	it('calls logout when the Logout button is pressed', () => {
-		const mockLogout = jest.fn();
-		(useAuthStore as jest.Mock).mockReturnValue({ logout: mockLogout });
+	it('shows the loading view when threadId is null', () => {
+		(useAuthStore as jest.Mock).mockReturnValue({ logout: jest.fn() });
 
-		const { getByTestId } = renderWithProviders(<HomeScreen />);
+		const { getByText } = renderWithProviders(<HomeScreen />);
 
-		// Press the Logout button
-		const logoutButton = getByTestId(TestID.LogoutButton);
-		fireEvent.press(logoutButton);
+		expect(getByText('Loading conversation thread...')).toBeVisible();
+	});
 
-		// Verify that logout was called
-		expect(mockLogout).toHaveBeenCalled();
+	it('shows the loading view when there are no messages', () => {
+		(useAuthStore as jest.Mock).mockReturnValue({ logout: jest.fn() });
+		const { getByText } = renderWithProviders(<HomeScreen />);
+
+		expect(getByText('Loading conversation thread...')).toBeVisible();
 	});
 });

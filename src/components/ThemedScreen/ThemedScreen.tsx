@@ -10,7 +10,10 @@ const ThemedScreen = ({
 	const insets = useSafeAreaInsets();
 	return (
 		<View
-			style={[styles.container, { paddingTop: insets.top }]}
+			style={[
+				styles.container,
+				{ paddingTop: insets.top, paddingBottom: insets.bottom },
+			]}
 			testID={testID}>
 			{children}
 		</View>

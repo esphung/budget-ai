@@ -1,44 +1,24 @@
-import { AIPromptBuilder } from '@services/AIPromptBuilder';
-import { ApiClient } from '@services/ApiClient';
-import type { AssistantResponse } from '../types/AssistantResponse';
-import { chatLog } from '@utils/logUtils';
-import { DB, Scalar } from '@op-engineering/op-sqlite';
-import { AIConversationRepository } from '@repositories/AIConversationRepository';
-import { randomId } from '@utils/randomIdUtils';
+import { executeTransaction } from '@db/executeTransaction';
 import { AIAction } from '@db/types';
+import { DB } from '@op-engineering/op-sqlite';
+import { AIConversationRepository } from '@repositories/AIConversationRepository';
+import { ApiClient } from '@services/ApiClient';
+import { chatLog } from '@utils/logUtils';
+import { randomId } from '@utils/randomIdUtils';
 import { Alert } from 'react-native';
-
-export type ChatResponse = { data: { text: { content: string } } };
-
-async function executeTransaction(
-	db: DB,
-	queries: Array<{ sql: string; args: Scalar[] }>,
-) {
-	await db.transaction(async (tx) => {
-		for (const { sql, args } of queries) {
-			await tx.execute(sql, args);
-		}
-	});
-}
+import type { AssistantResponse } from '../types/AssistantResponse';
 
 export class OpenAiService {
-	private aiPromptBuilder: AIPromptBuilder;
+	private api: ApiClient;
+	private db: DB;
 
-	constructor(private apiClient: ApiClient) {
-		this.aiPromptBuilder = new AIPromptBuilder();
-	}
-
-	async getLaunchGreeting(): Promise<ChatResponse> {
-		const prompt = this.aiPromptBuilder.launchGreetingPrompt('Eric');
-
-		const response = await this.apiClient.openai.generateText(
-			prompt.instructions,
-		);
-		return response;
+	constructor(api: ApiClient, db: DB) {
+		this.api = api;
+		this.db = db;
 	}
 
 	async applyAIAction(input: {
-		db: DB;
+		// db: DB;
 		threadId: string;
 		action: AIAction;
 	}) {
@@ -47,7 +27,8 @@ export class OpenAiService {
 			actionType: input.action.actionType,
 			threadId: input.threadId,
 		});
-		const repo = new AIConversationRepository(input.db);
+
+		const repo = new AIConversationRepository(this.db);
 
 		try {
 			switch (input.action.actionType) {
@@ -62,7 +43,7 @@ export class OpenAiService {
 					const transactionId = randomId();
 					const now = new Date().toISOString();
 
-					await executeTransaction(input.db, [
+					await executeTransaction(this.db, [
 						{
 							sql: `
 					INSERT INTO transactions (
@@ -176,7 +157,7 @@ export class OpenAiService {
 
 		for (const action of actions) {
 			await this.applyAIAction({
-				db: input.db,
+				// db: input.db,
 				threadId: input.threadId,
 				action,
 			});
@@ -283,9 +264,7 @@ export class OpenAiService {
 			messagesLength: params.messages.length,
 		});
 
-		const response = await this.apiClient.openai.sendMessage(
-			params.messages,
-		);
+		const response = await this.api.openai.sendMessage(params.messages);
 
 		const assistantResponse: AssistantResponse = JSON.parse(
 			response.data.message,

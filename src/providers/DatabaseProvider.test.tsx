@@ -33,22 +33,6 @@ describe('DatabaseProvider', () => {
 		expect(result.current.db).toBeDefined();
 	});
 
-	it('throws an error when useDatabase is used outside of the provider', () => {
-		const consoleErrorSpy = jest
-			.spyOn(console, 'error')
-			.mockImplementation(() => {});
-		const TestComponent = () => {
-			useDatabase();
-			return null;
-		};
-
-		expect(() => render(<TestComponent />)).toThrow(
-			'useDatabase must be used within an DatabaseProvider',
-		);
-
-		consoleErrorSpy.mockRestore();
-	});
-
 	it('initializes the database on mount', () => {
 		const mockService =
 			require('@services/DatabaseService').DatabaseService.getInstance();

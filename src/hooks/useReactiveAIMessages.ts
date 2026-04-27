@@ -3,14 +3,15 @@ import { DB } from '@op-engineering/op-sqlite';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
 import { useEffect, useState } from 'react';
 
-export function useReactiveAIMessages(db: DB, threadId: string | null) {
+export function useReactiveAIMessages(
+	db: DB | null,
+	threadId: string | null,
+) {
 	const [messages, setMessages] = useState<AIMessage[]>([]);
 
 	useEffect(() => {
-		if (!threadId) {
-			throw new Error(
-				'[useReactiveAIMessages] threadId is required to fetch messages',
-			);
+		if (!db || !threadId) {
+			return;
 		}
 
 		const repo = new AIConversationRepository(db);
@@ -45,5 +46,5 @@ export function useReactiveAIMessages(db: DB, threadId: string | null) {
 		};
 	}, [db, threadId]);
 
-	return messages;
+	return [...messages];
 }

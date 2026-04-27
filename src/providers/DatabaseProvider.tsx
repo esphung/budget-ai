@@ -5,6 +5,7 @@ import { dbLog } from '@utils/logUtils';
 import React, {
 	createContext,
 	ReactNode,
+	useCallback,
 	useContext,
 	useEffect,
 	useState,
@@ -12,14 +13,10 @@ import React, {
 import { DevSettings } from 'react-native';
 
 // Define the shape of the context state
-type OpSqlDbContextProps = {
-	db: DB | null;
-};
+type DatabaseStore = { db: DB | null };
 
 // Create the context
-const OpSqlDbContext = createContext<OpSqlDbContextProps | undefined>(
-	undefined,
-);
+const DatabaseContext = createContext<DatabaseStore | undefined>(undefined);
 
 const service = DatabaseService.getInstance('budgetai.db', 'default');
 
@@ -28,36 +25,37 @@ export const DatabaseProvider: React.FC<{
 }> = ({ children }) => {
 	const [db, setDb] = useState<DB | null>(null);
 
-	// listen for db updates and run migrations when it becomes available
-	useEffect(() => {
-		const updateDb = async (update: DB | null) => {
-			dbLog.debug('Received DB update');
-
-			// update the db even if it's null so that consumers can react
-			setDb(update);
-
+	const handleDbUpdate = useCallback(async (update: DB | null) => {
+		dbLog.debug('Received DB update in provider');
+		setDb(update);
+		try {
 			// if the update is null, it means the db is not ready yet, so we shouldn't run migrations
 			if (!update) return;
-			try {
-				await runAIMigrations(update);
-				dbLog.debug('DB migrations complete');
-			} catch (error) {
-				dbLog.error('Failed to run migrations:', error);
-			}
+			await runAIMigrations(update);
+			dbLog.debug('DB migrations complete');
+		} catch (error) {
+			dbLog.error('Failed to run migrations:', error);
+		}
+	}, []);
+
+	// listen for db updates and run migrations when it becomes available
+	useEffect(() => {
+		const onUpdate = async (update: DB | null) => {
+			return handleDbUpdate(update);
 		};
 
-		service.addListener(updateDb);
+		// subscribe to database updates
+		service.addListener(onUpdate);
+
+		// initialize the database
+		service.init();
 
 		return () => {
-			service.removeListener(updateDb);
+			service.removeListener(onUpdate);
 		};
-	}, []);
+	}, [handleDbUpdate]);
 
-	// initialize the database on mount
-	useEffect(() => {
-		service.init();
-	}, []);
-
+	// add debug menu item to show database debug info - only in dev mode
 	useEffect(() => {
 		if (__DEV__) {
 			DevSettings.addMenuItem(
@@ -73,19 +71,23 @@ export const DatabaseProvider: React.FC<{
 	}, []);
 
 	return (
-		<OpSqlDbContext.Provider value={{ db }}>
+		<DatabaseContext.Provider value={{ db }}>
 			{children}
-		</OpSqlDbContext.Provider>
+		</DatabaseContext.Provider>
 	);
 };
 
 // Custom hook for consuming the context
-export const useDatabase = (): OpSqlDbContextProps => {
-	const context = useContext(OpSqlDbContext);
-	if (!context) {
-		throw new Error(
-			'useDatabase must be used within an DatabaseProvider',
-		);
+export function useDatabase<T = DatabaseStore>(
+	selector?: (store: DatabaseStore) => T,
+	// if selector is provided, return selected value, otherwise return entire store
+): T {
+	const ctx: DatabaseStore | undefined = useContext(DatabaseContext);
+	if (!ctx) {
+		throw new Error('Missing DatabaseProvider');
 	}
-	return context;
-};
+	if (selector) {
+		return selector(ctx);
+	}
+	return ctx as unknown as T;
+}
