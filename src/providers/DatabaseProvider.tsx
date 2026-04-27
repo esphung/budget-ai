@@ -80,11 +80,11 @@ export const DatabaseProvider: React.FC<{
 };
 
 // Custom hook for consuming the context
-export const useOpSqlDb = (): OpSqlDbContextProps => {
+export const useDatabase = (): OpSqlDbContextProps => {
 	const context = useContext(OpSqlDbContext);
 	if (!context) {
 		throw new Error(
-			'useOpSqlDb must be used within an DatabaseProvider',
+			'useDatabase must be used within an DatabaseProvider',
 		);
 	}
 	return context;

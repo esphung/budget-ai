@@ -104,6 +104,7 @@ Rules:
 													type: 'string',
 													enum: [
 														'save_transaction',
+														'navigate',
 													],
 												},
 												payload: {
@@ -135,12 +136,19 @@ Rules:
 																'null',
 															],
 														},
+														screen: {
+															type: [
+																'string',
+																'null',
+															],
+														},
 													},
 													required: [
 														'amount',
 														'merchant',
 														'category',
 														'date',
+														'screen',
 													],
 												},
 											},

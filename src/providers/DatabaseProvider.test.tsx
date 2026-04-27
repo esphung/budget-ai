@@ -1,4 +1,4 @@
-import { DatabaseProvider, useOpSqlDb } from '@providers/DatabaseProvider';
+import { DatabaseProvider, useDatabase } from '@providers/DatabaseProvider';
 import { render, renderHook } from '@testing-library/react-native';
 import React from 'react';
 
@@ -28,22 +28,22 @@ describe('DatabaseProvider', () => {
 			<DatabaseProvider>{children}</DatabaseProvider>
 		);
 
-		const { result } = renderHook(() => useOpSqlDb(), { wrapper });
+		const { result } = renderHook(() => useDatabase(), { wrapper });
 
 		expect(result.current.db).toBeDefined();
 	});
 
-	it('throws an error when useOpSqlDb is used outside of the provider', () => {
+	it('throws an error when useDatabase is used outside of the provider', () => {
 		const consoleErrorSpy = jest
 			.spyOn(console, 'error')
 			.mockImplementation(() => {});
 		const TestComponent = () => {
-			useOpSqlDb();
+			useDatabase();
 			return null;
 		};
 
 		expect(() => render(<TestComponent />)).toThrow(
-			'useOpSqlDb must be used within an DatabaseProvider',
+			'useDatabase must be used within an DatabaseProvider',
 		);
 
 		consoleErrorSpy.mockRestore();

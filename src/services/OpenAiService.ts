@@ -6,6 +6,7 @@ import { DB, Scalar } from '@op-engineering/op-sqlite';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
 import { randomId } from '@utils/randomIdUtils';
 import { AIAction } from '@db/types';
+import { Alert } from 'react-native';
 
 export type ChatResponse = { data: { text: { content: string } } };
 
@@ -100,6 +101,36 @@ export class OpenAiService {
 						metadata: {
 							action_type: 'save_transaction',
 							transaction_id: transactionId,
+						},
+					});
+
+					break;
+				}
+
+				case 'navigate': {
+					// Example of another action type
+					const payload = input.action.payload as {
+						screen: string;
+					};
+
+					// Here you would implement navigation logic, e.g. by saving a message that the frontend listens for
+					Alert.alert(`Navigate to ${payload.screen}`);
+
+					await repo.markActionApplied({
+						actionId: input.action.id,
+						result: {
+							navigated_to: payload.screen,
+						},
+					});
+
+					await repo.saveMessage({
+						threadId: input.threadId,
+						role: 'tool',
+						messageType: 'action_result',
+						content: `Navigate to ${payload.screen}`,
+						metadata: {
+							action_type: 'navigate',
+							screen: payload.screen,
 						},
 					});
 

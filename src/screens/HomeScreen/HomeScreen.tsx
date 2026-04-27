@@ -5,15 +5,52 @@ import { TestID } from '@enums/TestID';
 import { useReactiveAIMessages } from '@hooks/useReactiveAIMessages';
 import { DB } from '@op-engineering/op-sqlite';
 import { useAuthStore } from '@providers/AuthProvider';
-import { useOpSqlDb } from '@providers/DatabaseProvider';
+import { useDatabase } from '@providers/DatabaseProvider';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
 import { benchmarkService } from '@services/BenchmarkService';
 import { homeScreenLog } from '@utils/logUtils';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useOpenAiService } from '@providers/OpenAiServiceProvider';
+import { AIMessage } from '@db/types';
 
 const SHOW_BORDERS = true;
+
+// sort in descending order by createdAt
+const sortMessagesByCreatedAt = (messages: AIMessage[]) => {
+	return messages.sort((a, b) => {
+		if (!a.createdAt) return 1;
+		if (!b.createdAt) return -1;
+		return (
+			new Date(b.createdAt).getTime() -
+			new Date(a.createdAt).getTime()
+		);
+	});
+};
+
+const MessageCard = ({ item }: { item: AIMessage }) => {
+	const isUser = item.role === 'user';
+	return (
+		<View
+			style={{
+				marginBottom: 12,
+				alignSelf: isUser ? 'flex-end' : 'flex-start',
+				backgroundColor: isUser ? '#007AFF' : '#E5E5EA',
+				padding: 12,
+				borderRadius: 16,
+				maxWidth: '75%',
+				shadowColor: '#000',
+				shadowOffset: { width: 0, height: 1 },
+				shadowOpacity: 0.2,
+				shadowRadius: 1.41,
+				elevation: 2,
+			}}>
+			<Text style={{ color: isUser ? '#FFFFFF' : '#000000' }}>
+				{item.content}
+			</Text>
+		</View>
+	);
+};
 
 const AiChatView = ({ db, threadId }: { db: DB; threadId: string }) => {
 	const [text, setText] = useState<string>('');
@@ -39,6 +76,11 @@ const AiChatView = ({ db, threadId }: { db: DB; threadId: string }) => {
 		}
 	}, [text, db, threadId, aiService]);
 
+	const transformedMessages = useMemo(() => {
+		const sorted = sortMessagesByCreatedAt(messages);
+		return sorted;
+	}, [messages]);
+
 	// TODO: handle loading states and errors in the UI
 	if (!threadId) {
 		return (
@@ -57,23 +99,10 @@ const AiChatView = ({ db, threadId }: { db: DB; threadId: string }) => {
 		<View style={{ flex: 1, padding: 16 }}>
 			<FlatList
 				ref={flatListRef}
-				data={[...messages]}
+				data={[...transformedMessages]}
 				keyExtractor={(item) => item.id}
-				renderItem={({ item }) => (
-					<View style={{ marginBottom: 12 }}>
-						<Text style={{ fontWeight: 'bold' }}>
-							{item.role} / {item.messageType}
-						</Text>
-						<Text>{item.content}</Text>
-					</View>
-				)}
-				onContentSizeChange={() => {
-					setTimeout(() => {
-						flatListRef.current?.scrollToEnd({
-							animated: true,
-						});
-					}, 150);
-				}}
+				inverted
+				renderItem={({ item }) => <MessageCard item={item} />}
 			/>
 			<TextInput
 				value={text}
@@ -93,7 +122,7 @@ const AiChatView = ({ db, threadId }: { db: DB; threadId: string }) => {
 
 const HomeScreen = () => {
 	const { logout } = useAuthStore();
-	const { db } = useOpSqlDb();
+	const { db } = useDatabase();
 
 	const [threadId, setThreadId] = useState<string | null>(null);
 
