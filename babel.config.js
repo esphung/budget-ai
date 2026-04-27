@@ -25,6 +25,7 @@ module.exports = {
 					'@mocks': './src/mocks',
 					'@repositories': './src/repositories',
 					'@db': './src/db',
+					types: './src/types',
 				},
 			},
 		],

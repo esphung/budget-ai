@@ -4,7 +4,7 @@ import axios, {
 	CanceledError,
 	InternalAxiosRequestConfig,
 } from 'axios';
-import { AssistantResponse } from '../types/AssistantResponse';
+import { AssistantResponse } from 'types/AssistantResponse';
 
 export interface ApiError {
 	status: number;

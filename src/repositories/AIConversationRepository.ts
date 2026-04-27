@@ -6,7 +6,7 @@ import {
 	AIMessageType,
 } from '@db/types';
 import { DB, Scalar } from '@op-engineering/op-sqlite';
-import { randomId } from '@utils/randomIdUtils';
+import { generateUniqueId } from '@utils/randomIdUtils';
 
 const nowIso = () => new Date().toISOString();
 
@@ -46,7 +46,7 @@ export class AIConversationRepository {
 			return existing[0].id;
 		}
 
-		const id = randomId();
+		const id = generateUniqueId('thrd_');
 		const now = nowIso();
 
 		await this.executeTransaction([
@@ -75,7 +75,7 @@ export class AIConversationRepository {
 		metadata?: Record<string, unknown> | null;
 		model?: string | null;
 	}) {
-		const id = randomId();
+		const id = generateUniqueId('msg_');
 		const now = nowIso();
 
 		await this.db.transaction(async (tx) => {
@@ -124,7 +124,7 @@ export class AIConversationRepository {
 		actionType: string;
 		payload: Record<string, unknown>;
 	}) {
-		const id = randomId();
+		const id = generateUniqueId('act_');
 		const now = nowIso();
 
 		await this.db.transaction(async (tx) => {

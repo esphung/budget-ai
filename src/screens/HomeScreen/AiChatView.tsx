@@ -1,7 +1,6 @@
 import MessageList from '@components/Chat/MessageList';
 import PrimaryButton from '@components/PrimaryButton';
 import { AIMessage } from '@db/types';
-import { DB } from '@op-engineering/op-sqlite';
 import { useOpenAiService } from '@providers/OpenAiServiceProvider';
 import LoadingView from '@screens/HomeScreen/LoadingView';
 import { homeScreenLog } from '@utils/logUtils';
@@ -9,11 +8,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { TextInput, View } from 'react-native';
 
 const AiChatView = ({
-	db,
 	threadId,
 	messages,
 }: {
-	db: DB | null;
 	threadId: string | null;
 	messages: AIMessage[];
 }) => {
@@ -25,31 +22,25 @@ const AiChatView = ({
 		const trimmed = text.trim();
 		if (!trimmed) return;
 		setText('');
-		if (threadId && db) {
+		if (threadId && aiService) {
 			await aiService.sendMessageAndApplyActions({
-				db: db,
 				threadId: threadId,
 				userText: trimmed,
 			});
 		}
-	}, [text, db, threadId, aiService]);
+	}, [text, threadId, aiService]);
 
 	const contentView = useMemo(() => {
 		if (!threadId) {
 			return <LoadingView message="Loading conversation thread..." />;
 		}
-
-		if (![...(messages || [])].length) {
-			return <LoadingView message="Waiting for messages..." />;
-		}
-
-		if (!db) {
-			return <LoadingView message="Connecting to database..." />;
-		}
-
 		return (
 			<View style={{ flex: 1 }}>
-				<MessageList messages={[...(messages || [])]} />
+				{![...(messages || [])].length ? (
+					<LoadingView message="No messages yet." />
+				) : (
+					<MessageList messages={[...(messages || [])]} />
+				)}
 				<TextInput
 					value={text}
 					onChangeText={setText}
@@ -65,7 +56,7 @@ const AiChatView = ({
 				<PrimaryButton title="Send" onPress={onSend} width="100%" />
 			</View>
 		);
-	}, [db, messages, onSend, text, threadId]);
+	}, [messages, onSend, text, threadId]);
 
 	return <View style={{ flex: 1, padding: 16 }}>{contentView}</View>;
 };

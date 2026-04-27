@@ -14,8 +14,6 @@ const HomeScreen = () => {
 	// hooks
 	const { logout } = useAuthStore();
 	const { db } = useDatabase();
-
-	// state
 	const { threadId } = useLoadThread(db);
 	const reactiveAiMessages = useReactiveAIMessages(db, threadId);
 
@@ -41,7 +39,7 @@ const HomeScreen = () => {
 
 	return (
 		<ThemedScreen testID={TestID.HomeScreen}>
-			<AiChatView threadId={threadId} db={db} messages={messages} />
+			<AiChatView threadId={threadId} messages={messages} />
 		</ThemedScreen>
 	);
 };

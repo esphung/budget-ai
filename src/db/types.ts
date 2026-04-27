@@ -32,3 +32,5 @@ export type AIAction = {
 	createdAt: string;
 	appliedAt?: string | null;
 };
+
+export type Message = { role: string; content: string };

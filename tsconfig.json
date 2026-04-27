@@ -18,7 +18,8 @@
 			"@providers/*": ["./src/providers/*"],
 			"@mocks/*": ["./src/mocks/*"],
 			"@repositories/*": ["./src/repositories/*"],
-			"@db/*": ["./src/db/*"]
+			"@db/*": ["./src/db/*"],
+			"types/*": ["./src/types/*"]
 		}
 	},
 	"include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "*.json"],
