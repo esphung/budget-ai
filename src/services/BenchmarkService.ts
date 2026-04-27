@@ -9,7 +9,7 @@ export type BenchmarkResult = {
 	elapsedTimeMs: number; // in milliseconds
 };
 
-export type BenchmarkLabel = 'bootstrap';
+export type BenchmarkLabel = 'bootstrap' | 'launchGreeting';
 
 function roundMs(ms: number): number {
 	return Math.round(ms);

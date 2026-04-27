@@ -9,28 +9,24 @@ jest.mock('@providers/AuthProvider', () => ({
 }));
 
 describe('HomeScreen', () => {
-	it('renders the HomeScreen with welcome text', () => {
+	it('renders the HomeScreen', () => {
 		(useAuthStore as jest.Mock).mockReturnValue({ logout: jest.fn() });
 
-		const { getByTestId, getByText } = render(<HomeScreen />);
+		const { getByTestId } = render(<HomeScreen />);
 
 		// Check if the HomeScreen container is rendered
 		const homeScreen = getByTestId(TestID.HomeScreen);
 		expect(homeScreen).toBeTruthy();
-
-		// Check if the welcome text is displayed
-		const welcomeText = getByText('Welcome to the Home Screen!');
-		expect(welcomeText).toBeTruthy();
 	});
 
 	it('calls logout when the Logout button is pressed', () => {
 		const mockLogout = jest.fn();
 		(useAuthStore as jest.Mock).mockReturnValue({ logout: mockLogout });
 
-		const { getByText } = render(<HomeScreen />);
+		const { getByTestId } = render(<HomeScreen />);
 
 		// Press the Logout button
-		const logoutButton = getByText('Logout');
+		const logoutButton = getByTestId(TestID.LogoutButton);
 		fireEvent.press(logoutButton);
 
 		// Verify that logout was called

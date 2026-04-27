@@ -1,5 +1,6 @@
 import { TestID } from '@enums/TestID';
 import RootStack from '@navigation/RootStack/RootStack';
+import { ApiClientProvider } from '@providers/ApiClientProvider';
 import { AuthProvider } from '@providers/AuthProvider';
 import { StorageService } from '@services/StorageService';
 import { createAuthStore } from '@stores/AuthStore';
@@ -35,7 +36,7 @@ jest.mock('@services/StorageService', () => {
 	};
 });
 
-function renderWithAuthProvider(
+function renderWithProviders(
 	ui: React.ReactElement,
 	token: string | null = null,
 ) {
@@ -48,18 +49,22 @@ function renderWithAuthProvider(
 		actions.setToken(token);
 	}
 
-	return render(<AuthProvider store={store}>{ui}</AuthProvider>);
+	return render(
+		<ApiClientProvider apiClient={jest.fn() as any}>
+			<AuthProvider store={store}>{ui}</AuthProvider>
+		</ApiClientProvider>,
+	);
 }
 
 describe('RootStack', () => {
 	it('renders AuthStack when token is null', () => {
-		const { getByTestId } = renderWithAuthProvider(<RootStack />);
+		const { getByTestId } = renderWithProviders(<RootStack />);
 		const authStack = getByTestId(TestID.AuthStack);
 		expect(authStack).toBeVisible();
 	});
 
 	it('renders AppStack when persisted token exists', async () => {
-		const { getByTestId } = renderWithAuthProvider(
+		const { getByTestId } = renderWithProviders(
 			<RootStack />,
 			'mock-token',
 		);

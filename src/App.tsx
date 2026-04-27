@@ -3,6 +3,7 @@ import { useDevMenu } from '@hooks/useDevMenu';
 import RootStack from '@navigation/RootStack/RootStack';
 import { ApiClientProvider } from '@providers/ApiClientProvider';
 import { AuthProvider } from '@providers/AuthProvider';
+import { FeatureFlagsProvider } from '@providers/FeatureFlagsProvider';
 import { ApiClient } from '@services/ApiClient';
 import { createAuthStore } from '@stores/AuthStore';
 import React from 'react';
@@ -21,9 +22,12 @@ const App = () => {
 	return (
 		<SafeAreaProvider>
 			<ApiClientProvider apiClient={apiClient}>
-				<AuthProvider store={authStore}>
-					<RootStack />
-				</AuthProvider>
+				<FeatureFlagsProvider
+					initialFlags={{ newChatEnabled: true }}>
+					<AuthProvider store={authStore}>
+						<RootStack />
+					</AuthProvider>
+				</FeatureFlagsProvider>
 			</ApiClientProvider>
 		</SafeAreaProvider>
 	);

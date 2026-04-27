@@ -2,15 +2,15 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import LoginScreen from './LoginScreen';
 import { TestID } from '@enums/TestID';
-import { useAuthStoreWithSelector } from '@providers/AuthProvider';
+import { useAuthStore } from '@providers/AuthProvider';
 
 jest.mock('@providers/AuthProvider', () => ({
-	useAuthStoreWithSelector: jest.fn(),
+	useAuthStore: jest.fn(),
 }));
 
 describe('LoginScreen', () => {
 	it('renders the LoginScreen with welcome text', () => {
-		(useAuthStoreWithSelector as jest.Mock).mockReturnValue(jest.fn());
+		(useAuthStore as jest.Mock).mockReturnValue(jest.fn());
 
 		const { getByTestId, getByText } = render(<LoginScreen />);
 
@@ -19,15 +19,13 @@ describe('LoginScreen', () => {
 		expect(loginScreen).toBeTruthy();
 
 		// Check if the welcome text is displayed
-		const welcomeText = getByText('Welcome to the Login Screen!');
+		const welcomeText = getByText('Welcome to BudgetAI!');
 		expect(welcomeText).toBeTruthy();
 	});
 
 	it('calls setToken when the Login button is pressed', () => {
 		const mockSetToken = jest.fn();
-		(useAuthStoreWithSelector as jest.Mock).mockReturnValue(
-			mockSetToken,
-		);
+		(useAuthStore as jest.Mock).mockReturnValue(mockSetToken);
 
 		const { getByText } = render(<LoginScreen />);
 

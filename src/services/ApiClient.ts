@@ -111,4 +111,19 @@ export class ApiClient {
 				),
 			),
 	};
+
+	openai = {
+		generateText: (
+			content: string,
+			max_completion_tokens?: number,
+			signal?: AbortSignal,
+		): Promise<{ data: { text: { content: string } } }> =>
+			this.request(() =>
+				this.http.post<{ data: { text: { content: string } } }>(
+					'/openai/generate-text',
+					{ content, max_completion_tokens },
+					{ signal },
+				),
+			),
+	};
 }

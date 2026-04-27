@@ -1,6 +1,8 @@
 import { TestID } from '@enums/TestID';
 import AppStack from '@navigation/AppStack/AppStack';
 import { AuthProvider } from '@providers/AuthProvider';
+import { FeatureFlagsProvider } from '@providers/FeatureFlagsProvider';
+import { OpenAiServiceProvider } from '@providers/OpenAiServiceProvider';
 import { createAuthStore } from '@stores/AuthStore';
 import { render } from '@testing-library/react-native';
 import React from 'react';
@@ -26,14 +28,27 @@ jest.mock('@screens/HomeScreen/HomeScreen', () => {
 });
 
 const renderWithProviders = (ui: React.ReactElement) => {
+	const mockApiClient = {
+		openai: {
+			generateText: jest.fn().mockResolvedValue({
+				data: { text: { content: 'Welcome to BudgetAI!' } },
+			}),
+		},
+	} as any; // Mock API client, can be expanded with specific methods if needed
 	const authStore = createAuthStore(); // Create a real auth store with the storage instance
-	return render(<AuthProvider store={authStore}>{ui}</AuthProvider>);
+	return render(
+		<FeatureFlagsProvider>
+			<OpenAiServiceProvider apiClient={mockApiClient}>
+				<AuthProvider store={authStore}>{ui}</AuthProvider>
+			</OpenAiServiceProvider>
+		</FeatureFlagsProvider>,
+	);
 };
 
 describe('AppStack', () => {
 	it('renders HomeScreen', () => {
 		const { getByTestId } = renderWithProviders(<AppStack />);
 		const homeScreen = getByTestId(TestID.HomeScreen);
-		expect(homeScreen).toBeTruthy();
+		expect(homeScreen).toBeVisible();
 	});
 });

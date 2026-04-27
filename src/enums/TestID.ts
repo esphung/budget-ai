@@ -6,4 +6,5 @@ export enum TestID {
 	AppStack = 'app-stack',
 	TestScreen = 'test-screen',
 	HomeScreen = 'home-screen',
+	LogoutButton = 'logout-button',
 }

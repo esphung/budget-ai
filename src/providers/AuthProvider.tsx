@@ -60,16 +60,16 @@ export function AuthProvider({
 	);
 }
 
-export function useAuthStoreWithSelector<T>(
-	selector: (store: AuthStore) => T,
+export function useAuthStore<T = AuthStore>(
+	selector?: (store: AuthStore) => T,
+	// if selector is provided, return selected value, otherwise return entire store
 ): T {
-	return selector(useAuthStore());
-}
-
-export function useAuthStore() {
-	const ctx = useContext(AuthContext);
+	const ctx: AuthStore | null = useContext(AuthContext);
 	if (!ctx) {
 		throw new Error('Missing AuthProvider');
 	}
-	return ctx;
+	if (selector) {
+		return selector(ctx);
+	}
+	return ctx as unknown as T;
 }
