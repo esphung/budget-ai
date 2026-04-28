@@ -1,6 +1,7 @@
 import cors from 'cors';
-import express, { ErrorRequestHandler, Request, Response } from 'express';
-import { openAiRouter, plaidRouter } from './routes';
+import express, { Request, Response } from 'express';
+import { jsonErrorHandler } from './middleware/jsonErrorHandler';
+import { openAiRouter, plaidRouter, publicRouter } from './routes';
 import { env } from './services/env';
 
 const app = express();
@@ -16,27 +17,9 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // ── Routes will be registered here ───────────────────────────
+app.use('/', publicRouter);
 app.use('/plaid', plaidRouter);
 app.use('/openai', openAiRouter);
-
-const jsonErrorHandler: ErrorRequestHandler = (err, _req, res, next) => {
-	if (
-		err instanceof SyntaxError &&
-		'body' in err &&
-		err.message.toLowerCase().includes('json')
-	) {
-		res.status(400).json({
-			errorMessage: 'Malformed JSON body',
-			errorDetails:
-				'Request body must be valid JSON. Example: { "messages": [{ "role": "system", "content": "Say hello" }] }',
-			data: null,
-			status: 400,
-		});
-		return;
-	}
-
-	next(err);
-};
 
 app.use(jsonErrorHandler);
 

@@ -1,7 +1,9 @@
 import { ApiClient } from '@services/ApiClient';
 import React, { createContext } from 'react';
 
-const apiClient = new ApiClient('http://localhost:3001');
+const BASE_URL = 'https://budget-ai-backend.onrender.com';
+const apiClient = new ApiClient(BASE_URL);
+// const apiClient = new ApiClient('http://localhost:3001');
 
 const ApiClientContext = createContext<{ api: ApiClient } | null>(null);
 
