@@ -27,7 +27,7 @@ const AiChatView = ({
 }) => {
 	const [text, setText] = useState<string>('');
 	const keyboardShift = useRef(new Animated.Value(0)).current;
-	const { colors } = useTheme();
+	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { aiService } = useOpenAiService();
 	const checkHealth = useApiClient((api) => api.health.check);
@@ -35,7 +35,8 @@ const AiChatView = ({
 
 	const animateKeyboardShift = useCallback(
 		(keyboardHeight: number, duration?: number) => {
-			const offset = Math.max(0, keyboardHeight - spacing.lg);
+			// const offset = Math.max(0, keyboardHeight - spacing.lg);
+			const offset = Math.max(0, keyboardHeight - spacing.lg - 80);
 			const durationMs =
 				typeof duration === 'number'
 					? duration < 10
@@ -146,6 +147,8 @@ const AiChatView = ({
 						blurOnSubmit={true}
 						returnKeyType="send"
 						submitBehavior="blurAndSubmit"
+						keyboardAppearance={isDarkMode ? 'dark' : 'light'}
+						testID="AiChatView-Input"
 					/>
 					<PrimaryButton
 						title="Send"
@@ -156,22 +159,23 @@ const AiChatView = ({
 			</View>
 		);
 	}, [
-		colors.neutral.placeholder,
-		messages,
-		onSend,
-		styles.composer,
+		threadId,
 		styles.content,
-		styles.input,
 		styles.messageListContainer,
-		styles.statusDot,
-		styles.statusDotOffline,
-		styles.statusDotOnline,
+		styles.composer,
 		styles.statusRow,
+		styles.statusDot,
+		styles.statusDotOnline,
+		styles.statusDotOffline,
 		styles.statusText,
 		styles.statusTextOffline,
-		text,
-		threadId,
+		styles.input,
+		messages,
 		backendStatus,
+		text,
+		colors.neutral.placeholder,
+		onSend,
+		isDarkMode,
 	]);
 
 	return (
