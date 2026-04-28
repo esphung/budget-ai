@@ -30,6 +30,10 @@ export interface ExchangePublicTokenResponse {
 	accessToken: string;
 }
 
+export interface HealthCheckResponse {
+	status: string;
+}
+
 function normalizeError(err: unknown): ApiError {
 	if (err instanceof CanceledError) {
 		return { status: 0, message: 'Request cancelled', cause: err };
@@ -80,6 +84,13 @@ export class ApiClient extends BaseService {
 	constructor(baseUrl: string) {
 		super(baseUrl);
 	}
+
+	readonly health = {
+		check: (signal?: AbortSignal): Promise<HealthCheckResponse> =>
+			this.request(() =>
+				this.http.get<HealthCheckResponse>('/health', { signal }),
+			),
+	};
 
 	// ── Plaid ─────────────────────────────────────────────────────────────────
 
