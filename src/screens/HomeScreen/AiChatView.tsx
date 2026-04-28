@@ -8,8 +8,9 @@ import { useApiClient } from '@providers/ApiClientProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { useOpenAiService } from '@providers/OpenAiServiceProvider';
 import { AppColors, radius, spacing, typography } from '@theme/tokens';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+	Animated,
 	Keyboard,
 	Platform,
 	StyleSheet,
@@ -25,12 +26,31 @@ const AiChatView = ({
 	messages: AIMessage[];
 }) => {
 	const [text, setText] = useState<string>('');
-	const [keyboardHeight, setKeyboardHeight] = useState(0);
+	const keyboardShift = useRef(new Animated.Value(0)).current;
 	const { colors } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { aiService } = useOpenAiService();
 	const checkHealth = useApiClient((api) => api.health.check);
 	const { backendStatus } = useBackendHealth(checkHealth);
+
+	const animateKeyboardShift = useCallback(
+		(keyboardHeight: number, duration?: number) => {
+			const offset = Math.max(0, keyboardHeight - spacing.lg);
+			const durationMs =
+				typeof duration === 'number'
+					? duration < 10
+						? Math.round(duration * 1000)
+						: Math.round(duration)
+					: 220;
+
+			Animated.timing(keyboardShift, {
+				toValue: -offset,
+				duration: durationMs,
+				useNativeDriver: true,
+			}).start();
+		},
+		[keyboardShift],
+	);
 
 	useEffect(() => {
 		const showEvent =
@@ -41,18 +61,24 @@ const AiChatView = ({
 		const showSubscription = Keyboard.addListener(
 			showEvent,
 			(event) => {
-				setKeyboardHeight(event.endCoordinates?.height ?? 0);
+				animateKeyboardShift(
+					event.endCoordinates?.height ?? 0,
+					event.duration,
+				);
 			},
 		);
-		const hideSubscription = Keyboard.addListener(hideEvent, () => {
-			setKeyboardHeight(0);
-		});
+		const hideSubscription = Keyboard.addListener(
+			hideEvent,
+			(event) => {
+				animateKeyboardShift(0, event.duration);
+			},
+		);
 
 		return () => {
 			showSubscription?.remove?.();
 			hideSubscription?.remove?.();
 		};
-	}, []);
+	}, [animateKeyboardShift]);
 
 	const onSend = useCallback(async () => {
 		const trimmed = text.trim();
@@ -74,14 +100,11 @@ const AiChatView = ({
 	}, []);
 
 	const contentView = useMemo(() => {
-		const keyboardInset = Math.max(0, keyboardHeight - spacing.lg);
-
 		if (!threadId) {
 			return <LoadingView message="Loading conversation thread..." />;
 		}
 		return (
-			<View
-				style={[styles.content, { paddingBottom: keyboardInset }]}>
+			<View style={styles.content}>
 				{![...(messages || [])].length ? (
 					<LoadingView message="No messages yet." />
 				) : (
@@ -133,7 +156,6 @@ const AiChatView = ({
 			</View>
 		);
 	}, [
-		keyboardHeight,
 		colors.neutral.placeholder,
 		messages,
 		onSend,
@@ -159,7 +181,13 @@ const AiChatView = ({
 			onStartShouldSetResponderCapture={
 				dismissKeyboardOnTouchCapture
 			}>
-			{contentView}
+			<Animated.View
+				style={[
+					styles.animatedContent,
+					{ transform: [{ translateY: keyboardShift }] },
+				]}>
+				{contentView}
+			</Animated.View>
 		</View>
 	);
 };
@@ -171,6 +199,9 @@ const createStyles = (colors: AppColors) =>
 			paddingHorizontal: spacing.lg - 2,
 			paddingTop: spacing.lg - 2,
 			paddingBottom: spacing.md + 1,
+		},
+		animatedContent: {
+			flex: 1,
 		},
 		content: {
 			flex: 1,
