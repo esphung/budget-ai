@@ -7,4 +7,5 @@ export enum TestID {
 	TestScreen = 'test-screen',
 	HomeScreen = 'home-screen',
 	LogoutButton = 'logout-button',
+	SettingsScreen = 'settings-screen',
 }

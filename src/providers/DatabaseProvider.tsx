@@ -1,59 +1,24 @@
-import { runAIMigrations } from '@db/runAIMigrations';
 import { DB } from '@op-engineering/op-sqlite';
-import { DatabaseService } from '@services/DatabaseService';
 import { dbLog } from '@utils/logUtils';
 import React, {
 	createContext,
 	ReactNode,
-	useCallback,
 	useContext,
 	useEffect,
-	useState,
 } from 'react';
 import { DevSettings } from 'react-native';
 
 // Define the shape of the context state
-type DatabaseStore = { db: DB | null };
+type DatabaseStore = { db: DB | null; isInitializing: boolean };
 
 // Create the context
 const DatabaseContext = createContext<DatabaseStore | undefined>(undefined);
 
-const service = DatabaseService.getInstance('budgetai.db', 'default');
-
 export const DatabaseProvider: React.FC<{
 	children: ReactNode;
-}> = ({ children }) => {
-	const [db, setDb] = useState<DB | null>(null);
-
-	const handleDbUpdate = useCallback(async (update: DB | null) => {
-		dbLog.debug('Received DB update in provider');
-		setDb(update);
-		try {
-			// if the update is null, it means the db is not ready yet, so we shouldn't run migrations
-			if (!update) return;
-			await runAIMigrations(update);
-			dbLog.debug('DB migrations complete');
-		} catch (error) {
-			dbLog.error('Failed to run migrations:', error);
-		}
-	}, []);
-
-	// listen for db updates and run migrations when it becomes available
-	useEffect(() => {
-		const onUpdate = async (update: DB | null) => {
-			return handleDbUpdate(update);
-		};
-
-		// subscribe to database updates
-		service.addListener(onUpdate);
-
-		// initialize the database
-		service.init();
-
-		return () => {
-			service.removeListener(onUpdate);
-		};
-	}, [handleDbUpdate]);
+	db: DB | null;
+}> = ({ children, db }) => {
+	const [isInitializing, setIsInitializing] = React.useState(true);
 
 	// add debug menu item to show database debug info - only in dev mode
 	useEffect(() => {
@@ -61,17 +26,26 @@ export const DatabaseProvider: React.FC<{
 			DevSettings.addMenuItem(
 				'Show DatabaseService Debug Info',
 				() => {
-					dbLog.debug(
-						'DatabaseService Debug Info:',
-						service.getDebugInfo(),
-					);
+					const debugInfo = {
+						path: db?.getDbPath() || 'No DB instance',
+						ready: !!db,
+						isInitializing,
+					};
+					dbLog.debug('Print Database Debug:', debugInfo);
 				},
 			);
 		}
-	}, []);
+	}, [db, isInitializing]);
+
+	useEffect(() => {
+		if (!isInitializing) return;
+		if (db) {
+			setIsInitializing(false);
+		}
+	}, [db, isInitializing]);
 
 	return (
-		<DatabaseContext.Provider value={{ db }}>
+		<DatabaseContext.Provider value={{ db, isInitializing }}>
 			{children}
 		</DatabaseContext.Provider>
 	);

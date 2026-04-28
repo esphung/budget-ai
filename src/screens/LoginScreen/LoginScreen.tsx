@@ -1,8 +1,14 @@
-import Panel from '@components/Panel/Panel';
 import PrimaryButton from '@components/PrimaryButton';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import { TestID } from '@enums/TestID';
 import { useAuthStore } from '@providers/AuthProvider';
+import {
+	colors,
+	radius,
+	spacing,
+	shadows,
+	typography,
+} from '@theme/tokens';
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -18,13 +24,18 @@ const LoginScreen = () => {
 	return (
 		<ThemedScreen>
 			<View style={styles.content} testID={TestID.LoginScreen}>
-				<Panel type="north" style={styles.northPanel}>
-					<Text style={styles.text}>Welcome to BudgetAI!</Text>
-				</Panel>
-				<Panel type="center" />
-				<Panel type="south" style={styles.southPanel}>
-					<PrimaryButton title="Login" onPress={handleLogin} />
-				</Panel>
+				<View style={styles.card}>
+					<Text style={styles.eyebrow}>Welcome</Text>
+					<Text style={styles.title}>BudgetAI</Text>
+					<Text style={styles.subtitle}>
+						Welcome to BudgetAI!
+					</Text>
+					<PrimaryButton
+						title="Login"
+						onPress={handleLogin}
+						width="100%"
+					/>
+				</View>
 			</View>
 		</ThemedScreen>
 	);
@@ -33,18 +44,38 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
 	content: {
 		flex: 1,
-	},
-	northPanel: {
 		justifyContent: 'center',
 		alignItems: 'center',
+		paddingHorizontal: spacing.xl,
 	},
-	southPanel: {
-		justifyContent: 'center',
-		alignItems: 'center',
+	card: {
+		width: '100%',
+		maxWidth: 420,
+		backgroundColor: colors.neutral.surface,
+		borderRadius: radius.xxl,
+		paddingVertical: spacing.xxxl,
+		paddingHorizontal: spacing.xxl + 2,
+		...shadows.xl,
+		gap: spacing.md - 2,
+	},
+	eyebrow: {
+		...typography.eyebrow,
+		textTransform: 'uppercase',
+		letterSpacing: 1.2,
+		color: colors.neutral.textTertiary,
+	},
+	title: {
+		...typography.heroTitle,
+		color: colors.neutral.text,
+	},
+	subtitle: {
+		...typography.subtitle,
+		color: colors.neutral.textSecondary,
+		marginBottom: spacing.sm,
 	},
 	text: {
 		fontSize: 18,
-		marginBottom: 20,
+		marginBottom: spacing.xl,
 	},
 });
 

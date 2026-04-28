@@ -1,4 +1,11 @@
 import { StyleSheet } from 'react-native';
+import {
+	colors,
+	radius,
+	spacing,
+	shadows,
+	typography,
+} from '@theme/tokens';
 
 export default StyleSheet.create({
 	container: {
@@ -6,11 +13,33 @@ export default StyleSheet.create({
 		alignItems: 'center',
 	},
 	scrollContent: {
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 20,
-		paddingHorizontal: 20,
-		paddingVertical: 40,
+		alignItems: 'stretch',
+		gap: spacing.lg - 2,
+		paddingHorizontal: spacing.lg,
+		paddingVertical: spacing.lg + 2,
+	},
+	heroCard: {
+		backgroundColor: colors.neutral.surface,
+		borderRadius: radius.lg,
+		paddingHorizontal: spacing.lg + 2,
+		paddingVertical: spacing.xl,
+		gap: spacing.sm,
+		...shadows.md,
+	},
+	eyebrow: {
+		...typography.eyebrow,
+		textTransform: 'uppercase',
+		color: colors.neutral.textTertiary,
+	},
+	heroTitle: {
+		fontSize: 28,
+		fontWeight: '800',
+		color: colors.neutral.text,
+	},
+	heroSubtitle: {
+		...typography.bodyMedium,
+		color: colors.neutral.textSecondary,
+		marginBottom: spacing.sm,
 	},
 	content: {
 		flex: 1,
@@ -57,22 +86,24 @@ export default StyleSheet.create({
 	},
 	insightCard: {
 		width: '100%',
-		backgroundColor: '#fff8e1',
+		backgroundColor: colors.insight,
 		borderWidth: 1,
-		borderColor: '#f9a825',
-		borderRadius: 6,
-		padding: 14,
-		gap: 6,
+		borderColor: colors.insightBorder,
+		borderRadius: radius.lg,
+		padding: spacing.lg,
+		gap: spacing.md - 6,
 	},
 	insightTitle: {
-		fontSize: 14,
+		fontSize: 13,
 		fontWeight: '700',
-		color: '#e65100',
+		textTransform: 'uppercase',
+		letterSpacing: 0.8,
+		color: colors.warning,
 	},
 	insightText: {
 		fontSize: 14,
 		lineHeight: 20,
-		color: '#333',
+		color: colors.warning,
 	},
 	text: {
 		fontSize: 18,

@@ -1,67 +1,91 @@
-// import { TestID } from '@enums/TestID';
-// import AppStack from '@navigation/AppStack/AppStack';
-// import { AuthProvider } from '@providers/AuthProvider';
-// import { DatabaseProvider } from '@providers/DatabaseProvider';
-// import { FeatureFlagsProvider } from '@providers/FeatureFlagsProvider';
-// import { OpenAiServiceProvider } from '@providers/OpenAiServiceProvider';
-// import { createAuthStore } from '@stores/AuthStore';
-// import { render } from '@testing-library/react-native';
-// import React from 'react';
+import { TestID } from '@enums/TestID';
+import AppStack from '@navigation/AppStack/AppStack';
+import { AuthProvider } from '@providers/AuthProvider';
+import { DatabaseProvider } from '@providers/DatabaseProvider';
+import { FeatureFlagsProvider } from '@providers/FeatureFlagsProvider';
+import { OpenAiServiceProvider } from '@providers/OpenAiServiceProvider';
+import { createAuthStore } from '@stores/AuthStore';
+import { render } from '@testing-library/react-native';
+import React from 'react';
 
-// // @op-engineering/op-sqlite
-// jest.mock('@op-engineering/op-sqlite', () => ({
-// 	__esModule: true,
-// 	open: jest.fn().mockReturnValue({
-// 		close: jest.fn(),
-// 		transaction: jest.fn().mockImplementation((cb) => {
-// 			const tx = {
-// 				execute: jest.fn(), // Add execute function
-// 				executeSql: jest.fn(),
-// 			};
-// 			cb(tx);
-// 		}),
-// 	}),
-// }));
+jest.mock('@react-navigation/native-stack', () => {
+	const ReactLib = require('react');
 
-// // @react-native-async-storage/async-storage
-// jest.mock('@react-native-async-storage/async-storage', () => {
-// 	return {
-// 		AsyncStorage: {
-// 			setItem: jest.fn(),
-// 			getItem: jest.fn().mockResolvedValue('mock-token'),
-// 			removeItem: jest.fn(),
-// 		},
-// 	};
-// });
+	return {
+		createNativeStackNavigator: jest.fn(() => ({
+			Navigator: ({ children }: { children: React.ReactNode }) => (
+				<>{children}</>
+			),
+			Screen: ({
+				name,
+				component: Component,
+			}: {
+				name: string;
+				component: React.ComponentType;
+			}) =>
+				name === 'HomeScreen'
+					? ReactLib.createElement(Component)
+					: null,
+		})),
+	};
+});
 
-// jest.mock('@screens/HomeScreen/HomeScreen', () => {
-// 	const ids = require('@enums/TestID');
-// 	const RN = require('react-native');
+// @op-engineering/op-sqlite
+jest.mock('@op-engineering/op-sqlite', () => ({
+	__esModule: true,
+	open: jest.fn().mockReturnValue({
+		close: jest.fn(),
+		transaction: jest.fn().mockImplementation((cb) => {
+			const tx = {
+				execute: jest.fn(), // Add execute function
+				executeSql: jest.fn(),
+			};
+			cb(tx);
+		}),
+	}),
+}));
 
-// 	return function MockHomeScreen() {
-// 		return <RN.View testID={ids.TestID.HomeScreen} />;
-// 	};
-// });
+// @react-native-async-storage/async-storage
+jest.mock('@react-native-async-storage/async-storage', () => {
+	return {
+		__esModule: true,
+		default: {
+			setItem: jest.fn(),
+			getItem: jest.fn().mockResolvedValue('mock-token'),
+			removeItem: jest.fn(),
+		},
+	};
+});
 
-// const renderWithProviders = (ui: React.ReactElement) => {
-// 	const authStore = createAuthStore(); // Create a real auth store with the storage instance
-// 	return render(
-// 		<DatabaseProvider>
-// 			<FeatureFlagsProvider>
-// 				<OpenAiServiceProvider>
-// 					<AuthProvider store={authStore}>{ui}</AuthProvider>
-// 				</OpenAiServiceProvider>
-// 			</FeatureFlagsProvider>
-// 		</DatabaseProvider>,
-// 	);
-// };
+jest.mock('@screens/HomeScreen/HomeScreen', () => {
+	const ids = require('@enums/TestID');
+	const RN = require('react-native');
 
-// describe('AppStack', () => {
-// 	it('renders HomeScreen', () => {
-// 		const { getByTestId } = renderWithProviders(<AppStack />);
-// 		const homeScreen = getByTestId(TestID.HomeScreen);
-// 		expect(homeScreen).toBeVisible();
-// 	});
-// });
+	return function MockHomeScreen() {
+		return <RN.View testID={ids.TestID.HomeScreen} />;
+	};
+});
 
-it.todo('add tests for AppStack');
+const renderWithProviders = (ui: React.ReactElement) => {
+	const authStore = createAuthStore(); // Create a real auth store with the storage instance
+	const mockDb = {
+		getDbPath: jest.fn(() => '/tmp/budgetai.db'),
+	} as unknown as any;
+	return render(
+		<DatabaseProvider db={mockDb}>
+			<FeatureFlagsProvider>
+				<OpenAiServiceProvider>
+					<AuthProvider store={authStore}>{ui}</AuthProvider>
+				</OpenAiServiceProvider>
+			</FeatureFlagsProvider>
+		</DatabaseProvider>,
+	);
+};
+
+describe('AppStack', () => {
+	it('renders HomeScreen', () => {
+		const { getByTestId } = renderWithProviders(<AppStack />);
+		const homeScreen = getByTestId(TestID.HomeScreen);
+		expect(homeScreen).toBeVisible();
+	});
+});

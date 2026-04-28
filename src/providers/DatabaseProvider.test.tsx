@@ -1,70 +1,141 @@
+import { DB } from '@op-engineering/op-sqlite';
 import { DatabaseProvider, useDatabase } from '@providers/DatabaseProvider';
-import { render, renderHook } from '@testing-library/react-native';
+import { render, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { DevSettings, Text } from 'react-native';
 
-jest.mock('@services/DatabaseService', () => {
-	const mockInstance = {
-		isReady: false,
-		init: jest.fn(() => {
-			mockInstance.isReady = true;
-		}),
-		reinitializeDb: jest.fn(),
-		getDbPath: jest.fn(() => '/mock/path/to/db'),
-		getDebugInfo: jest.fn(() => ({ debug: 'info' })),
-		runMigrations: jest.fn(),
-		addListener: jest.fn(),
-		removeListener: jest.fn(),
-	};
-	return {
-		DatabaseService: {
-			getInstance: jest.fn(() => mockInstance),
-		},
-	};
-});
+jest.mock('@utils/logUtils', () => ({
+	dbLog: {
+		debug: jest.fn(),
+	},
+}));
+
+const mockDb = {
+	getDbPath: jest.fn(() => '/tmp/budgetai.db'),
+} as unknown as DB;
+
+const StateProbe = () => {
+	const store = useDatabase();
+	return (
+		<Text>{`hasDb:${String(!!store.db)};init:${String(
+			store.isInitializing,
+		)}`}</Text>
+	);
+};
 
 describe('DatabaseProvider', () => {
-	it('provides the DatabaseService and isReady state', () => {
-		const wrapper = ({ children }: { children: React.ReactNode }) => (
-			<DatabaseProvider>{children}</DatabaseProvider>
-		);
-
-		const { result } = renderHook(() => useDatabase(), { wrapper });
-
-		expect(result.current.db).toBeDefined();
+	beforeEach(() => {
+		jest.clearAllMocks();
 	});
 
-	it('initializes the database on mount', () => {
-		const mockService =
-			require('@services/DatabaseService').DatabaseService.getInstance();
-		const initSpy = jest.spyOn(mockService, 'init');
+	it('throws when useDatabase is used outside provider', () => {
+		const consoleErrorSpy = jest
+			.spyOn(console, 'error')
+			.mockImplementation(() => {});
+
+		const OutsideConsumer = () => {
+			useDatabase();
+			return <Text>outside</Text>;
+		};
+
+		expect(() => render(<OutsideConsumer />)).toThrow(
+			'Missing DatabaseProvider',
+		);
+
+		consoleErrorSpy.mockRestore();
+	});
+
+	it('provides db and resolves initializing state when db exists', async () => {
+		const { getByText } = render(
+			<DatabaseProvider db={mockDb}>
+				<StateProbe />
+			</DatabaseProvider>,
+		);
+
+		await waitFor(() => {
+			expect(getByText('hasDb:true;init:false')).toBeTruthy();
+		});
+	});
+
+	it('keeps initializing true when db is null', () => {
+		const { getByText } = render(
+			<DatabaseProvider db={null}>
+				<StateProbe />
+			</DatabaseProvider>,
+		);
+
+		expect(getByText('hasDb:false;init:true')).toBeTruthy();
+	});
+
+	it('supports selector usage in useDatabase', async () => {
+		const SelectorProbe = () => {
+			const isReady = useDatabase((store) => !store.isInitializing);
+			return <Text>{`ready:${String(isReady)}`}</Text>;
+		};
+
+		const { getByText } = render(
+			<DatabaseProvider db={mockDb}>
+				<SelectorProbe />
+			</DatabaseProvider>,
+		);
+
+		await waitFor(() => {
+			expect(getByText('ready:true')).toBeTruthy();
+		});
+	});
+
+	it('transitions from initializing to ready when db appears', async () => {
+		const { getByText, rerender } = render(
+			<DatabaseProvider db={null}>
+				<StateProbe />
+			</DatabaseProvider>,
+		);
+
+		expect(getByText('hasDb:false;init:true')).toBeTruthy();
+
+		rerender(
+			<DatabaseProvider db={mockDb}>
+				<StateProbe />
+			</DatabaseProvider>,
+		);
+
+		await waitFor(() => {
+			expect(getByText('hasDb:true;init:false')).toBeTruthy();
+		});
+	});
+
+	it('registers debug menu item and logs db debug info when invoked', async () => {
+		const {
+			dbLog: { debug },
+		} = require('@utils/logUtils');
+
+		const addMenuItemSpy = jest
+			.spyOn(DevSettings, 'addMenuItem')
+			.mockImplementation(() => {});
 
 		render(
-			<DatabaseProvider>
-				<></>
+			<DatabaseProvider db={mockDb}>
+				<StateProbe />
 			</DatabaseProvider>,
 		);
 
-		expect(initSpy).toHaveBeenCalledTimes(1);
-		expect(mockService.isReady).toBe(true);
-	});
+		await waitFor(() => {
+			expect(addMenuItemSpy.mock.calls.length).toBeGreaterThan(0);
+		});
 
-	it('adds and removes listeners correctly', () => {
-		const mockService =
-			require('@services/DatabaseService').DatabaseService.getInstance();
-		const addListenerSpy = jest.spyOn(mockService, 'addListener');
-		const removeListenerSpy = jest.spyOn(mockService, 'removeListener');
+		const [, menuAction] = addMenuItemSpy.mock.calls.at(-1) as [
+			string,
+			() => void,
+		];
+		menuAction();
 
-		const { unmount } = render(
-			<DatabaseProvider>
-				<></>
-			</DatabaseProvider>,
+		expect(debug).toHaveBeenCalledWith(
+			'Print Database Debug:',
+			expect.objectContaining({
+				path: '/tmp/budgetai.db',
+				ready: true,
+				isInitializing: false,
+			}),
 		);
-
-		expect(addListenerSpy).toHaveBeenCalledTimes(1);
-		expect(removeListenerSpy).toHaveBeenCalledTimes(0);
-
-		unmount();
-
-		expect(removeListenerSpy).toHaveBeenCalledTimes(1);
 	});
 });
