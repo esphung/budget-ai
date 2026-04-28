@@ -1,10 +1,12 @@
 import AiChatView from '@screens/HomeScreen/AiChatView';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { Keyboard } from 'react-native';
 
 const mockSendMessageAndApplyActions = jest.fn();
 const mockCheckHealth = jest.fn();
 const mockUseBackendHealth = jest.fn();
+const mockKeyboardDismiss = jest.fn();
 
 jest.mock('@components/AppText/AppText', () => {
 	const { Text } = require('react-native');
@@ -78,6 +80,12 @@ jest.mock('@providers/ThemeProvider', () => ({
 describe('AiChatView', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
+		jest.spyOn(Keyboard, 'dismiss').mockImplementation(
+			mockKeyboardDismiss,
+		);
+		jest.spyOn(Keyboard, 'addListener').mockReturnValue({
+			remove: jest.fn(),
+		} as any);
 		mockUseBackendHealth.mockReturnValue({
 			backendStatus: 'online',
 			isBackendOnline: true,
@@ -116,6 +124,8 @@ describe('AiChatView', () => {
 				userText: 'Log my lunch expense',
 			});
 		});
+
+		expect(mockKeyboardDismiss).toHaveBeenCalled();
 	});
 
 	it('does not send chat messages when the backend is offline', async () => {
@@ -138,5 +148,18 @@ describe('AiChatView', () => {
 		await waitFor(() => {
 			expect(mockSendMessageAndApplyActions).not.toHaveBeenCalled();
 		});
+	});
+
+	it('dismisses keyboard when tapping away from the input', () => {
+		const { getByTestId } = render(
+			<AiChatView threadId="thread-1" messages={[]} />,
+		);
+
+		fireEvent(
+			getByTestId('AiChatView-Container'),
+			'startShouldSetResponderCapture',
+		);
+
+		expect(mockKeyboardDismiss).toHaveBeenCalled();
 	});
 });

@@ -11,6 +11,8 @@ const MessageList = forwardRef<FlatList, { messages: AIMessage[] }>(
 				data={[...messages]}
 				keyExtractor={(item) => item.id}
 				inverted
+				keyboardDismissMode="on-drag"
+				keyboardShouldPersistTaps="never"
 				renderItem={({ item }) => <MessageCard item={item} />}
 				showsVerticalScrollIndicator={false}
 				testID="MessageList"

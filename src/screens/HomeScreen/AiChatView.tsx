@@ -8,8 +8,14 @@ import { useApiClient } from '@providers/ApiClientProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { useOpenAiService } from '@providers/OpenAiServiceProvider';
 import { AppColors, radius, spacing, typography } from '@theme/tokens';
-import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+	Keyboard,
+	Platform,
+	StyleSheet,
+	TextInput,
+	View,
+} from 'react-native';
 
 const AiChatView = ({
 	threadId,
@@ -19,15 +25,39 @@ const AiChatView = ({
 	messages: AIMessage[];
 }) => {
 	const [text, setText] = useState<string>('');
+	const [keyboardHeight, setKeyboardHeight] = useState(0);
 	const { colors } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { aiService } = useOpenAiService();
 	const checkHealth = useApiClient((api) => api.health.check);
 	const { backendStatus } = useBackendHealth(checkHealth);
 
+	useEffect(() => {
+		const showEvent =
+			Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+		const hideEvent =
+			Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+		const showSubscription = Keyboard.addListener(
+			showEvent,
+			(event) => {
+				setKeyboardHeight(event.endCoordinates?.height ?? 0);
+			},
+		);
+		const hideSubscription = Keyboard.addListener(hideEvent, () => {
+			setKeyboardHeight(0);
+		});
+
+		return () => {
+			showSubscription?.remove?.();
+			hideSubscription?.remove?.();
+		};
+	}, []);
+
 	const onSend = useCallback(async () => {
 		const trimmed = text.trim();
 		if (!trimmed) return;
+		Keyboard.dismiss();
 		if (backendStatus === 'offline') return;
 		setText('');
 		if (threadId && aiService) {
@@ -38,16 +68,26 @@ const AiChatView = ({
 		}
 	}, [backendStatus, text, threadId, aiService]);
 
+	const dismissKeyboardOnTouchCapture = useCallback(() => {
+		Keyboard.dismiss();
+		return false;
+	}, []);
+
 	const contentView = useMemo(() => {
+		const keyboardInset = Math.max(0, keyboardHeight - spacing.lg);
+
 		if (!threadId) {
 			return <LoadingView message="Loading conversation thread..." />;
 		}
 		return (
-			<View style={styles.content}>
+			<View
+				style={[styles.content, { paddingBottom: keyboardInset }]}>
 				{![...(messages || [])].length ? (
 					<LoadingView message="No messages yet." />
 				) : (
-					<MessageList messages={[...(messages || [])]} />
+					<View style={styles.messageListContainer}>
+						<MessageList messages={[...(messages || [])]} />
+					</View>
 				)}
 				<View style={styles.composer}>
 					<View style={styles.statusRow}>
@@ -80,8 +120,9 @@ const AiChatView = ({
 						placeholderTextColor={colors.neutral.placeholder}
 						style={styles.input}
 						onSubmitEditing={onSend}
+						blurOnSubmit={true}
 						returnKeyType="send"
-						submitBehavior="submit"
+						submitBehavior="blurAndSubmit"
 					/>
 					<PrimaryButton
 						title="Send"
@@ -92,12 +133,14 @@ const AiChatView = ({
 			</View>
 		);
 	}, [
+		keyboardHeight,
 		colors.neutral.placeholder,
 		messages,
 		onSend,
 		styles.composer,
 		styles.content,
 		styles.input,
+		styles.messageListContainer,
 		styles.statusDot,
 		styles.statusDotOffline,
 		styles.statusDotOnline,
@@ -109,7 +152,16 @@ const AiChatView = ({
 		backendStatus,
 	]);
 
-	return <View style={styles.container}>{contentView}</View>;
+	return (
+		<View
+			testID="AiChatView-Container"
+			style={styles.container}
+			onStartShouldSetResponderCapture={
+				dismissKeyboardOnTouchCapture
+			}>
+			{contentView}
+		</View>
+	);
 };
 
 const createStyles = (colors: AppColors) =>
@@ -121,6 +173,9 @@ const createStyles = (colors: AppColors) =>
 			paddingBottom: spacing.md + 1,
 		},
 		content: {
+			flex: 1,
+		},
+		messageListContainer: {
 			flex: 1,
 		},
 		composer: {
