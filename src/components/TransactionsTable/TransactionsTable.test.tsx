@@ -1,17 +1,14 @@
-import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
-import { render } from '@testing-library/react-native';
+import TransactionsTable, {
+	TransactionListItem,
+} from '@components/TransactionsTable/TransactionsTable';
+import { fireEvent, render } from '@testing-library/react-native';
 
-interface Transaction {
-	id: string;
-	name: string;
-	amount: number;
-	date: string;
-	category: string[];
-	transactionType?: 'income' | 'expense' | 'transfer' | string;
-}
+jest.mock('@utils/dateUtil', () => ({
+	humanReadableDate: (_date: Date) => 'Mocked Date',
+}));
 
 describe('TransactionsTable', () => {
-	const mockTransactions: Transaction[] = [
+	const mockTransactions: TransactionListItem[] = [
 		{
 			id: 'txn_1',
 			name: 'Starbucks',
@@ -19,6 +16,7 @@ describe('TransactionsTable', () => {
 			transactionType: 'expense',
 			date: '2024-04-20',
 			category: ['Food and Drink', 'Coffee Shop'],
+			merchant: 'Starbucks',
 		},
 		{
 			id: 'txn_2',
@@ -27,6 +25,7 @@ describe('TransactionsTable', () => {
 			transactionType: 'income',
 			date: '2024-04-18',
 			category: ['Income', 'Salary'],
+			merchant: 'Foo',
 		},
 		{
 			id: 'txn_3',
@@ -35,6 +34,7 @@ describe('TransactionsTable', () => {
 			transactionType: 'expense',
 			date: '2024-04-19',
 			category: ['Transportation', 'Gas'],
+			merchant: 'Bar',
 		},
 	];
 
@@ -53,25 +53,24 @@ describe('TransactionsTable', () => {
 
 		expect(getByText('Name')).toBeTruthy();
 		expect(getByText('Amount')).toBeTruthy();
-		expect(getByText('Date')).toBeTruthy();
 	});
 
 	it('renders all transaction rows with correct data', () => {
-		const { getByText } = render(
+		const { getByText, queryAllByText } = render(
 			<TransactionsTable transactions={mockTransactions} />,
 		);
 
 		// Check first transaction
 		expect(getByText('Starbucks')).toBeTruthy();
-		expect(getByText('2024-04-20')).toBeTruthy();
 
 		// Check second transaction
 		expect(getByText('Payroll Deposit')).toBeTruthy();
-		expect(getByText('2024-04-18')).toBeTruthy();
 
 		// Check third transaction
 		expect(getByText('Gas Station')).toBeTruthy();
-		expect(getByText('2024-04-19')).toBeTruthy();
+
+		// Dates are shown in expanded details, not in the main row
+		expect(queryAllByText('Mocked Date').length).toBe(0);
 	});
 
 	it('formats positive amounts with + sign', () => {
@@ -103,7 +102,7 @@ describe('TransactionsTable', () => {
 	});
 
 	it('handles edge case amounts correctly', () => {
-		const edgeCaseTransactions: Transaction[] = [
+		const edgeCaseTransactions: TransactionListItem[] = [
 			{
 				id: 'txn_edge_1',
 				name: 'Zero Amount',
@@ -111,6 +110,7 @@ describe('TransactionsTable', () => {
 				transactionType: 'income',
 				date: '2024-04-20',
 				category: ['Other'],
+				merchant: '',
 			},
 			{
 				id: 'txn_edge_2',
@@ -119,6 +119,7 @@ describe('TransactionsTable', () => {
 				transactionType: 'expense',
 				date: '2024-04-19',
 				category: ['Other'],
+				merchant: '',
 			},
 		];
 
@@ -131,7 +132,7 @@ describe('TransactionsTable', () => {
 	});
 
 	it('treats non-income transactions as expense labels even when amount is positive', () => {
-		const transactions: Transaction[] = [
+		const transactions: TransactionListItem[] = [
 			{
 				id: 'txn_edge_3',
 				name: 'Manual Expense',
@@ -139,6 +140,7 @@ describe('TransactionsTable', () => {
 				transactionType: 'expense',
 				date: '2024-04-21',
 				category: ['Other'],
+				merchant: '',
 			},
 		];
 
@@ -147,5 +149,128 @@ describe('TransactionsTable', () => {
 		);
 
 		expect(getByText('-$4.50')).toBeTruthy();
+	});
+
+	describe('expandable rows', () => {
+		it('does not show expanded details by default', () => {
+			const { queryByTestId } = render(
+				<TransactionsTable transactions={mockTransactions} />,
+			);
+
+			expect(queryByTestId('transaction-details-txn_1')).toBeNull();
+		});
+
+		it('shows expanded details when a row is tapped', () => {
+			const { getByTestId } = render(
+				<TransactionsTable transactions={mockTransactions} />,
+			);
+
+			fireEvent.press(getByTestId('transaction-row-txn_1'));
+
+			expect(getByTestId('transaction-details-txn_1')).toBeTruthy();
+		});
+
+		it('shows category in expanded details', () => {
+			const { getByTestId, getByText } = render(
+				<TransactionsTable transactions={mockTransactions} />,
+			);
+
+			fireEvent.press(getByTestId('transaction-row-txn_1'));
+
+			// 'Food and Drink › Coffee Shop'
+			expect(getByText('Food and Drink › Coffee Shop')).toBeTruthy();
+		});
+
+		it('shows transaction type in expanded details', () => {
+			const { getByTestId, getByText } = render(
+				<TransactionsTable transactions={mockTransactions} />,
+			);
+
+			fireEvent.press(getByTestId('transaction-row-txn_1'));
+
+			expect(getByText('Expense')).toBeTruthy();
+		});
+
+		it('capitalizes the transaction type label', () => {
+			const { getByTestId, getByText } = render(
+				<TransactionsTable transactions={mockTransactions} />,
+			);
+
+			fireEvent.press(getByTestId('transaction-row-txn_2'));
+
+			expect(getByText('Income')).toBeTruthy();
+		});
+
+		it('collapses an expanded row when tapped again', () => {
+			const { getByTestId, queryByTestId } = render(
+				<TransactionsTable transactions={mockTransactions} />,
+			);
+
+			fireEvent.press(getByTestId('transaction-row-txn_1'));
+			expect(getByTestId('transaction-details-txn_1')).toBeTruthy();
+
+			fireEvent.press(getByTestId('transaction-row-txn_1'));
+			expect(queryByTestId('transaction-details-txn_1')).toBeNull();
+		});
+
+		it('only one row is expanded at a time', () => {
+			const { getByTestId, queryByTestId } = render(
+				<TransactionsTable transactions={mockTransactions} />,
+			);
+
+			fireEvent.press(getByTestId('transaction-row-txn_1'));
+			expect(getByTestId('transaction-details-txn_1')).toBeTruthy();
+
+			fireEvent.press(getByTestId('transaction-row-txn_2'));
+			expect(queryByTestId('transaction-details-txn_1')).toBeNull();
+			expect(getByTestId('transaction-details-txn_2')).toBeTruthy();
+		});
+
+		it('shows type detail in expanded row', () => {
+			const transactions: TransactionListItem[] = [
+				{
+					id: 'txn_type_visible',
+					name: 'Known Type',
+					amount: -10,
+					transactionType: 'expense',
+					date: '2024-04-22',
+					category: ['Other'],
+					merchant: 'Test Merchant',
+				},
+			];
+
+			const { getByTestId, queryByText } = render(
+				<TransactionsTable transactions={transactions} />,
+			);
+
+			fireEvent.press(
+				getByTestId('transaction-row-txn_type_visible'),
+			);
+
+			expect(queryByText('Type')).toBeTruthy();
+			expect(queryByText('Expense')).toBeTruthy();
+		});
+
+		it('shows category label even when category is empty', () => {
+			const transactions: TransactionListItem[] = [
+				{
+					id: 'txn_no_cat',
+					name: 'No Category',
+					amount: -10,
+					transactionType: 'expense',
+					date: '2024-04-22',
+					category: [],
+					merchant: 'Test Merchant',
+				},
+			];
+
+			const { getByTestId, queryByText } = render(
+				<TransactionsTable transactions={transactions} />,
+			);
+
+			fireEvent.press(getByTestId('transaction-row-txn_no_cat'));
+
+			expect(queryByText('Category')).toBeTruthy();
+		});
 	});
 });

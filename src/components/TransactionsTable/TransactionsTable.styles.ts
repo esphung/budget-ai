@@ -28,14 +28,13 @@ export const createStyles = (colors: AppColors) =>
 			borderTopColor: colors.neutral.borderLight,
 		},
 		tableCell: {
-			flex: 1,
-			paddingVertical: 10,
+			paddingVertical: 8,
 			paddingHorizontal: 8,
-			fontSize: 13,
+			fontSize: 14,
 			color: colors.neutral.text,
 		},
 		tableCellWide: {
-			flex: 1.4,
+			flex: 1,
 		},
 		tableHeader: {
 			fontWeight: '700',
@@ -55,5 +54,27 @@ export const createStyles = (colors: AppColors) =>
 		amountPositive: {
 			color: colors.success,
 			fontWeight: '700',
+		},
+		expandedDetails: {
+			borderTopWidth: 1,
+			borderTopColor: colors.neutral.borderLight,
+			backgroundColor: colors.neutral.background,
+			paddingVertical: 8,
+			paddingHorizontal: 14,
+			borderWidth: 1,
+		},
+		detailRow: {
+			flexDirection: 'row',
+		},
+		detailLabel: {
+			fontSize: 12,
+			color: colors.neutral.textSecondary,
+			width: 72,
+		},
+		detailValue: {
+			fontSize: 12,
+			color: colors.neutral.text,
+			flex: 1,
+			textAlign: 'right',
 		},
 	});

@@ -2,6 +2,7 @@ import axios from 'axios';
 import {
 	GetLinkTokenResponse,
 	ExchangePublicTokenResponse,
+	HealthCheckResponse,
 	ApiError,
 	ApiClient,
 } from '@services/ApiClient';
@@ -60,6 +61,43 @@ function makeAxiosErrorWithErrorField(status: number, error: string) {
 	(axios.isAxiosError as unknown as jest.Mock).mockReturnValueOnce(true);
 	return err;
 }
+
+// ── health.check ────────────────────────────────────────────────────────────
+
+describe('apiClient.health.check', () => {
+	it('returns server health on success', async () => {
+		const payload: HealthCheckResponse = {
+			status: 'ok',
+		};
+		mockAxiosInstance.get.mockReturnValueOnce(
+			makeAxiosResponse(payload),
+		);
+
+		const result = await apiClient.health.check();
+
+		expect(result).toEqual({ status: 'ok' });
+		expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+			'/health',
+			expect.objectContaining({ signal: undefined }),
+		);
+	});
+
+	it('normalizes a health check network failure into ApiError', async () => {
+		const networkErr = new Error('Network Error') as any;
+		networkErr.response = undefined;
+		(axios.isAxiosError as unknown as jest.Mock).mockReturnValueOnce(
+			true,
+		);
+		mockAxiosInstance.get.mockRejectedValueOnce(networkErr);
+
+		await expect(apiClient.health.check()).rejects.toMatchObject<
+			Partial<ApiError>
+		>({
+			status: 0,
+			message: 'Network Error',
+		});
+	});
+});
 
 // ── plaid.getLinkToken ────────────────────────────────────────────────────────
 

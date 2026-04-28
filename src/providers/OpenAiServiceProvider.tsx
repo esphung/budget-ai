@@ -6,6 +6,7 @@ import { OpenAiService } from '@services/OpenAiService';
 import React, {
 	createContext,
 	ReactNode,
+	useCallback,
 	useContext,
 	useMemo,
 } from 'react';
@@ -40,8 +41,10 @@ export const OpenAiServiceProvider: React.FC<{
 	const { api } = useApiClient();
 	const { db } = useDatabase();
 	const logout = useAuthStore((s) => s.logout);
-
-	const aiService = useOpenAiServiceInstance(api, db, () => logout());
+	const handleLogout = useCallback(() => {
+		logout();
+	}, [logout]);
+	const aiService = useOpenAiServiceInstance(api, db, handleLogout);
 
 	return (
 		<OpenAiServiceContext.Provider value={{ aiService }}>
