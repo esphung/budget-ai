@@ -14,20 +14,20 @@ The goal of this project is to show how these two pieces — real financial data
 
 ### Financial Institution Connection
 
--   Integrates with **Plaid Link** to let users securely connect their bank accounts.
--   Retrieves account balances and transaction history via the Plaid API.
--   Credentials and tokens are stored in encrypted secure storage — never in plain state or AsyncStorage.
+*   Integrates with **Plaid Link** to let users securely connect their bank accounts.
+*   Retrieves account balances and transaction history via the Plaid API.
+*   Credentials and tokens are stored in encrypted secure storage — never in plain state or AsyncStorage.
 
 ### AI Suggestions 🤬
 
--   Transaction data is sent to an AI service that categorizes spending and identifies patterns.
--   Suggestions are surfaced contextually (e.g., after a high-spend week, after a new recurring charge is detected).
--   Responses are scoped to the user's actual data to avoid generic or irrelevant recommendations.
+*   Transaction data is sent to an AI service that categorizes spending and identifies patterns.
+*   Suggestions are surfaced contextually (e.g., after a high-spend week, after a new recurring charge is detected).
+*   Responses are scoped to the user's actual data to avoid generic or irrelevant recommendations.
 
 ### Custom State Management
 
--   Built a lightweight state management library modeled after Zustand's API, adapted for dependency injection.
--   Allows stores and services to be injected and swapped at any layer — useful for testing, feature flags, and environment-specific implementations — without coupling components to concrete dependencies.
+*   Built a lightweight state management library modeled after Zustand's API, adapted for dependency injection.
+*   Allows stores and services to be injected and swapped at any layer — useful for testing, feature flags, and environment-specific implementations — without coupling components to concrete dependencies.
 
 ---
 
@@ -111,7 +111,12 @@ yarn format:check
 ### Starting Local Server 🎉
 
 ```sh
-cd server
+cd budget-ai-backend
 cp .env.example .env   # fill in your keys
 yarn dev               # ts-node-dev with hot reload
+```
+
+```sh
+# render.com BE
+BASE_URL=https://budget-ai-backend.onrender.com
 ```

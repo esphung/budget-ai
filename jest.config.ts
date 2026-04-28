@@ -37,7 +37,7 @@ const config: Config = {
 		'src/enums/.*\\.ts$',
 		'src/screens/TestScreen/.*',
 		'src/hooks/useDevMenu\\.ts',
-		'server/.*',
+		'budget-ai-backend/.*',
 	],
 
 	// Indicates which provider should be used to instrument code for coverage

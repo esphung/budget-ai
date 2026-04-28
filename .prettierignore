@@ -6,3 +6,6 @@ node_modules/
 /ios/Pods/
 /ios/**/*.xcassets/*
 .yarn**
+
+budget-ai-backend/
+server/
