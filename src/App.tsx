@@ -3,6 +3,7 @@ import RootStack from '@navigation/RootStack/RootStack';
 import { ApiClientProvider } from '@providers/ApiClientProvider';
 import { AuthProvider } from '@providers/AuthProvider';
 import { FeatureFlagsProvider } from '@providers/FeatureFlagsProvider';
+import { ThemeProvider } from '@providers/ThemeProvider';
 import { benchmarkService } from '@services/BenchmarkService';
 import { createAuthStore } from '@stores/AuthStore';
 import React from 'react';
@@ -19,13 +20,15 @@ const App = () => {
 
 	return (
 		<SafeAreaProvider>
-			<ApiClientProvider>
-				<FeatureFlagsProvider>
-					<AuthProvider store={authStore}>
-						<RootStack />
-					</AuthProvider>
-				</FeatureFlagsProvider>
-			</ApiClientProvider>
+			<ThemeProvider>
+				<ApiClientProvider>
+					<FeatureFlagsProvider>
+						<AuthProvider store={authStore}>
+							<RootStack />
+						</AuthProvider>
+					</FeatureFlagsProvider>
+				</ApiClientProvider>
+			</ThemeProvider>
 		</SafeAreaProvider>
 	);
 };

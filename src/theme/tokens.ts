@@ -4,7 +4,7 @@
  * to ensure consistency across the app
  */
 
-export const colors = {
+export const lightColors = {
 	// Primary
 	primary: {
 		base: '#0B5FFF',
@@ -44,6 +44,51 @@ export const colors = {
 	insight: '#FFF7ED',
 	insightBorder: '#FDBA74',
 };
+
+export const darkColors = {
+	// Primary
+	primary: {
+		base: '#3B82F6',
+		light: '#60A5FA',
+		dark: '#1D4ED8',
+	},
+
+	// Neutral
+	neutral: {
+		background: '#0B1220',
+		surface: '#111A2D',
+		border: '#2A354B',
+		borderLight: '#34425C',
+		text: '#E5EAF4',
+		textSecondary: '#A8B3C7',
+		textTertiary: '#8593AA',
+		placeholder: '#6B7890',
+		disabled: '#3B465A',
+	},
+
+	// Semantic
+	success: '#22C55E',
+	error: '#F87171',
+	warning: '#FB923C',
+	info: '#60A5FA',
+
+	// Chat
+	chat: {
+		user: '#1D4ED8',
+		assistant: '#1F293D',
+		userText: '#F8FAFC',
+		assistantText: '#E2E8F0',
+	},
+
+	// UI State
+	loading: '#172036',
+	insight: '#2B1E0A',
+	insightBorder: '#9A6700',
+};
+
+export const colors = lightColors;
+
+export type AppColors = typeof lightColors;
 
 export const spacing = {
 	xs: 4,
@@ -105,28 +150,28 @@ export const typography = {
 
 export const shadows = {
 	sm: {
-		shadowColor: colors.neutral.text,
+		shadowColor: lightColors.neutral.text,
 		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.08,
 		shadowRadius: 8,
 		elevation: 2,
 	},
 	md: {
-		shadowColor: colors.neutral.text,
+		shadowColor: lightColors.neutral.text,
 		shadowOffset: { width: 0, height: 6 },
 		shadowOpacity: 0.07,
 		shadowRadius: 14,
 		elevation: 3,
 	},
 	lg: {
-		shadowColor: colors.neutral.text,
+		shadowColor: lightColors.neutral.text,
 		shadowOffset: { width: 0, height: 10 },
 		shadowOpacity: 0.07,
 		shadowRadius: 18,
 		elevation: 4,
 	},
 	xl: {
-		shadowColor: colors.neutral.text,
+		shadowColor: lightColors.neutral.text,
 		shadowOffset: { width: 0, height: 12 },
 		shadowOpacity: 0.08,
 		shadowRadius: 20,

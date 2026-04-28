@@ -74,9 +74,9 @@ const renderWithProviders = (ui: React.ReactElement) => {
 	return render(
 		<DatabaseProvider db={mockDb}>
 			<FeatureFlagsProvider>
-				<OpenAiServiceProvider>
-					<AuthProvider store={authStore}>{ui}</AuthProvider>
-				</OpenAiServiceProvider>
+				<AuthProvider store={authStore}>
+					<OpenAiServiceProvider>{ui}</OpenAiServiceProvider>
+				</AuthProvider>
 			</FeatureFlagsProvider>
 		</DatabaseProvider>,
 	);

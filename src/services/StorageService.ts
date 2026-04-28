@@ -5,17 +5,20 @@ function createStorageKey(baseKey: string, key: StorageKey): string {
 	return `${baseKey}-${key}`;
 }
 
-type StorageNamespace = '@auth';
+type StorageNamespace = '@auth' | '@preferences';
 
 export class StorageService {
 	private readonly storageKey: string;
-	private static instance: StorageService | null = null;
+	private static instances: Partial<
+		Record<StorageNamespace, StorageService>
+	> = {};
 
 	static getInstance(key: StorageNamespace): StorageService {
-		if (!StorageService.instance) {
-			StorageService.instance = new StorageService(key);
+		if (!StorageService.instances[key]) {
+			StorageService.instances[key] = new StorageService(key);
 		}
-		return StorageService.instance;
+
+		return StorageService.instances[key] as StorageService;
 	}
 
 	private constructor(key: StorageNamespace) {

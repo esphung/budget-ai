@@ -16,7 +16,7 @@ type NewTransactionParams = {
 	merchant: string | null;
 	category: string | null;
 	date: string;
-	transactionType: 'expense' | 'income' | 'transfer' | null;
+	transactionType: 'expense' | 'income' | 'transfer';
 };
 
 const mapActionPayloadToTxnParams = (
@@ -56,6 +56,7 @@ export const actionHandlers: Record<
 		repo: AIConversationRepository,
 		action: AIAction,
 		threadId: string,
+		onFinish: () => void,
 	) => Promise<void>
 > = {
 	save_transaction: async (db, repo, action, threadId) => {
@@ -111,11 +112,6 @@ export const actionHandlers: Record<
 	navigate: async (_db, repo, action, threadId) => {
 		const payload = action.payload as { screen: string };
 
-		await repo.markActionApplied({
-			actionId: action.id,
-			result: { navigated_to: payload.screen },
-		});
-
 		await repo.saveMessage({
 			threadId,
 			role: 'tool',
@@ -123,10 +119,35 @@ export const actionHandlers: Record<
 			content: `Navigate to ${payload.screen}`,
 			metadata: {
 				action_type: 'navigate',
-				screen: payload.screen,
+				screen: mapToAppStackScreen(payload.screen),
 			},
 		});
 
+		await repo.markActionApplied({
+			actionId: action.id,
+			result: { navigated_to: mapToAppStackScreen(payload.screen) },
+		});
+
 		goToScreen(payload);
+	},
+
+	logout: async (_db, repo, action, threadId, onFinish) => {
+		await repo.saveMessage({
+			threadId,
+			role: 'tool',
+			messageType: 'action_result',
+			content: `Logging out...`,
+			metadata: {
+				action_type: 'logout',
+				screen: null,
+			},
+		});
+
+		await repo.markActionApplied({
+			actionId: action.id,
+			result: { logged_out: true },
+		});
+
+		onFinish?.();
 	},
 };

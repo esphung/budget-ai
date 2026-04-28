@@ -1,36 +1,45 @@
-import PrimaryButton from '@components/PrimaryButton/PrimaryButton';
+import ActionButtonList, {
+	ActionButtonItem,
+} from '@components/ActionButtonList/ActionButtonList';
+import AppText from '@components/AppText/AppText';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import { TestID } from '@enums/TestID';
+import { AppStackScreens } from '@navigation/AppStack/AppStack';
 import { NavigationService } from '@navigation/navigationService';
 import { useAuthStore } from '@providers/AuthProvider';
-import {
-	colors,
-	radius,
-	spacing,
-	shadows,
-	typography,
-} from '@theme/tokens';
-import { useCallback } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useTheme } from '@providers/ThemeProvider';
+import { AppColors, radius, spacing, shadows } from '@theme/tokens';
+import { useCallback, useMemo } from 'react';
+import { StyleSheet, Switch, View } from 'react-native';
 
-const DATA = [
+const DATA: ActionButtonItem[] = [
+	{
+		id: 'test_screen',
+		title: 'Go to Test Screen',
+		type: 'primary',
+		testID: 'SettingsOption-test_screen',
+	},
 	{
 		id: 'go_back',
 		title: 'Go Back',
-		type: 'secondary' as const,
-	},
-	{
-		id: 'logout',
-		title: 'Logout',
-		type: 'tertiary' as const,
+		type: 'secondary',
+		testID: 'SettingsOption-go_back',
 	},
 ];
 
-type Item = {
+type SwitchItem = {
 	id: string;
 	title: string;
-	type: 'primary' | 'secondary' | 'tertiary';
+	description: string;
 };
+
+const SWITCH_ITEMS: SwitchItem[] = [
+	{
+		id: 'dark_mode',
+		title: 'Dark mode',
+		description: 'Switch between dark and light themes.',
+	},
+];
 
 const SettingsActions = ({ onLogout }: { onLogout: () => void }) => {
 	const handleAction = useCallback(
@@ -39,23 +48,62 @@ const SettingsActions = ({ onLogout }: { onLogout: () => void }) => {
 				NavigationService.goBack();
 			} else if (itemId === 'logout') {
 				onLogout();
+			} else if (itemId === 'test_screen') {
+				NavigationService.navigateToScreen(AppStackScreens.Test);
 			}
 		},
 		[onLogout],
 	);
 
+	return <ActionButtonList items={DATA} onPressItem={handleAction} />;
+};
+
+const SettingsSwitches = ({
+	styles,
+}: {
+	styles: ReturnType<typeof createStyles>;
+}) => {
+	const { colors, isDarkMode, setThemeMode } = useTheme();
+
+	const handleValueChange = useCallback(
+		(value: boolean) => {
+			setThemeMode(value ? 'dark' : 'light');
+		},
+		[setThemeMode],
+	);
+
 	return (
-		<View style={styles.actionsContainer}>
-			{DATA.map((item: Item) => (
-				<PrimaryButton
-					key={item.id}
-					testID={`SettingsOption-${item.id}`}
-					title={item.title}
-					onPress={() => handleAction(item.id)}
-					width="100%"
-					type={item.type}
-					style={styles.actionButton}
-				/>
+		<View style={styles.switchList}>
+			{SWITCH_ITEMS.map((item) => (
+				<View key={item.id} style={styles.switchRow}>
+					<View style={styles.switchCopy}>
+						<AppText
+							variant="bodyMedium"
+							style={styles.switchTitle}>
+							{item.title}
+						</AppText>
+						<AppText
+							variant="small"
+							style={styles.switchDescription}>
+							{item.description}
+						</AppText>
+					</View>
+					<Switch
+						testID={`SettingsSwitch-${item.id}`}
+						value={isDarkMode}
+						onValueChange={handleValueChange}
+						trackColor={{
+							false: colors.neutral.border,
+							true: colors.primary.light,
+						}}
+						thumbColor={
+							isDarkMode
+								? colors.primary.base
+								: colors.neutral.surface
+						}
+						ios_backgroundColor={colors.neutral.borderLight}
+					/>
+				</View>
 			))}
 		</View>
 	);
@@ -63,62 +111,114 @@ const SettingsActions = ({ onLogout }: { onLogout: () => void }) => {
 
 const SettingsScreen = () => {
 	const { logout } = useAuthStore();
+	const { colors } = useTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
+
 	return (
 		<ThemedScreen>
 			<View style={styles.screen} testID={TestID.SettingsScreen}>
 				<View style={styles.card}>
-					<Text style={styles.eyebrow}>Account</Text>
-					<Text style={styles.title}>Settings</Text>
-					<Text style={styles.subtitle}>
+					<AppText variant="eyebrow" style={styles.eyebrow}>
+						Account
+					</AppText>
+					<AppText variant="titleLarge" style={styles.title}>
+						Settings
+					</AppText>
+					<AppText variant="subtitle" style={styles.subtitle}>
 						Choose an action to continue.
-					</Text>
+					</AppText>
 					<SettingsActions onLogout={logout} />
+				</View>
+
+				<View style={styles.switchesCard}>
+					<AppText variant="eyebrow" style={styles.eyebrow}>
+						Preferences
+					</AppText>
+					<AppText
+						variant="subtitle"
+						style={styles.switchesTitle}>
+						Toggle Settings
+					</AppText>
+					<SettingsSwitches styles={styles} />
 				</View>
 			</View>
 		</ThemedScreen>
 	);
 };
 
-const styles = StyleSheet.create({
-	screen: {
-		flex: 1,
-		justifyContent: 'center',
-		paddingHorizontal: spacing.xl,
-		backgroundColor: colors.neutral.background,
-	},
-	card: {
-		width: '100%',
-		maxWidth: 480,
-		alignSelf: 'center',
-		backgroundColor: colors.neutral.surface,
-		borderRadius: radius.lg,
-		paddingVertical: spacing.xxl,
-		paddingHorizontal: spacing.xl,
-		...shadows.xl,
-	},
-	eyebrow: {
-		...typography.eyebrow,
-		textTransform: 'uppercase',
-		letterSpacing: 1.2,
-		color: colors.neutral.textTertiary,
-		marginBottom: spacing.md - 2,
-	},
-	title: {
-		...typography.titleLarge,
-		color: colors.neutral.text,
-		marginBottom: spacing.sm,
-	},
-	subtitle: {
-		...typography.subtitle,
-		color: colors.neutral.textSecondary,
-		marginBottom: spacing.xl,
-	},
-	actionsContainer: {
-		width: '100%',
-	},
-	actionButton: {
-		marginBottom: spacing.md,
-	},
-});
+const createStyles = (colors: AppColors) =>
+	StyleSheet.create({
+		screen: {
+			flex: 1,
+			paddingHorizontal: spacing.lg,
+			paddingTop: spacing.lg,
+			paddingBottom: spacing.lg,
+			backgroundColor: colors.neutral.background,
+		},
+		card: {
+			width: '100%',
+			maxWidth: 480,
+			alignSelf: 'center',
+			backgroundColor: colors.neutral.surface,
+			borderRadius: radius.lg,
+			paddingVertical: spacing.xl,
+			paddingHorizontal: spacing.lg,
+			...shadows.xl,
+		},
+		switchesCard: {
+			width: '100%',
+			maxWidth: 480,
+			alignSelf: 'center',
+			marginTop: spacing.lg,
+			backgroundColor: colors.neutral.surface,
+			borderRadius: radius.lg,
+			paddingVertical: spacing.lg,
+			paddingHorizontal: spacing.lg,
+			...shadows.lg,
+		},
+		eyebrow: {
+			textTransform: 'uppercase',
+			letterSpacing: 1.2,
+			color: colors.neutral.textTertiary,
+			marginBottom: spacing.md - 2,
+		},
+		title: {
+			color: colors.neutral.text,
+			marginBottom: spacing.sm,
+		},
+		subtitle: {
+			color: colors.neutral.textSecondary,
+			marginBottom: spacing.lg,
+		},
+		switchesTitle: {
+			color: colors.neutral.text,
+			marginBottom: spacing.md,
+		},
+		switchList: {
+			gap: spacing.md,
+		},
+		switchRow: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			paddingHorizontal: spacing.md,
+			paddingVertical: spacing.md,
+			borderWidth: 1,
+			borderColor: colors.neutral.borderLight,
+			borderRadius: radius.md,
+			backgroundColor: colors.neutral.background,
+		},
+		switchCopy: {
+			flex: 1,
+			paddingRight: spacing.md,
+		},
+		switchTitle: {
+			color: colors.neutral.text,
+			marginBottom: spacing.xs,
+		},
+		switchDescription: {
+			color: colors.neutral.textSecondary,
+		},
+	});
 
 export default SettingsScreen;

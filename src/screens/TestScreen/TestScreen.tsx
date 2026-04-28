@@ -1,14 +1,20 @@
-import PrimaryButton from '@components/PrimaryButton';
+import ActionButtonList, {
+	ActionButtonItem,
+} from '@components/ActionButtonList/ActionButtonList';
+import AppText from '@components/AppText/AppText';
 import LinkedAccountsTable from '@components/LinkedAccountsTable/LinkedAccountsTable';
+import PrimaryButton from '@components/PrimaryButton';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { TestID } from '@enums/TestID';
 import { usePlaidLink } from '@hooks/usePlaidLink';
+import { NavigationService } from '@navigation/navigationService';
 import { useApiClient } from '@providers/ApiClientProvider';
 import { useAuthStore } from '@providers/AuthProvider';
-import styles from '@screens/TestScreen/TestScreen.styles';
-import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { useTheme } from '@providers/ThemeProvider';
+import { createStyles } from '@screens/TestScreen/TestScreen.styles';
+import { useCallback, useMemo, useState } from 'react';
+import { ScrollView, View } from 'react-native';
 import { LinkAccount } from 'react-native-plaid-link-sdk';
 
 interface Transaction {
@@ -21,10 +27,31 @@ interface Transaction {
 
 const TestScreen = () => {
 	const { logout } = useAuthStore();
-	const { exchangePublicToken, getLinkToken } = useApiClient((s) => ({
-		exchangePublicToken: s.plaid.exchangePublicToken,
-		getLinkToken: s.plaid.getLinkToken,
-	}));
+	const { colors } = useTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
+	const actionItems = useMemo<ActionButtonItem[]>(
+		() => [
+			{
+				id: 'go_back',
+				title: 'Go Back',
+				type: 'secondary',
+				testID: 'TestScreen-GoBackButton',
+			},
+			{
+				id: 'logout',
+				title: 'Logout',
+				type: 'tertiary',
+				testID: 'TestScreen-LogoutButton',
+			},
+		],
+		[],
+	);
+	const { exchangePublicToken, getLinkToken } = useApiClient(
+		({ plaid }) => ({
+			exchangePublicToken: plaid.exchangePublicToken,
+			getLinkToken: plaid.getLinkToken,
+		}),
+	);
 
 	const [accounts, setAccounts] = useState<LinkAccount[] | null>(null);
 	const [transactions, setTransactions] = useState<Transaction[] | null>(
@@ -63,18 +90,38 @@ const TestScreen = () => {
 		getLinkToken: getLinkToken,
 	});
 
+	const handleAction = useCallback(
+		(itemId: string) => {
+			if (itemId === 'logout') {
+				logout();
+				return;
+			}
+
+			if (itemId === 'go_back') {
+				NavigationService.goBack();
+			}
+		},
+		[logout],
+	);
+
 	return (
 		<ThemedScreen>
 			<ScrollView
 				contentContainerStyle={styles.scrollContent}
 				testID={TestID.TestScreen}>
 				<View style={styles.heroCard}>
-					<Text style={styles.eyebrow}>Sandbox</Text>
-					<Text style={styles.heroTitle}>Plaid + Insights</Text>
-					<Text style={styles.heroSubtitle}>
+					<AppText variant="eyebrow" style={styles.eyebrow}>
+						Sandbox
+					</AppText>
+					<AppText variant="title" style={styles.heroTitle}>
+						Plaid + Insights
+					</AppText>
+					<AppText
+						variant="bodyMedium"
+						style={styles.heroSubtitle}>
 						Link accounts and preview transactions with
 						generated AI insight.
-					</Text>
+					</AppText>
 					<PrimaryButton
 						title={
 							isStarting
@@ -95,18 +142,21 @@ const TestScreen = () => {
 				)}
 				{insight && (
 					<View style={styles.insightCard}>
-						<Text style={styles.insightTitle}>AI Insight</Text>
-						<Text style={styles.insightText}>
+						<AppText
+							variant="small"
+							style={styles.insightTitle}>
+							AI Insight
+						</AppText>
+						<AppText variant="body" style={styles.insightText}>
 							{insight.trim()}
-						</Text>
+						</AppText>
 					</View>
 				)}
-				<PrimaryButton
-					title="Logout"
-					onPress={logout}
-					width="100%"
-					type="tertiary"
+				<ActionButtonList
+					items={actionItems}
+					onPressItem={handleAction}
 				/>
+				<View style={styles.bottomSpacer} />
 			</ScrollView>
 		</ThemedScreen>
 	);

@@ -9,6 +9,7 @@ import React, {
 	useContext,
 	useMemo,
 } from 'react';
+import { useAuthStore } from './AuthProvider';
 
 // Define the shape of the context state
 interface OpenAiServiceContext {
@@ -24,10 +25,11 @@ const OpenAiServiceContext = createContext<
 const useOpenAiServiceInstance = (
 	api: ApiClient,
 	db: DB | null,
+	logout: () => void,
 ): OpenAiService | null => {
 	return useMemo(
-		() => (db ? new OpenAiService(api, db) : null),
-		[api, db],
+		() => (db ? new OpenAiService(api, db, logout) : null),
+		[api, db, logout],
 	);
 };
 
@@ -35,10 +37,11 @@ const useOpenAiServiceInstance = (
 export const OpenAiServiceProvider: React.FC<{
 	children: ReactNode;
 }> = ({ children }) => {
-	const api = useApiClient();
+	const { api } = useApiClient();
 	const { db } = useDatabase();
+	const logout = useAuthStore((s) => s.logout);
 
-	const aiService = useOpenAiServiceInstance(api, db);
+	const aiService = useOpenAiServiceInstance(api, db, () => logout());
 
 	return (
 		<OpenAiServiceContext.Provider value={{ aiService }}>

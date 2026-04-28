@@ -1,4 +1,5 @@
 import { useTransactionBalance } from '@hooks/useTransactionBalance';
+import { act } from '@testing-library/react-native';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { DB } from '@op-engineering/op-sqlite';
 
@@ -26,6 +27,10 @@ describe('useTransactionBalance', () => {
 		await waitFor(() => {
 			expect(result.current).toBe(1500.75);
 		});
+
+		expect(mockDb.execute).toHaveBeenCalledWith(
+			expect.stringContaining("transaction_type = 'income'"),
+		);
 	});
 
 	it('handles negative balance (more expenses than income)', async () => {
@@ -119,7 +124,9 @@ describe('useTransactionBalance', () => {
 		// Simulate reactive callback firing
 		const reactiveConfig = (mockDb.reactiveExecute as jest.Mock).mock
 			.calls[0][0];
-		reactiveConfig.callback();
+		act(() => {
+			reactiveConfig.callback();
+		});
 
 		await waitFor(() => {
 			// Should have called execute twice now (initial + reactive callback)

@@ -1,16 +1,11 @@
+import AppText from '@components/AppText/AppText';
 import PrimaryButton from '@components/PrimaryButton';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import { TestID } from '@enums/TestID';
 import { useAuthStore } from '@providers/AuthProvider';
-import {
-	colors,
-	radius,
-	spacing,
-	shadows,
-	typography,
-} from '@theme/tokens';
+import { colors, radius, spacing, shadows } from '@theme/tokens';
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 const LoginScreen = () => {
 	const setToken = useAuthStore((s) => s.setToken);
@@ -25,11 +20,15 @@ const LoginScreen = () => {
 		<ThemedScreen>
 			<View style={styles.content} testID={TestID.LoginScreen}>
 				<View style={styles.card}>
-					<Text style={styles.eyebrow}>Welcome</Text>
-					<Text style={styles.title}>BudgetAI</Text>
-					<Text style={styles.subtitle}>
+					<AppText variant="eyebrow" style={styles.eyebrow}>
+						Welcome
+					</AppText>
+					<AppText variant="heroTitle" style={styles.title}>
+						BudgetAI
+					</AppText>
+					<AppText variant="subtitle" style={styles.subtitle}>
 						Welcome to BudgetAI!
-					</Text>
+					</AppText>
 					<PrimaryButton
 						title="Login"
 						onPress={handleLogin}
@@ -59,17 +58,14 @@ const styles = StyleSheet.create({
 		gap: spacing.md - 2,
 	},
 	eyebrow: {
-		...typography.eyebrow,
 		textTransform: 'uppercase',
 		letterSpacing: 1.2,
 		color: colors.neutral.textTertiary,
 	},
 	title: {
-		...typography.heroTitle,
 		color: colors.neutral.text,
 	},
 	subtitle: {
-		...typography.subtitle,
 		color: colors.neutral.textSecondary,
 		marginBottom: spacing.sm,
 	},

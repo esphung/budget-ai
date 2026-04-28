@@ -1,5 +1,8 @@
-import styles from '@components/TransactionsTable/TransactionsTable.styles';
-import { Text, View } from 'react-native';
+import AppText from '@components/AppText/AppText';
+import { useTheme } from '@providers/ThemeProvider';
+import { createStyles } from '@components/TransactionsTable/TransactionsTable.styles';
+import { useMemo } from 'react';
+import { ScrollView, View } from 'react-native';
 
 interface Transaction {
 	id: string;
@@ -7,6 +10,7 @@ interface Transaction {
 	amount: number;
 	date: string;
 	category: string[];
+	transactionType?: 'income' | 'expense' | 'transfer' | string;
 }
 
 interface TransactionsTableProps {
@@ -16,44 +20,67 @@ interface TransactionsTableProps {
 export default function TransactionsTable({
 	transactions,
 }: TransactionsTableProps) {
+	const { colors } = useTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
+
 	return (
 		<View style={styles.tableContainer}>
-			<Text style={styles.tableTitle}>Transactions</Text>
+			<AppText style={styles.tableTitle}>Transactions</AppText>
 			<View style={styles.tableRow}>
-				<Text
+				<AppText
 					style={[
 						styles.tableCell,
 						styles.tableHeader,
 						styles.tableCellWide,
 					]}>
 					Name
-				</Text>
-				<Text style={[styles.tableCell, styles.tableHeader]}>
+				</AppText>
+				<AppText style={[styles.tableCell, styles.tableHeader]}>
 					Amount
-				</Text>
-				<Text style={[styles.tableCell, styles.tableHeader]}>
+				</AppText>
+				<AppText style={[styles.tableCell, styles.tableHeader]}>
 					Date
-				</Text>
+				</AppText>
 			</View>
-			{transactions.map((t) => (
-				<View key={t.id} style={styles.tableRow}>
-					<Text style={[styles.tableCell, styles.tableCellWide]}>
-						{t.name}
-					</Text>
-					<Text
-						style={[
-							styles.tableCell,
-							t.amount < 0
-								? styles.amountNegative
-								: styles.amountPositive,
-						]}>
-						{t.amount < 0
-							? `-$${Math.abs(t.amount).toFixed(2)}`
-							: `+$${t.amount.toFixed(2)}`}
-					</Text>
-					<Text style={styles.tableCell}>{t.date}</Text>
-				</View>
-			))}
+			<ScrollView
+				style={styles.rowsScroll}
+				contentContainerStyle={styles.rowsScrollContent}
+				nestedScrollEnabled
+				showsVerticalScrollIndicator={false}>
+				{transactions.map((t) => {
+					const isIncome =
+						t.transactionType != null
+							? t.transactionType === 'income'
+							: t.amount >= 0;
+					const displayAmount = `${
+						isIncome ? '+' : '-'
+					}$${Math.abs(t.amount).toFixed(2)}`;
+
+					return (
+						<View key={t.id} style={styles.tableRow}>
+							<AppText
+								style={[
+									styles.tableCell,
+									styles.tableCellWide,
+								]}>
+								{t.name}
+							</AppText>
+							<AppText
+								style={[
+									styles.tableCell,
+									isIncome
+										? styles.amountPositive
+										: styles.amountNegative,
+								]}>
+								{displayAmount}
+							</AppText>
+							<AppText style={styles.tableCell}>
+								{t.date}
+							</AppText>
+						</View>
+					);
+				})}
+			</ScrollView>
 		</View>
 	);
 }

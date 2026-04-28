@@ -16,7 +16,8 @@ function isAction(value: unknown): value is Action {
 
 	return (
 		(candidate.type === 'save_transaction' ||
-			candidate.type === 'navigate') &&
+			candidate.type === 'navigate' ||
+			candidate.type === 'logout') &&
 		!!candidate.payload &&
 		typeof candidate.payload === 'object'
 	);
@@ -100,6 +101,7 @@ Rules:
 - Return a short friendly message.
 - If the user clearly describes an expense, include a save_transaction action.
 - if the user asks to go somewhere in the app, include a navigate action with the destination in the payload.
+- If the user asks to log out or sign out, include a logout action with an empty payload.
 - If the user does not clearly describe an expense, return actions as an empty array.
 - Do not say the transaction was saved. Say you can save it or that it is ready to save.
 - Use null for missing fields.

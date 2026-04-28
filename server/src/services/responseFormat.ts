@@ -20,7 +20,11 @@ export const responseFormat: OpenAI.ResponseFormatJSONSchema = {
 						properties: {
 							type: {
 								type: 'string',
-								enum: ['save_transaction', 'navigate'],
+								enum: [
+									'save_transaction',
+									'navigate',
+									'logout',
+								],
 							},
 							payload: {
 								type: 'object',
@@ -43,11 +47,11 @@ export const responseFormat: OpenAI.ResponseFormatJSONSchema = {
 										type: ['string', 'null'],
 									},
 									screen: {
+										type: ['string', 'null'],
 										enum: [
 											'SettingsScreen',
 											'HomeScreen',
 											'TestScreen',
-											'null',
 										],
 									},
 								},

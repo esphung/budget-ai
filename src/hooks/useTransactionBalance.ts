@@ -9,6 +9,18 @@ import { useEffect, useState } from 'react';
 export function useTransactionBalance(db: DB | null): number {
 	const [balance, setBalance] = useState<number>(0);
 	const [updateTrigger, setUpdateTrigger] = useState<number>(0);
+	const balanceQuery = `
+		SELECT COALESCE(
+			SUM(
+				CASE
+					WHEN transaction_type = 'income' THEN ABS(amount)
+					ELSE -ABS(amount)
+				END
+			),
+			0
+		) as total
+		FROM transactions
+	`;
 
 	// Initial fetch and refetch when updates trigger
 	useEffect(() => {
@@ -18,9 +30,7 @@ export function useTransactionBalance(db: DB | null): number {
 
 		const fetchBalance = async () => {
 			try {
-				const result = await db.execute(
-					'SELECT COALESCE(SUM(amount), 0) as total FROM transactions',
-				);
+				const result = await db.execute(balanceQuery);
 				const rows =
 					(result.rows as Array<{ total: number }>) || [];
 				const total = rows[0]?.total || 0;
@@ -32,7 +42,7 @@ export function useTransactionBalance(db: DB | null): number {
 		};
 
 		fetchBalance();
-	}, [db, updateTrigger]);
+	}, [balanceQuery, db, updateTrigger]);
 
 	// Setup reactive listener to trigger refetches
 	useEffect(() => {
@@ -41,7 +51,7 @@ export function useTransactionBalance(db: DB | null): number {
 		}
 
 		const unsubscribe = db.reactiveExecute({
-			query: 'SELECT COALESCE(SUM(amount), 0) as total FROM transactions',
+			query: balanceQuery,
 			arguments: [],
 			fireOn: [{ table: 'transactions' }],
 			callback: () => {
@@ -53,7 +63,7 @@ export function useTransactionBalance(db: DB | null): number {
 		return () => {
 			unsubscribe?.();
 		};
-	}, [db]);
+	}, [db, balanceQuery]);
 
 	return balance;
 }

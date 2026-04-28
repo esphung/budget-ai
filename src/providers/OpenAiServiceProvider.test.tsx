@@ -2,6 +2,9 @@ import {
 	OpenAiServiceProvider,
 	useOpenAiService,
 } from '@providers/OpenAiServiceProvider';
+import { ApiClientProvider } from '@providers/ApiClientProvider';
+import { AuthProvider } from '@providers/AuthProvider';
+import { createAuthStore } from '@stores/AuthStore';
 import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 import { Text } from 'react-native';
@@ -28,8 +31,20 @@ jest.mock('@op-engineering/op-sqlite', () => ({
 	}),
 }));
 
+jest.mock('@react-native-async-storage/async-storage', () => {
+	return {
+		__esModule: true,
+		default: {
+			setItem: jest.fn(),
+			getItem: jest.fn().mockResolvedValue(null),
+			removeItem: jest.fn(),
+		},
+	};
+});
+
 describe('OpenAiServiceProvider', () => {
 	it('provides the OpenAiService context to its children', () => {
+		const authStore = createAuthStore();
 		const mockDb = {
 			getDbPath: jest.fn(() => '/tmp/budgetai.db'),
 		} as unknown as any;
@@ -42,9 +57,13 @@ describe('OpenAiServiceProvider', () => {
 
 		render(
 			<DatabaseProvider db={mockDb}>
-				<OpenAiServiceProvider>
-					<MockChild />
-				</OpenAiServiceProvider>
+				<ApiClientProvider>
+					<AuthProvider store={authStore}>
+						<OpenAiServiceProvider>
+							<MockChild />
+						</OpenAiServiceProvider>
+					</AuthProvider>
+				</ApiClientProvider>
 			</DatabaseProvider>,
 		);
 

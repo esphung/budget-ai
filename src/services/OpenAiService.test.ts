@@ -16,10 +16,6 @@ jest.mock('@repositories/AIConversationRepository', () => {
 	};
 });
 
-jest.mock('@utils/messageUtils', () => ({
-	mapAIMessageForAI: jest.fn((message) => message),
-}));
-
 describe('OpenAiService assistant mapping', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
@@ -63,7 +59,8 @@ describe('OpenAiService assistant mapping', () => {
 		});
 		const api = { openai: { sendMessage: sendMessageMock } } as any;
 		const db = {} as any;
-		const service = new OpenAiService(api, db);
+		// const service = new OpenAiService(api, db);
+		const service = new OpenAiService(api, db, () => {});
 
 		await service.sendMessageAndApplyActions({
 			threadId: 'thread-2',

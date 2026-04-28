@@ -1,5 +1,5 @@
 export type Action = {
-	type: 'save_transaction' | 'navigate';
+	type: 'save_transaction' | 'navigate' | 'logout';
 	payload: Record<string, unknown>;
 };
 

@@ -1,6 +1,8 @@
-import { colors, radius, spacing, typography } from '@theme/tokens';
+import AppText from '@components/AppText/AppText';
+import { useTheme } from '@providers/ThemeProvider';
+import { AppColors, radius, spacing, typography } from '@theme/tokens';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 type BalanceHeaderProps = {
 	balance: number;
@@ -15,6 +17,8 @@ const BalanceHeader = ({
 	balance,
 	isLoading = false,
 }: BalanceHeaderProps) => {
+	const { colors } = useTheme();
+	const styles = React.useMemo(() => createStyles(colors), [colors]);
 	const isPositive = balance >= 0;
 	const balanceColor = isPositive ? colors.success : colors.error;
 
@@ -27,8 +31,9 @@ const BalanceHeader = ({
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.label}>Total Balance</Text>
-			<Text
+			<AppText style={styles.label}>Total Balance</AppText>
+			<AppText
+				variant="heroTitle"
 				style={[
 					styles.balance,
 					{
@@ -36,30 +41,30 @@ const BalanceHeader = ({
 					},
 				]}>
 				{isLoading ? '—' : formattedBalance}
-			</Text>
+			</AppText>
 		</View>
 	);
 };
 
-const styles = StyleSheet.create({
-	container: {
-		paddingHorizontal: spacing.lg,
-		paddingVertical: spacing.md,
-		backgroundColor: colors.neutral.surface,
-		borderRadius: radius.lg,
-		alignItems: 'center',
-		gap: spacing.sm,
-	},
-	label: {
-		...typography.eyebrow,
-		textTransform: 'uppercase',
-		letterSpacing: 0.8,
-		color: colors.neutral.textTertiary,
-	},
-	balance: {
-		...typography.heroTitle,
-		fontWeight: '700',
-	},
-});
+const createStyles = (colors: AppColors) =>
+	StyleSheet.create({
+		container: {
+			paddingHorizontal: spacing.lg,
+			paddingVertical: spacing.md,
+			backgroundColor: colors.neutral.surface,
+			borderRadius: radius.lg,
+			alignItems: 'center',
+			gap: spacing.sm,
+		},
+		label: {
+			...typography.eyebrow,
+			textTransform: 'uppercase',
+			letterSpacing: 0.8,
+			color: colors.neutral.textTertiary,
+		},
+		balance: {
+			fontWeight: '700',
+		},
+	});
 
 export default BalanceHeader;
