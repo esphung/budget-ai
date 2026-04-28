@@ -1,29 +1,36 @@
+import { StorageKey } from '@enums/StorageKey';
 import { StorageService } from '@services/StorageService';
 import { type AuthStore, type AuthStoreFactory } from '@stores/AuthStore';
 import React, {
 	createContext,
 	useContext,
+	useEffect,
 	useMemo,
 	useReducer,
 } from 'react';
 
 const AuthContext = createContext<AuthStore | null>(null);
+
 AuthContext.displayName = 'AuthContext';
+
+// Storage instance for auth persistence
+const storage = StorageService.getInstance('@auth');
 
 export function AuthProvider({
 	store,
 	children,
-	storage,
 }: {
 	store: AuthStoreFactory;
 	children: React.ReactNode;
-	storage: StorageService;
 }) {
 	const [state, dispatch] = useReducer(
 		store.reducer,
 		store.getInitialState(),
 	);
-	const actions = useMemo(() => store.createActions(dispatch), [store]);
+	const actions = useMemo(
+		() => store.createActions(dispatch, storage),
+		[store],
+	);
 	const value = useMemo(
 		() => ({
 			...state,
@@ -33,19 +40,19 @@ export function AuthProvider({
 	);
 
 	// Load persisted token on mount
-	React.useEffect(() => {
+	useEffect(() => {
 		async function loadPersisted() {
-			const persistedToken = await storage.loadItem();
+			const persistedToken = await storage.loadItem(
+				StorageKey.AuthToken,
+			);
 			console.debug(
 				'[AuthProvider] Loaded persisted token:',
 				persistedToken,
 			);
-			if (persistedToken) {
-				actions.setToken(persistedToken);
-			}
+			actions.setToken(persistedToken);
 		}
 		loadPersisted();
-	}, [storage, actions]);
+	}, [actions]);
 
 	return (
 		<AuthContext.Provider value={value}>
@@ -54,16 +61,16 @@ export function AuthProvider({
 	);
 }
 
-export function useAuthStoreWithSelector<T>(
-	selector: (store: AuthStore) => T,
+export function useAuthStore<T = AuthStore>(
+	selector?: (store: AuthStore) => T,
+	// if selector is provided, return selected value, otherwise return entire store
 ): T {
-	return selector(useAuthStore());
-}
-
-export function useAuthStore() {
-	const ctx = useContext(AuthContext);
+	const ctx: AuthStore | null = useContext(AuthContext);
 	if (!ctx) {
 		throw new Error('Missing AuthProvider');
 	}
-	return ctx;
+	if (selector) {
+		return selector(ctx);
+	}
+	return ctx as unknown as T;
 }

@@ -7,6 +7,7 @@ interface Transaction {
 	amount: number;
 	date: string;
 	category: string[];
+	transactionType?: 'income' | 'expense' | 'transfer' | string;
 }
 
 describe('TransactionsTable', () => {
@@ -15,6 +16,7 @@ describe('TransactionsTable', () => {
 			id: 'txn_1',
 			name: 'Starbucks',
 			amount: -4.5,
+			transactionType: 'expense',
 			date: '2024-04-20',
 			category: ['Food and Drink', 'Coffee Shop'],
 		},
@@ -22,6 +24,7 @@ describe('TransactionsTable', () => {
 			id: 'txn_2',
 			name: 'Payroll Deposit',
 			amount: 2500,
+			transactionType: 'income',
 			date: '2024-04-18',
 			category: ['Income', 'Salary'],
 		},
@@ -29,6 +32,7 @@ describe('TransactionsTable', () => {
 			id: 'txn_3',
 			name: 'Gas Station',
 			amount: -45.0,
+			transactionType: 'expense',
 			date: '2024-04-19',
 			category: ['Transportation', 'Gas'],
 		},
@@ -104,6 +108,7 @@ describe('TransactionsTable', () => {
 				id: 'txn_edge_1',
 				name: 'Zero Amount',
 				amount: 0,
+				transactionType: 'income',
 				date: '2024-04-20',
 				category: ['Other'],
 			},
@@ -111,6 +116,7 @@ describe('TransactionsTable', () => {
 				id: 'txn_edge_2',
 				name: 'Large Negative',
 				amount: -9999.99,
+				transactionType: 'expense',
 				date: '2024-04-19',
 				category: ['Other'],
 			},
@@ -122,5 +128,24 @@ describe('TransactionsTable', () => {
 
 		expect(getByText('+$0.00')).toBeTruthy();
 		expect(getByText('-$9999.99')).toBeTruthy();
+	});
+
+	it('treats non-income transactions as expense labels even when amount is positive', () => {
+		const transactions: Transaction[] = [
+			{
+				id: 'txn_edge_3',
+				name: 'Manual Expense',
+				amount: 4.5,
+				transactionType: 'expense',
+				date: '2024-04-21',
+				category: ['Other'],
+			},
+		];
+
+		const { getByText } = render(
+			<TransactionsTable transactions={transactions} />,
+		);
+
+		expect(getByText('-$4.50')).toBeTruthy();
 	});
 });

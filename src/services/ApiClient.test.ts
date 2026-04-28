@@ -1,10 +1,12 @@
 import axios from 'axios';
 import {
-	apiClient,
 	GetLinkTokenResponse,
 	ExchangePublicTokenResponse,
 	ApiError,
+	ApiClient,
 } from '@services/ApiClient';
+
+const apiClient = new ApiClient('http://localhost:3001');
 
 // ── Axios mock setup ──────────────────────────────────────────────────────────
 

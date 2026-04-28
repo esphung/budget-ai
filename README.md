@@ -4,7 +4,7 @@ A React Native showcase app demonstrating two key capabilities:
 
 1. **Connecting to a financial institution** — uses Plaid to authenticate users and pull in real account and transaction data from their bank or credit union.
 2. **Practical AI suggestions** — surfaces actionable, context-aware spending insights and budget recommendations powered by an AI backend, grounded in the user's actual financial data rather than generic advice.
-3. **Custom App State** - no libraries oor extra weight. increased understanding of how React renders state vs everything else
+3. **Custom App State** - no libraries or extra weight. Increased understanding of how React renders state vs everything else.
 
 The goal of this project is to show how these two pieces — real financial data and AI-driven analysis — can be combined into a mobile experience that is genuinely useful rather than just technically impressive.
 
@@ -28,6 +28,27 @@ The goal of this project is to show how these two pieces — real financial data
 
 -   Built a lightweight state management library modeled after Zustand's API, adapted for dependency injection.
 -   Allows stores and services to be injected and swapped at any layer — useful for testing, feature flags, and environment-specific implementations — without coupling components to concrete dependencies.
+
+---
+
+## Folder Structure 📂
+
+The app is organized as follows:
+
+```
+src/
+  components/          # UI components
+    Shared/            # Reusable components (e.g., buttons, modals, tables)
+    Screens/           # Screen-specific components
+  hooks/               # Custom hooks
+  services/            # API and business logic
+  stores/              # State management
+  utils/               # Utility functions
+  types/               # TypeScript types
+  navigation/          # Navigation stacks
+  providers/           # Context providers
+  tests/               # Centralized test files
+```
 
 ---
 

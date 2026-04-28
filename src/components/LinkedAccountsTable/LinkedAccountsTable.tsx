@@ -1,5 +1,8 @@
-import styles from '@components/LinkedAccountsTable/LinkedAccountsTable.styles';
-import { Text, View } from 'react-native';
+import AppText from '@components/AppText/AppText';
+import { useTheme } from '@providers/ThemeProvider';
+import { createStyles } from '@components/LinkedAccountsTable/LinkedAccountsTable.styles';
+import { useMemo } from 'react';
+import { View } from 'react-native';
 import { LinkAccount } from 'react-native-plaid-link-sdk';
 
 interface LinkedAccountsTableProps {
@@ -9,34 +12,38 @@ interface LinkedAccountsTableProps {
 export default function LinkedAccountsTable({
 	accounts,
 }: LinkedAccountsTableProps) {
+	const { colors } = useTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
+
 	return (
 		<View style={styles.tableContainer}>
-			<Text style={styles.tableTitle}>Linked Accounts</Text>
+			<AppText style={styles.tableTitle}>Linked Accounts</AppText>
 			<View style={styles.tableRow}>
-				<Text
+				<AppText
 					style={[
 						styles.tableCell,
 						styles.tableHeader,
 						styles.tableCellWide,
 					]}>
 					Name
-				</Text>
-				<Text style={[styles.tableCell, styles.tableHeader]}>
+				</AppText>
+				<AppText style={[styles.tableCell, styles.tableHeader]}>
 					Type
-				</Text>
-				<Text style={[styles.tableCell, styles.tableHeader]}>
+				</AppText>
+				<AppText style={[styles.tableCell, styles.tableHeader]}>
 					Mask
-				</Text>
+				</AppText>
 			</View>
 			{accounts.map((a) => (
 				<View key={a.id} style={styles.tableRow}>
-					<Text style={[styles.tableCell, styles.tableCellWide]}>
+					<AppText
+						style={[styles.tableCell, styles.tableCellWide]}>
 						{a.name}
-					</Text>
-					<Text style={styles.tableCell}>
+					</AppText>
+					<AppText style={styles.tableCell}>
 						{String(a.subtype)}
-					</Text>
-					<Text style={styles.tableCell}>••{a.mask}</Text>
+					</AppText>
+					<AppText style={styles.tableCell}>••{a.mask}</AppText>
 				</View>
 			))}
 		</View>

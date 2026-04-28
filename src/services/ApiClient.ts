@@ -4,13 +4,7 @@ import axios, {
 	CanceledError,
 	InternalAxiosRequestConfig,
 } from 'axios';
-
-// ── Shared config ─────────────────────────────────────────────────────────────
-
-const BASE_URL = 'http://localhost:3001';
-const DEFAULT_TIMEOUT_MS = 15_000;
-
-// ── Request / response contracts ─────────────────────────────────────────────
+import { OpenAIAssistantResponse } from '../../shared/types/openai';
 
 export interface ApiError {
 	status: number;
@@ -24,8 +18,8 @@ export interface GetLinkTokenResponse {
 	link_token: string;
 	expiration: string;
 	request_id: string;
-	hosted_link_url?: string; // Optional URL for Plaid-hosted Link flow (if supported by the backend)
-	user_id?: string; // Optional user ID if returned by the server for client-side use
+	hosted_link_url?: string;
+	user_id?: string;
 }
 
 export interface ExchangePublicTokenRequest {
@@ -35,8 +29,6 @@ export interface ExchangePublicTokenRequest {
 export interface ExchangePublicTokenResponse {
 	accessToken: string;
 }
-
-// ── Error normalizer ──────────────────────────────────────────────────────────
 
 function normalizeError(err: unknown): ApiError {
 	if (err instanceof CanceledError) {
@@ -55,42 +47,24 @@ function normalizeError(err: unknown): ApiError {
 	return { status: 0, message: 'Unknown error', cause: err };
 }
 
-// ── Client ────────────────────────────────────────────────────────────────────
+class BaseService {
+	protected readonly http: AxiosInstance;
 
-class ApiClient {
-	private static instance: ApiClient;
-	private readonly http: AxiosInstance;
-
-	private constructor(baseUrl: string = BASE_URL) {
+	constructor(baseUrl: string) {
 		this.http = axios.create({
 			baseURL: baseUrl,
-			timeout: DEFAULT_TIMEOUT_MS,
+			timeout: 15_000,
 		});
 
-		// Attach auth token from store on every request when available
 		this.http.interceptors.request.use(
 			(config: InternalAxiosRequestConfig) => {
-				// TODO: read token from secure storage or auth store when implemented
-				// config.headers.Authorization = `Bearer ${token}`;
+				// TODO: Attach auth token dynamically
 				return config;
 			},
 		);
 	}
 
-	static getInstance(): ApiClient {
-		if (!ApiClient.instance) {
-			ApiClient.instance = new ApiClient();
-		}
-		return ApiClient.instance;
-	}
-
-	// ── Helpers ───────────────────────────────────────────────────────────────
-
-	/**
-	 * Wraps an axios call and normalizes errors into ApiError.
-	 * Pass an AbortSignal for cancellation support.
-	 */
-	private async request<T>(
+	protected async request<T>(
 		call: () => Promise<AxiosResponse<T>>,
 	): Promise<T> {
 		try {
@@ -100,13 +74,16 @@ class ApiClient {
 			throw normalizeError(err);
 		}
 	}
+}
+
+export class ApiClient extends BaseService {
+	constructor(baseUrl: string) {
+		super(baseUrl);
+	}
 
 	// ── Plaid ─────────────────────────────────────────────────────────────────
 
 	readonly plaid = {
-		/**
-		 * Creates a Plaid Link token to initialize the Link flow on the client.
-		 */
 		getLinkToken: (
 			signal?: AbortSignal,
 		): Promise<GetLinkTokenResponse> =>
@@ -116,10 +93,6 @@ class ApiClient {
 				}),
 			),
 
-		/**
-		 * Exchanges a public token (returned by Plaid Link) for a persistent
-		 * access token stored server-side.
-		 */
 		exchangePublicToken: (
 			body: ExchangePublicTokenRequest,
 			signal?: AbortSignal,
@@ -132,6 +105,20 @@ class ApiClient {
 				),
 			),
 	};
-}
 
-export const apiClient = ApiClient.getInstance();
+	// ── OpenAI ────────────────────────────────────────────────────────────────
+
+	readonly openai = {
+		sendMessage: (
+			messages: { role: string; content: string }[],
+			signal?: AbortSignal,
+		): Promise<OpenAIAssistantResponse> =>
+			this.request(() =>
+				this.http.post(
+					'/openai/send-message',
+					{ messages },
+					{ signal },
+				),
+			),
+	};
+}

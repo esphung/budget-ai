@@ -1,18 +1,20 @@
+import ActionButtonList, {
+	ActionButtonItem,
+} from '@components/ActionButtonList/ActionButtonList';
+import AppText from '@components/AppText/AppText';
 import LinkedAccountsTable from '@components/LinkedAccountsTable/LinkedAccountsTable';
+import PrimaryButton from '@components/PrimaryButton';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { TestID } from '@enums/TestID';
 import { usePlaidLink } from '@hooks/usePlaidLink';
+import { NavigationService } from '@navigation/navigationService';
+import { useApiClient } from '@providers/ApiClientProvider';
 import { useAuthStore } from '@providers/AuthProvider';
-import styles from '@screens/TestScreen/TestScreen.styles';
-import { useState } from 'react';
-import {
-	Button,
-	ScrollView,
-	Text,
-	TouchableOpacity,
-	View,
-} from 'react-native';
+import { useTheme } from '@providers/ThemeProvider';
+import { createStyles } from '@screens/TestScreen/TestScreen.styles';
+import { useCallback, useMemo, useState } from 'react';
+import { ScrollView, View } from 'react-native';
 import { LinkAccount } from 'react-native-plaid-link-sdk';
 
 interface Transaction {
@@ -25,6 +27,31 @@ interface Transaction {
 
 const TestScreen = () => {
 	const { logout } = useAuthStore();
+	const { colors } = useTheme();
+	const styles = useMemo(() => createStyles(colors), [colors]);
+	const actionItems = useMemo<ActionButtonItem[]>(
+		() => [
+			{
+				id: 'go_back',
+				title: 'Go Back',
+				type: 'secondary',
+				testID: 'TestScreen-GoBackButton',
+			},
+			{
+				id: 'logout',
+				title: 'Logout',
+				type: 'tertiary',
+				testID: 'TestScreen-LogoutButton',
+			},
+		],
+		[],
+	);
+	const { exchangePublicToken, getLinkToken } = useApiClient(
+		({ plaid }) => ({
+			exchangePublicToken: plaid.exchangePublicToken,
+			getLinkToken: plaid.getLinkToken,
+		}),
+	);
 
 	const [accounts, setAccounts] = useState<LinkAccount[] | null>(null);
 	const [transactions, setTransactions] = useState<Transaction[] | null>(
@@ -59,27 +86,55 @@ const TestScreen = () => {
 		onExit: (linkExit) => {
 			console.debug('[Plaid Link] Exit:', linkExit);
 		},
+		exchangePublicToken: exchangePublicToken,
+		getLinkToken: getLinkToken,
 	});
+
+	const handleAction = useCallback(
+		(itemId: string) => {
+			if (itemId === 'logout') {
+				logout();
+				return;
+			}
+
+			if (itemId === 'go_back') {
+				NavigationService.goBack();
+			}
+		},
+		[logout],
+	);
 
 	return (
 		<ThemedScreen>
 			<ScrollView
 				contentContainerStyle={styles.scrollContent}
 				testID={TestID.TestScreen}>
-				<View style={styles.buttonContainer}>
-					<TouchableOpacity
-						style={[
-							styles.button,
-							isStarting && styles.buttonDisabled,
-						]}
-						disabled={isStarting}
-						onPress={startPlaidLink}>
-						<Text style={styles.buttonText}>
-							{isStarting
+				<View style={styles.heroCard}>
+					<AppText variant="eyebrow" style={styles.eyebrow}>
+						Sandbox
+					</AppText>
+					<AppText variant="title" style={styles.heroTitle}>
+						Plaid + Insights
+					</AppText>
+					<AppText
+						variant="bodyMedium"
+						style={styles.heroSubtitle}>
+						Link accounts and preview transactions with
+						generated AI insight.
+					</AppText>
+					<PrimaryButton
+						title={
+							isStarting
 								? 'Starting Plaid...'
-								: 'Open Plaid Link'}
-						</Text>
-					</TouchableOpacity>
+								: 'Open Plaid Link'
+						}
+						onPress={() => {
+							if (!isStarting) {
+								startPlaidLink();
+							}
+						}}
+						width="100%"
+					/>
 				</View>
 				{accounts && <LinkedAccountsTable accounts={accounts} />}
 				{transactions && (
@@ -87,13 +142,21 @@ const TestScreen = () => {
 				)}
 				{insight && (
 					<View style={styles.insightCard}>
-						<Text style={styles.insightTitle}>AI Insight</Text>
-						<Text style={styles.insightText}>
+						<AppText
+							variant="small"
+							style={styles.insightTitle}>
+							AI Insight
+						</AppText>
+						<AppText variant="body" style={styles.insightText}>
 							{insight.trim()}
-						</Text>
+						</AppText>
 					</View>
 				)}
-				<Button title="Logout" onPress={logout} />
+				<ActionButtonList
+					items={actionItems}
+					onPressItem={handleAction}
+				/>
+				<View style={styles.bottomSpacer} />
 			</ScrollView>
 		</ThemedScreen>
 	);

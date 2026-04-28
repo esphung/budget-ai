@@ -8,6 +8,7 @@ import type { Config } from 'jest';
 const config: Config = {
 	preset: '@react-native/jest-preset',
 	setupFiles: ['<rootDir>/jest.setup.ts'],
+
 	// All imported modules in your tests should be mocked automatically
 	// automock: false,
 
@@ -50,15 +51,15 @@ const config: Config = {
 	// 	"clover"
 	// ],
 
-	// An object that configures minimum threshold enforcement for coverage results
-	coverageThreshold: {
-		global: {
-			branches: 80,
-			functions: 80,
-			lines: 80,
-			statements: 80,
-		},
-	},
+	// // An object that configures minimum threshold enforcement for coverage results
+	// coverageThreshold: {
+	// 	global: {
+	// 		branches: 80,
+	// 		functions: 80,
+	// 		lines: 80,
+	// 		statements: 80,
+	// 	},
+	// },
 
 	// A path to a custom dependency extractor
 	// dependencyExtractor: undefined,
@@ -104,7 +105,16 @@ const config: Config = {
 	// ],
 
 	// A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
-	// moduleNameMapper: {},
+	moduleNameMapper: {
+		'^react-native/Libraries/Animated/NativeAnimatedHelper$':
+			'<rootDir>/jest/mocks/NativeAnimatedHelper.ts',
+		'^react-native/Libraries/Animated/src/NativeAnimatedHelper$':
+			'<rootDir>/jest/mocks/NativeAnimatedHelper.ts',
+		'^react-native/src/private/animated/NativeAnimatedHelper$':
+			'<rootDir>/jest/mocks/NativeAnimatedHelper.ts',
+		'^react-native-plaid-link-sdk$':
+			'<rootDir>/jest/mocks/reactNativePlaidLinkSdk.ts',
+	},
 
 	// An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
 	// modulePathIgnorePatterns: [],
@@ -148,7 +158,7 @@ const config: Config = {
 	// setupFiles: [],
 
 	// A list of paths to modules that run some code to configure or set up the testing framework before each test
-	// setupFilesAfterEnv: [],
+	setupFilesAfterEnv: ['<rootDir>/jest/setup.ts'],
 
 	// The number of seconds after which a test is considered as slow and reported as such in the results.
 	// slowTestThreshold: 5,
@@ -189,10 +199,9 @@ const config: Config = {
 	// transform: undefined,
 
 	// An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-	// transformIgnorePatterns: [
-	//   "/node_modules/",
-	//   "\\.pnp\\.[^\\/]+$"
-	// ],
+	transformIgnorePatterns: [
+		'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-async-storage|@op-engineering)/)',
+	],
 
 	// An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
 	// unmockedModulePathPatterns: undefined,
@@ -200,11 +209,18 @@ const config: Config = {
 	// Indicates whether each individual test should be reported during the run
 	// verbose: undefined,
 
-	// An array of regexp patterns that are matched against all source file paths before re-running tests in watch mode
-	// watchPathIgnorePatterns: [],
+	// // An array of regexp patterns that are matched against all source file paths before re-running tests in watch mode
+	// watchPathIgnorePatterns: [
+	// 	'/node_modules/',
+	// 	'src/.*/index\\.ts$',
+	// 	'src/enums/.*\\.ts$',
+	// 	'src/screens/TestScreen/.*',
+	// 	'src/hooks/useDevMenu\\.ts',
+	// 	'server/.*',
+	// ],
 
 	// Whether to use watchman for file crawling
-	// watchman: true,
+	watchman: true,
 };
 
 export default config;

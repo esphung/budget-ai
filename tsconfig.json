@@ -16,7 +16,10 @@
 			"@enums/*": ["./src/enums/*"],
 			"@stores/*": ["./src/stores/*"],
 			"@providers/*": ["./src/providers/*"],
-			"@mocks/*": ["./src/mocks/*"]
+			"@mocks/*": ["./src/mocks/*"],
+			"@repositories/*": ["./src/repositories/*"],
+			"@db/*": ["./src/db/*"],
+			"types/*": ["./src/types/*"]
 		}
 	},
 	"include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "*.json"],

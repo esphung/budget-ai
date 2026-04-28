@@ -1,25 +1,21 @@
 import { useEffect } from 'react';
 import { DevSettings } from 'react-native';
+import { benchmarkService } from '@services/BenchmarkService';
 
-type DebugState = {
-	token: string | null;
-};
-
-export const useDevMenu = ({
-	onLogout,
-	getDebugState,
-}: {
-	onLogout: () => void;
-	getDebugState: () => DebugState;
-}) => {
+/**
+ * Adds a developer menu item to show benchmark results in development mode.
+ */
+export const useDevMenu = () => {
 	useEffect(() => {
-		if (!__DEV__) {
-			return;
-		}
-
-		DevSettings.addMenuItem('Reset Auth Token', onLogout);
-		DevSettings.addMenuItem('Print Debug State', () => {
-			console.log('Debug State:', getDebugState());
+		if (!__DEV__) return;
+		DevSettings.addMenuItem('Show Benchmarks', () => {
+			console.log(
+				`[DevMenu] Benchmark Results:\n${JSON.stringify(
+					benchmarkService.getResults(),
+					null,
+					2,
+				)}`,
+			);
 		});
-	}, [onLogout, getDebugState]);
+	}, []);
 };

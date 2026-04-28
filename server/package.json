@@ -9,9 +9,11 @@
 		"start": "node dist/index.js"
 	},
 	"dependencies": {
+		"axios": "^1.15.2",
 		"cors": "^2.8.5",
 		"dotenv": "^17.4.2",
 		"express": "^4.19.2",
+		"openai": "^6.34.0",
 		"plaid": "^42.1.0"
 	},
 	"devDependencies": {

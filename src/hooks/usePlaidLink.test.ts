@@ -1,5 +1,4 @@
 import { usePlaidLink } from '@hooks/usePlaidLink';
-import { apiClient } from '@services/ApiClient';
 import { act, renderHook } from '@testing-library/react-native';
 import {
 	create,
@@ -33,6 +32,8 @@ jest.mock('react-native-plaid-link-sdk', () => ({
 
 type OpenArgs = Parameters<typeof open>[0];
 
+const apiClient = require('@services/ApiClient').apiClient;
+
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 const mockCreate = create as jest.MockedFunction<typeof create>;
 const mockOpen = open as jest.MockedFunction<typeof open>;
@@ -61,7 +62,15 @@ describe('usePlaidLink', () => {
 	});
 
 	it('refreshLinkToken fetches and stores a token', async () => {
-		const { result } = renderHook(() => usePlaidLink());
+		const { result } = renderHook(() =>
+			usePlaidLink({
+				getLinkToken: mockApiClient.plaid.getLinkToken,
+				exchangePublicToken:
+					mockApiClient.plaid.exchangePublicToken,
+				onLinkedAccounts: () => {},
+				onExit: () => {},
+			}),
+		);
 
 		expect(result.current.hasLinkToken).toBe(false);
 
@@ -74,7 +83,15 @@ describe('usePlaidLink', () => {
 	});
 
 	it('clearLinkToken removes the stored token', async () => {
-		const { result } = renderHook(() => usePlaidLink());
+		const { result } = renderHook(() =>
+			usePlaidLink({
+				getLinkToken: mockApiClient.plaid.getLinkToken,
+				exchangePublicToken:
+					mockApiClient.plaid.exchangePublicToken,
+				onLinkedAccounts: () => {},
+				onExit: () => {},
+			}),
+		);
 
 		await act(async () => {
 			await result.current.refreshLinkToken();
@@ -89,7 +106,13 @@ describe('usePlaidLink', () => {
 	});
 
 	it('startPlaidLink fetches a token on demand and opens Plaid', async () => {
-		const { result } = renderHook(() => usePlaidLink());
+		const { result } = renderHook(() =>
+			usePlaidLink({
+				getLinkToken: mockApiClient.plaid.getLinkToken,
+				exchangePublicToken:
+					mockApiClient.plaid.exchangePublicToken,
+			}),
+		);
 
 		await act(async () => {
 			await result.current.startPlaidLink();
@@ -103,8 +126,17 @@ describe('usePlaidLink', () => {
 
 	it('clears token and emits linked accounts on successful link', async () => {
 		const onLinkedAccounts = jest.fn();
+		const exchangePublicTokenMock = mockApiClient.plaid
+			.exchangePublicToken as jest.Mock;
+		exchangePublicTokenMock.mockResolvedValue({
+			accessToken: 'access-token-1',
+		});
 		const { result } = renderHook(() =>
-			usePlaidLink({ onLinkedAccounts }),
+			usePlaidLink({
+				onLinkedAccounts,
+				exchangePublicToken: exchangePublicTokenMock,
+				getLinkToken: mockApiClient.plaid.getLinkToken,
+			}),
 		);
 
 		await act(async () => {
@@ -145,7 +177,14 @@ describe('usePlaidLink', () => {
 
 	it('clears token and invokes exit callback when user exits Link', async () => {
 		const onExit = jest.fn();
-		const { result } = renderHook(() => usePlaidLink({ onExit }));
+		const { result } = renderHook(() =>
+			usePlaidLink({
+				onExit,
+				getLinkToken: mockApiClient.plaid.getLinkToken,
+				exchangePublicToken:
+					mockApiClient.plaid.exchangePublicToken,
+			}),
+		);
 
 		await act(async () => {
 			await result.current.refreshLinkToken();

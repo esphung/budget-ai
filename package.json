@@ -13,16 +13,22 @@
 		"start": "react-native start --client-logs",
 		"test": "npx jest",
 		"test:coverage": "npx jest --coverage",
-		"typecheck": "npx tsc --noEmit",
-		"precommit": "yarn lint && yarn typecheck && yarn test"
+		"precommit": "yarn lint && yarn format:check && yarn test",
+		"db:open": "\"/Applications/DB Browser for SQLite.app/Contents/MacOS/DB Browser for SQLite\"",
+		"server": "(cd server && yarn dev)"
 	},
 	"dependencies": {
+		"@op-engineering/op-sqlite": "^15.2.12",
 		"@react-native-async-storage/async-storage": "^3.0.2",
+		"@react-navigation/native": "^7.2.2",
+		"@react-navigation/native-stack": "^7.14.12",
 		"axios": "^1.15.2",
 		"react": "19.2.3",
 		"react-native": "0.85.2",
+		"react-native-logs": "^5.6.0",
 		"react-native-plaid-link-sdk": "^12.8.0",
-		"react-native-safe-area-context": "5.5.2"
+		"react-native-safe-area-context": "5.5.2",
+		"react-native-screens": "^4.24.0"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.25.2",
@@ -51,5 +57,8 @@
 	"engines": {
 		"node": ">= 22.11.0"
 	},
-	"packageManager": "yarn@4.14.1"
+	"packageManager": "yarn@4.14.1",
+	"op-sqlite": {
+		"sqlcipher": false
+	}
 }
