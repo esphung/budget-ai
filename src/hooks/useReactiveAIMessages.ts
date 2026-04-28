@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react';
 export function useReactiveAIMessages(
 	db: DB | null,
 	threadId: string | null,
-) {
+): { messages: AIMessage[]; isLoaded: boolean } {
 	const [messages, setMessages] = useState<AIMessage[]>([]);
+	const [isLoaded, setIsLoaded] = useState(false);
 
 	useEffect(() => {
 		if (!db || !threadId) {
@@ -19,6 +20,7 @@ export function useReactiveAIMessages(
 		const fetchMessages = async () => {
 			const initialMessages = await repo.getMessages(threadId);
 			setMessages(initialMessages);
+			setIsLoaded(true);
 		};
 
 		const setupReactiveListener = () => {
@@ -46,5 +48,5 @@ export function useReactiveAIMessages(
 		};
 	}, [db, threadId]);
 
-	return [...messages];
+	return { messages: [...messages], isLoaded };
 }

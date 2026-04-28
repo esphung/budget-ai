@@ -162,4 +162,58 @@ describe('AiChatView', () => {
 
 		expect(mockKeyboardDismiss).toHaveBeenCalled();
 	});
+
+	it('shows a typing indicator while waiting for AI response', async () => {
+		let resolveSend: (() => void) | undefined;
+		const pendingSend = new Promise<void>((resolve) => {
+			resolveSend = resolve;
+		});
+		mockSendMessageAndApplyActions.mockReturnValue(pendingSend);
+
+		const { getByPlaceholderText, getByText, queryByTestId } = render(
+			<AiChatView threadId="thread-1" messages={[]} />,
+		);
+
+		expect(queryByTestId('AiChatView-TypingIndicator')).toBeNull();
+
+		fireEvent.changeText(
+			getByPlaceholderText('Type your message...'),
+			'What did I spend yesterday?',
+		);
+		fireEvent.press(getByText('Send'));
+
+		await waitFor(() => {
+			expect(
+				queryByTestId('AiChatView-TypingIndicator'),
+			).toBeTruthy();
+		});
+
+		resolveSend?.();
+		await waitFor(() => {
+			expect(queryByTestId('AiChatView-TypingIndicator')).toBeNull();
+		});
+	});
+
+	it('does not show typing indicator when backend is offline', async () => {
+		mockUseBackendHealth.mockReturnValue({
+			backendStatus: 'offline',
+			isBackendOnline: false,
+			refreshHealth: jest.fn(),
+		});
+
+		const { getByPlaceholderText, getByText, queryByTestId } = render(
+			<AiChatView threadId="thread-1" messages={[]} />,
+		);
+
+		fireEvent.changeText(
+			getByPlaceholderText('Type your message...'),
+			'Test offline behavior',
+		);
+		fireEvent.press(getByText('Send'));
+
+		await waitFor(() => {
+			expect(queryByTestId('AiChatView-TypingIndicator')).toBeNull();
+			expect(mockSendMessageAndApplyActions).not.toHaveBeenCalled();
+		});
+	});
 });

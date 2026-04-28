@@ -6,6 +6,7 @@ import BalanceHeader from '@components/BalanceHeader/BalanceHeader';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { TestID } from '@enums/TestID';
+import useGreeting from '@hooks/useGreeting';
 import useLoadThread from '@hooks/useLoadThread';
 import { useReactiveAIMessages } from '@hooks/useReactiveAIMessages';
 import { useReactiveTransactions } from '@hooks/useReactiveTransactions';
@@ -16,6 +17,7 @@ import {
 } from '@navigation/AppStack/AppStack';
 import { useAuthStore } from '@providers/AuthProvider';
 import { useDatabase } from '@providers/DatabaseProvider';
+import { useOpenAiService } from '@providers/OpenAiServiceProvider';
 import {
 	AppColors,
 	radius,
@@ -51,8 +53,10 @@ const HomeScreen = (_props: Props) => {
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { db } = useDatabase();
 	const { threadId } = useLoadThread(db);
-	const reactiveAiMessages = useReactiveAIMessages(db, threadId);
+	const { messages: reactiveAiMessages, isLoaded: isMessagesLoaded } =
+		useReactiveAIMessages(db, threadId);
 	const transactions = useReactiveTransactions(db);
+	const { aiService } = useOpenAiService();
 	const [activeView, setActiveView] = useState<'chat' | 'transactions'>(
 		'chat',
 	);
@@ -71,10 +75,14 @@ const HomeScreen = (_props: Props) => {
 
 	const tableTransactions = useMemo(() => {
 		return transactions.map((transaction) => ({
+			...transaction,
 			id: transaction.id,
 			name: transaction.merchant || 'Transaction',
 			amount: transaction.amount,
-			transactionType: transaction.transactionType,
+			transactionType: transaction.transactionType as
+				| 'income'
+				| 'expense'
+				| 'transfer',
 			date: transaction.date,
 			category: transaction.category
 				? transaction.category
@@ -82,6 +90,7 @@ const HomeScreen = (_props: Props) => {
 						.map((value) => value.trim())
 						.filter(Boolean)
 				: [],
+			merchant: transaction.merchant || '',
 		}));
 	}, [transactions]);
 
@@ -97,6 +106,13 @@ const HomeScreen = (_props: Props) => {
 		],
 		[],
 	);
+
+	useGreeting({
+		threadId,
+		messages: reactiveAiMessages,
+		isMessagesLoaded,
+		aiService,
+	});
 
 	// side effects
 	useEffect(() => {

@@ -26,6 +26,8 @@ const AiChatView = ({
 	messages: AIMessage[];
 }) => {
 	const [text, setText] = useState<string>('');
+	const [isAwaitingAiResponse, setIsAwaitingAiResponse] =
+		useState<boolean>(false);
 	const keyboardShift = useRef(new Animated.Value(0)).current;
 	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
@@ -86,14 +88,20 @@ const AiChatView = ({
 		if (!trimmed) return;
 		Keyboard.dismiss();
 		if (backendStatus === 'offline') return;
+		if (isAwaitingAiResponse) return;
 		setText('');
 		if (threadId && aiService) {
-			await aiService.sendMessageAndApplyActions({
-				threadId: threadId,
-				userText: trimmed,
-			});
+			setIsAwaitingAiResponse(true);
+			try {
+				await aiService.sendMessageAndApplyActions({
+					threadId: threadId,
+					userText: trimmed,
+				});
+			} finally {
+				setIsAwaitingAiResponse(false);
+			}
 		}
-	}, [backendStatus, text, threadId, aiService]);
+	}, [backendStatus, text, threadId, aiService, isAwaitingAiResponse]);
 
 	const dismissKeyboardOnTouchCapture = useCallback(() => {
 		Keyboard.dismiss();
@@ -137,6 +145,13 @@ const AiChatView = ({
 								: 'Checking AI connection...'}
 						</AppText>
 					</View>
+					{isAwaitingAiResponse && (
+						<AppText
+							style={styles.typingIndicator}
+							testID="AiChatView-TypingIndicator">
+							AI is typing...
+						</AppText>
+					)}
 					<TextInput
 						value={text}
 						onChangeText={setText}
@@ -169,9 +184,11 @@ const AiChatView = ({
 		styles.statusDotOffline,
 		styles.statusText,
 		styles.statusTextOffline,
+		styles.typingIndicator,
 		styles.input,
 		messages,
 		backendStatus,
+		isAwaitingAiResponse,
 		text,
 		colors.neutral.placeholder,
 		onSend,
@@ -241,6 +258,11 @@ const createStyles = (colors: AppColors) =>
 		},
 		statusTextOffline: {
 			color: colors.error,
+		},
+		typingIndicator: {
+			...typography.small,
+			color: colors.neutral.textSecondary,
+			paddingHorizontal: spacing.xs,
 		},
 		input: {
 			borderWidth: 1,

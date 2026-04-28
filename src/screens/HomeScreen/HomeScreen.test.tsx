@@ -29,6 +29,10 @@ jest.mock('@hooks/useLoadThread', () => ({
 	__esModule: true,
 	default: jest.fn(),
 }));
+jest.mock('@hooks/useGreeting', () => ({
+	__esModule: true,
+	default: jest.fn(),
+}));
 jest.mock('@hooks/useReactiveAIMessages');
 jest.mock('@hooks/useReactiveTransactions');
 jest.mock('@hooks/useTransactionBalance');
@@ -65,7 +69,10 @@ describe('HomeScreen', () => {
 			threadId: null,
 			isLoading: true,
 		});
-		(useReactiveAIMessages as jest.Mock).mockReturnValue([]);
+		(useReactiveAIMessages as jest.Mock).mockReturnValue({
+				messages: [],
+				isLoaded: false,
+			});
 
 		const { getByTestId } = renderWithProviders(
 			<HomeScreen {...mockProps} />,
@@ -79,7 +86,10 @@ describe('HomeScreen', () => {
 			threadId: null,
 			isLoading: true,
 		});
-		(useReactiveAIMessages as jest.Mock).mockReturnValue([]);
+		(useReactiveAIMessages as jest.Mock).mockReturnValue({
+				messages: [],
+				isLoaded: false,
+			});
 
 		const { getByText } = renderWithProviders(
 			<HomeScreen {...mockProps} />,
@@ -93,7 +103,10 @@ describe('HomeScreen', () => {
 			threadId: 'thread-1',
 			isLoading: false,
 		});
-		(useReactiveAIMessages as jest.Mock).mockReturnValue([]);
+		(useReactiveAIMessages as jest.Mock).mockReturnValue({
+				messages: [],
+				isLoaded: true,
+			});
 
 		const { getByText } = renderWithProviders(
 			<HomeScreen {...mockProps} />,
@@ -107,7 +120,10 @@ describe('HomeScreen', () => {
 			threadId: 'thread-1',
 			isLoading: false,
 		});
-		(useReactiveAIMessages as jest.Mock).mockReturnValue([]);
+		(useReactiveAIMessages as jest.Mock).mockReturnValue({
+			messages: [],
+			isLoaded: true,
+		});
 		(useReactiveTransactions as jest.Mock).mockReturnValue([
 			{
 				id: 'txn_1',

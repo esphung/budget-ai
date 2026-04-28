@@ -4,6 +4,7 @@ import { AIAction } from '@db/types';
 import { DB } from '@op-engineering/op-sqlite';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
 import { ApiClient } from '@services/ApiClient';
+import { AIPromptBuilder } from '@services/AIPromptBuilder';
 import { OpenAIAssistantResponse } from '../../shared/types/openai';
 
 const GPT_MODEL = 'gpt-4.1-nano';
@@ -186,5 +187,26 @@ export class OpenAiService {
 	}) => {
 		await this.sendAIMessage({ threadId, userText });
 		await this.processPendingAIActions({ threadId });
+	};
+
+	sendGreeting = async ({
+		threadId,
+	}: {
+		threadId: string;
+	}): Promise<void> => {
+		const promptBuilder = new AIPromptBuilder();
+		const prompt = promptBuilder.launchGreetingPrompt('');
+
+		const response = await this.callAI({
+			messages: [{ role: 'user', content: prompt.instructions }],
+		});
+
+		await this.repo.saveMessage({
+			threadId,
+			role: 'assistant',
+			messageType: 'text',
+			content: response.message,
+			model: GPT_MODEL,
+		});
 	};
 }
