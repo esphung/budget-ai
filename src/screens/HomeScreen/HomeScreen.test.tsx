@@ -70,9 +70,9 @@ describe('HomeScreen', () => {
 			isLoading: true,
 		});
 		(useReactiveAIMessages as jest.Mock).mockReturnValue({
-				messages: [],
-				isLoaded: false,
-			});
+			messages: [],
+			isLoaded: false,
+		});
 
 		const { getByTestId } = renderWithProviders(
 			<HomeScreen {...mockProps} />,
@@ -87,9 +87,9 @@ describe('HomeScreen', () => {
 			isLoading: true,
 		});
 		(useReactiveAIMessages as jest.Mock).mockReturnValue({
-				messages: [],
-				isLoaded: false,
-			});
+			messages: [],
+			isLoaded: false,
+		});
 
 		const { getByText } = renderWithProviders(
 			<HomeScreen {...mockProps} />,
@@ -104,9 +104,9 @@ describe('HomeScreen', () => {
 			isLoading: false,
 		});
 		(useReactiveAIMessages as jest.Mock).mockReturnValue({
-				messages: [],
-				isLoaded: true,
-			});
+			messages: [],
+			isLoaded: true,
+		});
 
 		const { getByText } = renderWithProviders(
 			<HomeScreen {...mockProps} />,
