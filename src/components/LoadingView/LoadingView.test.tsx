@@ -1,6 +1,6 @@
-import React from 'react';
+import LoadingView from '@components/LoadingView/LoadingView';
 import { render } from '@testing-library/react-native';
-import LoadingView from './LoadingView';
+import React from 'react';
 
 describe('LoadingView', () => {
 	test('renders correctly with a message', () => {

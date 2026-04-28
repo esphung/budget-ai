@@ -1,10 +1,11 @@
 import MessageList from '@components/Chat/MessageList';
+import LoadingView from '@components/LoadingView/LoadingView';
 import PrimaryButton from '@components/PrimaryButton';
 import { AIMessage } from '@db/types';
 import { useOpenAiService } from '@providers/OpenAiServiceProvider';
-import LoadingView from '@screens/HomeScreen/LoadingView';
+import { colors, radius, spacing } from '@theme/tokens';
 import { useCallback, useMemo, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 const AiChatView = ({
 	threadId,
@@ -33,33 +34,59 @@ const AiChatView = ({
 			return <LoadingView message="Loading conversation thread..." />;
 		}
 		return (
-			<View style={{ flex: 1 }}>
+			<View style={styles.content}>
 				{![...(messages || [])].length ? (
 					<LoadingView message="No messages yet." />
 				) : (
 					<MessageList messages={[...(messages || [])]} />
 				)}
-				<TextInput
-					value={text}
-					onChangeText={setText}
-					placeholder="Type your message..."
-					style={{
-						borderWidth: 1,
-						padding: 12,
-						borderRadius: 8,
-						marginBottom: 8,
-						marginTop: 8,
-					}}
-					onSubmitEditing={onSend}
-					returnKeyType="send"
-					submitBehavior="submit"
-				/>
-				<PrimaryButton title="Send" onPress={onSend} width="100%" />
+				<View style={styles.composer}>
+					<TextInput
+						value={text}
+						onChangeText={setText}
+						placeholder="Type your message..."
+						placeholderTextColor="#94A3B8"
+						style={styles.input}
+						onSubmitEditing={onSend}
+						returnKeyType="send"
+						submitBehavior="submit"
+					/>
+					<PrimaryButton
+						title="Send"
+						onPress={onSend}
+						width="100%"
+					/>
+				</View>
 			</View>
 		);
 	}, [messages, onSend, text, threadId]);
 
-	return <View style={{ flex: 1, padding: 16 }}>{contentView}</View>;
+	return <View style={styles.container}>{contentView}</View>;
 };
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		paddingHorizontal: spacing.lg - 2,
+		paddingTop: spacing.lg - 2,
+		paddingBottom: spacing.md + 1,
+	},
+	content: {
+		flex: 1,
+	},
+	composer: {
+		marginTop: spacing.md - 2,
+		gap: spacing.sm,
+	},
+	input: {
+		borderWidth: 1,
+		borderColor: colors.neutral.border,
+		paddingHorizontal: spacing.lg - 2,
+		paddingVertical: spacing.md,
+		borderRadius: radius.md,
+		backgroundColor: colors.neutral.surface,
+		color: colors.neutral.text,
+	},
+});
 
 export default AiChatView;

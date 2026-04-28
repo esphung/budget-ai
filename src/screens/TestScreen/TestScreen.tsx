@@ -1,3 +1,4 @@
+import PrimaryButton from '@components/PrimaryButton';
 import LinkedAccountsTable from '@components/LinkedAccountsTable/LinkedAccountsTable';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
@@ -7,13 +8,7 @@ import { useApiClient } from '@providers/ApiClientProvider';
 import { useAuthStore } from '@providers/AuthProvider';
 import styles from '@screens/TestScreen/TestScreen.styles';
 import { useState } from 'react';
-import {
-	Button,
-	ScrollView,
-	Text,
-	TouchableOpacity,
-	View,
-} from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { LinkAccount } from 'react-native-plaid-link-sdk';
 
 interface Transaction {
@@ -73,20 +68,26 @@ const TestScreen = () => {
 			<ScrollView
 				contentContainerStyle={styles.scrollContent}
 				testID={TestID.TestScreen}>
-				<View style={styles.buttonContainer}>
-					<TouchableOpacity
-						style={[
-							styles.button,
-							isStarting && styles.buttonDisabled,
-						]}
-						disabled={isStarting}
-						onPress={startPlaidLink}>
-						<Text style={styles.buttonText}>
-							{isStarting
+				<View style={styles.heroCard}>
+					<Text style={styles.eyebrow}>Sandbox</Text>
+					<Text style={styles.heroTitle}>Plaid + Insights</Text>
+					<Text style={styles.heroSubtitle}>
+						Link accounts and preview transactions with
+						generated AI insight.
+					</Text>
+					<PrimaryButton
+						title={
+							isStarting
 								? 'Starting Plaid...'
-								: 'Open Plaid Link'}
-						</Text>
-					</TouchableOpacity>
+								: 'Open Plaid Link'
+						}
+						onPress={() => {
+							if (!isStarting) {
+								startPlaidLink();
+							}
+						}}
+						width="100%"
+					/>
 				</View>
 				{accounts && <LinkedAccountsTable accounts={accounts} />}
 				{transactions && (
@@ -100,7 +101,12 @@ const TestScreen = () => {
 						</Text>
 					</View>
 				)}
-				<Button title="Logout" onPress={logout} />
+				<PrimaryButton
+					title="Logout"
+					onPress={logout}
+					width="100%"
+					type="tertiary"
+				/>
 			</ScrollView>
 		</ThemedScreen>
 	);

@@ -4,7 +4,9 @@ import {
 	StyleSheet,
 	Text,
 	TouchableOpacity,
+	ViewStyle,
 } from 'react-native';
+import { colors, radius, spacing } from '@theme/tokens';
 
 type PrimaryButtonProps = {
 	title: string;
@@ -12,10 +14,11 @@ type PrimaryButtonProps = {
 	width?: DimensionValue;
 	testID?: string;
 	type?: 'primary' | 'secondary' | 'tertiary';
+	style?: ViewStyle;
 };
 
 const PrimaryButton: React.FC<PrimaryButtonProps> = memo(
-	({ title, onPress, width = 200, testID, type = 'primary' }) => {
+	({ title, onPress, width = 200, testID, type = 'primary', style }) => {
 		const customStyle = useMemo(() => {
 			const baseStyle = [styles.button, { width }];
 			if (type === 'tertiary') {
@@ -40,7 +43,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = memo(
 
 		return (
 			<TouchableOpacity
-				style={customStyle}
+				style={StyleSheet.flatten([customStyle, style])}
 				onPress={onPress}
 				testID={testID}>
 				<Text style={textStyle}>{title}</Text>
@@ -56,28 +59,34 @@ const styles = StyleSheet.create({
 		borderWidth: 0,
 	},
 	button: {
-		paddingVertical: 12,
-		paddingHorizontal: 24,
-		borderRadius: 8,
+		paddingVertical: spacing.md + 1,
+		paddingHorizontal: spacing.xxl,
+		borderRadius: radius.md,
 		alignItems: 'center',
 		justifyContent: 'center',
-		height: 48,
+		height: 52,
 	},
 	primary: {
-		backgroundColor: '#007BFF',
+		backgroundColor: colors.primary.base,
+		shadowColor: colors.primary.base,
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.2,
+		shadowRadius: 16,
+		elevation: 3,
 	},
 	secondary: {
-		backgroundColor: 'white',
-		borderColor: '#6C757D',
+		backgroundColor: colors.neutral.surface,
+		borderColor: colors.neutral.border,
 		borderWidth: 1,
 	},
 	text: {
-		color: '#FFFFFF',
+		color: colors.neutral.surface,
 		fontSize: 16,
-		fontWeight: 'bold',
+		fontWeight: '700',
 	},
 	tertiaryText: {
-		color: 'red',
+		color: colors.error,
+		fontWeight: '700',
 	},
 });
 

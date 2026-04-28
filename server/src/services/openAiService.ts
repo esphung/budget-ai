@@ -2,6 +2,61 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { env } from './env';
 import { responseFormat } from './responseFormat';
 import type { OpenAI } from 'openai';
+import type {
+	Action,
+	OpenAIAssistantResponse,
+} from '../types/openai';
+
+function isAction(value: unknown): value is Action {
+	if (!value || typeof value !== 'object') {
+		return false;
+	}
+
+	const candidate = value as {
+		type?: unknown;
+		payload?: unknown;
+	};
+
+	return (
+		(candidate.type === 'save_transaction' ||
+			candidate.type === 'navigate') &&
+		!!candidate.payload &&
+		typeof candidate.payload === 'object'
+	);
+}
+
+function toAssistantResponse(
+	completion: OpenAI.ChatCompletion,
+): OpenAIAssistantResponse {
+	const rawContent = completion.choices?.[0]?.message?.content;
+	const fallbackMessage =
+		typeof rawContent === 'string' && rawContent.length > 0
+			? rawContent
+			: 'I had trouble generating a response. Please try again.';
+
+	if (typeof rawContent !== 'string' || rawContent.length === 0) {
+		return { message: fallbackMessage, actions: [] };
+	}
+
+	try {
+		const parsed = JSON.parse(rawContent) as {
+			message?: unknown;
+			actions?: unknown;
+		};
+
+		const message =
+			typeof parsed.message === 'string' && parsed.message.length > 0
+				? parsed.message
+				: fallbackMessage;
+		const actions = Array.isArray(parsed.actions)
+			? parsed.actions.filter(isAction)
+			: [];
+
+		return { message, actions };
+	} catch {
+		return { message: fallbackMessage, actions: [] };
+	}
+}
 
 class OpenAiService {
 	private static instance: OpenAiService;
@@ -26,7 +81,9 @@ class OpenAiService {
 		return OpenAiService.instance;
 	}
 
-	async sendAIMessage(messages: { role: string; content: string }[]) {
+	async sendAIMessage(
+		messages: { role: string; content: string }[],
+	): Promise<OpenAIAssistantResponse> {
 		try {
 			const response = await axios<OpenAI.ChatCompletion>({
 				...this.config,
@@ -59,7 +116,7 @@ Rules:
 					response_format: responseFormat,
 				},
 			});
-			return response.data;
+			return toAssistantResponse(response.data);
 		} catch (error: any) {
 			console.error(
 				'Error sending AI message:',

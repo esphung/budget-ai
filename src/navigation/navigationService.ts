@@ -21,6 +21,8 @@ export const mapToAppStackScreen = (
 			return AppStackScreens.Home;
 		case AppStackScreens.Test:
 			return AppStackScreens.Test;
+		case AppStackScreens.Settings:
+			return AppStackScreens.Settings;
 		default:
 			console.warn(`Unknown screen requested: ${screen}`);
 			return null;
@@ -28,6 +30,12 @@ export const mapToAppStackScreen = (
 };
 
 export class NavigationService {
+	static goBack() {
+		if (navigationRef.isReady() && navigationRef.canGoBack()) {
+			navigationRef.goBack();
+		}
+	}
+
 	static getCurrentRouteName(): AppStackScreens | null {
 		if (navigationRef.isReady()) {
 			const routeName = navigationRef.getCurrentRoute()?.name;

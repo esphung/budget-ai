@@ -44,6 +44,7 @@ export const responseFormat: OpenAI.ResponseFormatJSONSchema = {
 									},
 									screen: {
 										enum: [
+											'SettingsScreen',
 											'HomeScreen',
 											'TestScreen',
 											'null',

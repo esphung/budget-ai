@@ -5,30 +5,9 @@ import { DB } from '@op-engineering/op-sqlite';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
 import { ApiClient } from '@services/ApiClient';
 import { mapAIMessageForAI } from '@utils/messageUtils';
-import { OpenAIChatCompletion, Action } from '../../shared/types/openai';
+import { OpenAIAssistantResponse } from '../../shared/types/openai';
 
 const GPT_MODEL = 'gpt-4.1-nano';
-
-function parseActionsFromContent(content: string | null): Action[] {
-	try {
-		// Parse the JSON content
-		const parsedContent = JSON.parse(content || '{}');
-
-		// Extract the actions array
-		const actions = parsedContent.actions;
-
-		// Check if actions exist and return them
-		if (actions && Array.isArray(actions)) {
-			return actions;
-		} else {
-			console.warn('No actions found in the content.');
-			return [];
-		}
-	} catch (error) {
-		console.error('Failed to parse content:', error);
-		return [];
-	}
-}
 
 export class OpenAiService {
 	private api: ApiClient;
@@ -80,6 +59,7 @@ export class OpenAiService {
 		threadId: string;
 		userText: string;
 	}) {
+		console.log('[OpenAIService] sendAIMessage - userText:', userText);
 		// 1. Save what the user said.
 		await this.repo.saveMessage({
 			threadId,
@@ -92,23 +72,25 @@ export class OpenAiService {
 		const messages = await this.repo.getMessages(threadId);
 
 		// 3. Send to your backend/OpenAI.
-		const response: OpenAIChatCompletion = await this.callAI({
+		const response = await this.callAI({
 			messages: messages.map(mapAIMessageForAI),
 		});
 
+		const parsed = response;
+		console.log(
+			'[OpenAIService] sendAIMessage - parsed assistant content:',
+			JSON.stringify(parsed, null, 2),
+		);
 		// 4. Save assistant text response.
 		const assistantMessageId = await this.repo.saveMessage({
 			threadId,
 			role: 'assistant',
 			messageType: 'text',
-			content: response.choices[0].message.content,
+			content: parsed.message,
 			model: GPT_MODEL,
 		});
 
-		// @ts-ignore
-		const actions = parseActionsFromContent(
-			response.choices[0].message.content,
-		);
+		const actions = parsed.actions;
 		console.log(
 			'[OpenAIService] sendAIMessage - extracted actions:',
 			JSON.stringify(actions, null, 2),
@@ -137,9 +119,7 @@ export class OpenAiService {
 		}
 	} // End of sendAIMessage
 
-	async callAI(params: {
-		messages: Message[];
-	}): Promise<OpenAIChatCompletion> {
+	async callAI(params: { messages: Message[] }): Promise<OpenAIAssistantResponse> {
 		const response = await this.api.openai.sendMessage(params.messages);
 		return response;
 	}

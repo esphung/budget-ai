@@ -30,6 +30,10 @@ jest.mock('@op-engineering/op-sqlite', () => ({
 
 describe('OpenAiServiceProvider', () => {
 	it('provides the OpenAiService context to its children', () => {
+		const mockDb = {
+			getDbPath: jest.fn(() => '/tmp/budgetai.db'),
+		} as unknown as any;
+
 		const MockChild = () => {
 			const openAiService = useOpenAiService();
 			expect(openAiService).toBeDefined();
@@ -37,7 +41,7 @@ describe('OpenAiServiceProvider', () => {
 		};
 
 		render(
-			<DatabaseProvider>
+			<DatabaseProvider db={mockDb}>
 				<OpenAiServiceProvider>
 					<MockChild />
 				</OpenAiServiceProvider>

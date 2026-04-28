@@ -1,7 +1,7 @@
+import MessageCard from '@components/Chat/MessageCard';
 import { AIMessage } from '@db/types';
 import React, { forwardRef } from 'react';
 import { FlatList } from 'react-native';
-import MessageCard from './MessageCard';
 
 const MessageList = forwardRef<FlatList, { messages: AIMessage[] }>(
 	({ messages }, ref) => {
@@ -12,6 +12,8 @@ const MessageList = forwardRef<FlatList, { messages: AIMessage[] }>(
 				keyExtractor={(item) => item.id}
 				inverted
 				renderItem={({ item }) => <MessageCard item={item} />}
+				showsVerticalScrollIndicator={false}
+				testID="MessageList"
 			/>
 		);
 	},
