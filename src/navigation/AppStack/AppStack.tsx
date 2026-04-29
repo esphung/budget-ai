@@ -41,7 +41,6 @@ const AppStack = () => {
 			<Stack.Screen
 				name={AppStackScreens.ManualTransaction}
 				component={ManualTransactionScreen}
-				options={{ headerShown: true, title: 'Manual Transaction' }}
 			/>
 		</Stack.Navigator>
 	);
