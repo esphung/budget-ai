@@ -133,16 +133,12 @@ const AiChatView = ({
 							]}
 						/>
 						<AppText
+							testID="AiChatView-BackendStatus"
 							style={[
 								styles.statusText,
 								backendStatus === 'offline' &&
 									styles.statusTextOffline,
-							]}
-							testID={
-								isAwaitingAiResponse
-									? 'AiChatView-TypingIndicator'
-									: undefined
-							}>
+							]}>
 							{isAwaitingAiResponse
 								? 'AI is typing...'
 								: backendStatus === 'online'
