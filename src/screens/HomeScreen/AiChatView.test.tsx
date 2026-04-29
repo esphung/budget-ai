@@ -1,4 +1,5 @@
 import AiChatView from '@screens/HomeScreen/AiChatView';
+import { act } from 'react-test-renderer';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 import { Keyboard } from 'react-native';
@@ -7,6 +8,10 @@ const mockSendMessageAndApplyActions = jest.fn();
 const mockCheckHealth = jest.fn();
 const mockUseBackendHealth = jest.fn();
 const mockKeyboardDismiss = jest.fn();
+const mockDismissKeyboardOnTouchCapture = jest.fn(() => {
+	Keyboard.dismiss();
+	return false;
+});
 
 jest.mock('@components/AppText/AppText', () => {
 	const { Text } = require('react-native');
@@ -38,6 +43,18 @@ jest.mock('@components/PrimaryButton', () => {
 
 jest.mock('@hooks/useBackendHealth', () => ({
 	useBackendHealth: (...args: unknown[]) => mockUseBackendHealth(...args),
+}));
+
+jest.mock('../../hooks/useKeyboardShift', () => ({
+	__esModule: true,
+	default: () => {
+		const { Animated } = require('react-native');
+		return {
+			keyboardShift: new Animated.Value(0),
+			dismissKeyboardOnTouchCapture:
+				mockDismissKeyboardOnTouchCapture,
+		};
+	},
 }));
 
 jest.mock('@providers/ApiClientProvider', () => ({
@@ -84,14 +101,15 @@ describe('AiChatView', () => {
 		jest.spyOn(Keyboard, 'dismiss').mockImplementation(
 			mockKeyboardDismiss,
 		);
-		jest.spyOn(Keyboard, 'addListener').mockReturnValue({
-			remove: jest.fn(),
-		} as any);
 		mockUseBackendHealth.mockReturnValue({
 			backendStatus: 'online',
 			isBackendOnline: true,
 			refreshHealth: jest.fn(),
 		});
+	});
+
+	afterEach(() => {
+		jest.restoreAllMocks();
 	});
 
 	it('shows the offline indicator when the backend is unavailable', () => {
@@ -187,9 +205,16 @@ describe('AiChatView', () => {
 			expect(queryByText('AI is typing...')).toBeTruthy();
 		});
 
-		resolveSend?.();
 		await waitFor(() => {
-			expect(queryByText('AI is typing...')).toBeNull();
+			expect(mockSendMessageAndApplyActions).toHaveBeenCalledTimes(1);
+		});
+
+		await act(async () => {
+			resolveSend?.();
+			await pendingSend;
+		});
+
+		await waitFor(() => {
 			expect(queryByText('AI online')).toBeTruthy();
 		});
 	});

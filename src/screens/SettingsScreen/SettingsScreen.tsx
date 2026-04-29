@@ -7,10 +7,13 @@ import { TestID } from '@enums/TestID';
 import { AppStackScreens } from '@navigation/AppStack/AppStack';
 import { NavigationService } from '@navigation/navigationService';
 import { useAuthStore } from '@providers/AuthProvider';
+import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
+import { AccountRepository } from '@repositories/AccountRepository';
+import { TransactionRepository } from '@repositories/TransactionRepository';
 import { AppColors, radius, spacing, shadows } from '@theme/tokens';
 import { useCallback, useMemo } from 'react';
-import { StyleSheet, Switch, View } from 'react-native';
+import { Alert, StyleSheet, Switch, View } from 'react-native';
 
 const DATA: ActionButtonItem[] = [
 	{
@@ -24,6 +27,18 @@ const DATA: ActionButtonItem[] = [
 		title: 'Go Back',
 		type: 'secondary',
 		testID: 'SettingsOption-go_back',
+	},
+	{
+		id: 'clear_transactions',
+		title: 'Clear Transactions',
+		type: 'tertiary',
+		testID: 'SettingsOption-clear_transactions',
+	},
+	{
+		id: 'clear_accounts',
+		title: 'Clear Accounts',
+		type: 'tertiary',
+		testID: 'SettingsOption-clear_accounts',
 	},
 ];
 
@@ -41,7 +56,15 @@ const SWITCH_ITEMS: SwitchItem[] = [
 	},
 ];
 
-const SettingsActions = ({ onLogout }: { onLogout: () => void }) => {
+const SettingsActions = ({
+	onLogout,
+	onClearTransactions,
+	onClearAccounts,
+}: {
+	onLogout: () => void;
+	onClearTransactions: () => void;
+	onClearAccounts: () => void;
+}) => {
 	const handleAction = useCallback(
 		(itemId: string) => {
 			if (itemId === 'go_back') {
@@ -50,9 +73,13 @@ const SettingsActions = ({ onLogout }: { onLogout: () => void }) => {
 				onLogout();
 			} else if (itemId === 'test_screen') {
 				NavigationService.navigateToScreen(AppStackScreens.Test);
+			} else if (itemId === 'clear_transactions') {
+				onClearTransactions();
+			} else if (itemId === 'clear_accounts') {
+				onClearAccounts();
 			}
 		},
-		[onLogout],
+		[onClearAccounts, onClearTransactions, onLogout],
 	);
 
 	return <ActionButtonList items={DATA} onPressItem={handleAction} />;
@@ -111,8 +138,51 @@ const SettingsSwitches = ({
 
 const SettingsScreen = () => {
 	const { logout } = useAuthStore();
+	const { db } = useDatabase();
 	const { colors } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
+
+	const clearTransactions = useCallback(() => {
+		if (!db) {
+			return;
+		}
+
+		Alert.alert(
+			'Clear transactions?',
+			'This will remove all transactions from local state and database.',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{
+					text: 'Clear',
+					style: 'destructive',
+					onPress: async () => {
+						await new TransactionRepository(db).clearAll();
+					},
+				},
+			],
+		);
+	}, [db]);
+
+	const clearAccounts = useCallback(() => {
+		if (!db) {
+			return;
+		}
+
+		Alert.alert(
+			'Clear accounts?',
+			'This will remove all accounts from local state and database.',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{
+					text: 'Clear',
+					style: 'destructive',
+					onPress: async () => {
+						await new AccountRepository(db).clearAll();
+					},
+				},
+			],
+		);
+	}, [db]);
 
 	return (
 		<ThemedScreen>
@@ -127,7 +197,11 @@ const SettingsScreen = () => {
 					<AppText variant="subtitle" style={styles.subtitle}>
 						Choose an action to continue.
 					</AppText>
-					<SettingsActions onLogout={logout} />
+					<SettingsActions
+						onLogout={logout}
+						onClearTransactions={clearTransactions}
+						onClearAccounts={clearAccounts}
+					/>
 				</View>
 
 				<View style={styles.switchesCard}>

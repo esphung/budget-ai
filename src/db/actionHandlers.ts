@@ -60,7 +60,7 @@ export const actionHandlers: Record<
 	) => Promise<void>
 > = {
 	save_transaction: async (db, repo, action, threadId) => {
-		const transactionId = generateUniqueId('txn_');
+		const transactionId = generateUniqueId('txn');
 		const mappedPayload = mapActionPayloadToTxnParams(action.payload);
 		const now = new Date().toISOString();
 

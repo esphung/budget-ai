@@ -1,9 +1,6 @@
 import { TestID } from '@enums/TestID';
 import RootStack from '@navigation/RootStack/RootStack';
-import { ApiClientProvider } from '@providers/ApiClientProvider';
 import { AuthProvider } from '@providers/AuthProvider';
-import { DatabaseProvider } from '@providers/DatabaseProvider';
-import { StorageService } from '@services/StorageService';
 import { createAuthStore } from '@stores/AuthStore';
 import { render, waitFor } from '@testing-library/react-native';
 
@@ -19,6 +16,7 @@ jest.mock('@op-engineering/op-sqlite', () => ({
 			};
 			cb(tx);
 		}),
+		execute: jest.fn(),
 	}),
 }));
 
@@ -41,54 +39,52 @@ jest.mock('@navigation/AuthStack/AuthStack', () => {
 });
 
 jest.mock('@services/StorageService', () => {
+	const mockStorage = {
+		saveItem: jest.fn(),
+		loadItem: jest.fn(),
+		clearItem: jest.fn(),
+	};
+
 	return {
 		StorageService: {
-			getInstance: jest.fn(() => ({
-				saveItem: jest.fn(),
-				loadItem: jest.fn().mockResolvedValue('mock-token'),
-				clearItem: jest.fn(),
-			})),
+			getInstance: jest.fn(() => mockStorage),
 		},
+		__mockStorage: mockStorage,
 	};
 });
 
-function renderWithProviders(
-	ui: React.ReactElement,
-	token: string | null = null,
-) {
+jest.mock('@db/runAIMigrations', () => ({
+	__esModule: true,
+	runAIMigrations: jest.fn().mockResolvedValue(undefined),
+}));
+
+function renderWithProviders(ui: React.ReactElement) {
 	const store = createAuthStore();
-	const mockStorage = StorageService.getInstance('@auth');
-	const actions = store.createActions(jest.fn(), mockStorage);
-	const mockDb = {
-		getDbPath: jest.fn(() => '/tmp/budgetai.db'),
-	} as unknown as any;
 
-	// Set the token if provided
-	if (token) {
-		actions.setToken(token);
-	}
-
-	return render(
-		<DatabaseProvider db={mockDb}>
-			<ApiClientProvider>
-				<AuthProvider store={store}>{ui}</AuthProvider>
-			</ApiClientProvider>
-		</DatabaseProvider>,
-	);
+	return render(<AuthProvider store={store}>{ui}</AuthProvider>);
 }
 
 describe('RootStack', () => {
-	it('renders AuthStack when token is null', () => {
+	const { __mockStorage } = jest.requireMock('@services/StorageService');
+
+	beforeEach(() => {
+		__mockStorage.loadItem.mockReset();
+	});
+
+	it('renders AuthStack when token is null', async () => {
+		__mockStorage.loadItem.mockResolvedValue(null);
+
 		const { getByTestId } = renderWithProviders(<RootStack />);
-		const authStack = getByTestId(TestID.AuthStack);
-		expect(authStack).toBeVisible();
+
+		await waitFor(() => {
+			expect(getByTestId(TestID.AuthStack)).toBeVisible();
+		});
 	});
 
 	it('renders AppStack when persisted token exists', async () => {
-		const { getByTestId } = renderWithProviders(
-			<RootStack />,
-			'mock-token',
-		);
+		__mockStorage.loadItem.mockResolvedValue('mock-token');
+
+		const { getByTestId } = renderWithProviders(<RootStack />);
 
 		await waitFor(() => {
 			expect(getByTestId(TestID.AppStack)).toBeVisible();

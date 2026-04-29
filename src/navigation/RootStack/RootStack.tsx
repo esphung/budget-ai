@@ -1,4 +1,5 @@
 import { runAIMigrations } from '@db/runAIMigrations';
+import { useDevDataReset } from '@hooks/useDevDataReset';
 import AppStack from '@navigation/AppStack/AppStack';
 import AuthStack from '@navigation/AuthStack/AuthStack';
 import { navigationRef } from '@navigation/navigationService';
@@ -16,16 +17,27 @@ const RootStack = () => {
 	const token = useAuthStore((s) => s.token);
 
 	const [db, setDb] = useState<DatabaseService['_db'] | null>(null);
+	useDevDataReset(db);
 
 	// mount DB and run migrations when it becomes available
 	useEffect(() => {
 		const onUpdate = async (update: DatabaseService['_db']) => {
 			dbLog.debug('Received DB update in RootStack');
-			setDb(update);
 
-			if (!update) return;
-			await runAIMigrations(update);
-			dbLog.debug('DB migrations complete');
+			// if we don't have a DB instance yet or we removed the DB, set it immediately without running migrations
+			if (!update) {
+				setDb(update);
+				return;
+			}
+
+			// run migrations on the new DB instance before setting it in state
+			try {
+				await runAIMigrations(update);
+				dbLog.debug('DB migrations complete');
+				setDb(update);
+			} catch (error) {
+				dbLog.error('DB migrations failed', error);
+			}
 		};
 
 		// subscribe to database updates
