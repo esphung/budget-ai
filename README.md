@@ -108,9 +108,8 @@ yarn format:fix
 yarn format:check
 ```
 
-### Backend Server 🎉 # ts-node-dev with hot reload
+### Backend Server 🎉
 
 ```sh
 BASE_URL=https://budget-ai-backend-f2124bc32a19.herokuapp.com
-# BASE_URL=https://budget-ai-backend.onrender.com # render.com previous url; still live
 ```
