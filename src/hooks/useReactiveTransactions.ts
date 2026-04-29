@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 export type TransactionRecord = {
 	id: string;
+	accountId: string | null;
 	amount: number;
 	merchant: string | null;
 	category: string | null;
@@ -27,6 +28,7 @@ export function useReactiveTransactions(db: DB | null) {
 				const result = await db.execute(`
 					SELECT
 						id,
+						account_id as accountId,
 						amount,
 						merchant,
 						category,
@@ -39,8 +41,44 @@ export function useReactiveTransactions(db: DB | null) {
 
 				setTransactions(result.rows as TransactionRecord[]);
 			} catch (error) {
-				console.error('Error fetching transactions:', error);
-				setTransactions([]);
+				const errorMessage =
+					error instanceof Error ? error.message : String(error);
+				const isMissingAccountId =
+					errorMessage.includes('no such column: account_id') ||
+					errorMessage.includes('no such column: account_i');
+
+				if (!isMissingAccountId) {
+					console.error('Error fetching transactions:', error);
+					setTransactions([]);
+					return;
+				}
+
+				try {
+					// Backward compatibility for existing databases before account_id migration.
+					const fallbackResult = await db.execute(`
+						SELECT
+							id,
+							NULL as accountId,
+							amount,
+							merchant,
+							category,
+							transaction_type as transactionType,
+							date,
+							created_at as createdAt
+						FROM transactions
+						ORDER BY date DESC, created_at DESC
+					`);
+
+					setTransactions(
+						fallbackResult.rows as TransactionRecord[],
+					);
+				} catch (fallbackError) {
+					console.error(
+						'Error fetching transactions (fallback):',
+						fallbackError,
+					);
+					setTransactions([]);
+				}
 			}
 		};
 

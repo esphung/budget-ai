@@ -1,7 +1,20 @@
-import { DB } from '@op-engineering/op-sqlite';
+import type { DB } from '@op-engineering/op-sqlite';
 
 export async function runAIMigrations(db: DB) {
 	await db.transaction(async (tx) => {
+		// ACCOUNTS TABLE
+		await tx.execute(`
+      CREATE TABLE IF NOT EXISTS accounts (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        account_type TEXT NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'USD',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+
+		// AI THREADS TABLE
 		await tx.execute(`
       CREATE TABLE IF NOT EXISTS ai_threads (
         id TEXT PRIMARY KEY,
@@ -11,6 +24,7 @@ export async function runAIMigrations(db: DB) {
       );
     `);
 
+		// AI MESSAGES TABLE
 		await tx.execute(`
       CREATE TABLE IF NOT EXISTS ai_messages (
         id TEXT PRIMARY KEY,
@@ -41,6 +55,7 @@ export async function runAIMigrations(db: DB) {
       );
     `);
 
+		// AI ACTIONS TABLE
 		await tx.execute(`
       CREATE TABLE IF NOT EXISTS ai_actions (
         id TEXT PRIMARY KEY,
@@ -68,6 +83,25 @@ export async function runAIMigrations(db: DB) {
       );
     `);
 
+		// TRANSACTIONS TABLE
+		await tx.execute(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id TEXT PRIMARY KEY,
+        account_id TEXT,
+        amount REAL NOT NULL,
+        merchant TEXT,
+        category TEXT,
+        transaction_type TEXT CHECK (
+          transaction_type IN ('expense', 'income', 'transfer')
+        ),
+        date TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (account_id) REFERENCES accounts(id)
+          ON DELETE SET NULL
+      );
+    `);
+
+		// INDEXES
 		await tx.execute(`
       CREATE INDEX IF NOT EXISTS idx_ai_messages_thread_created
       ON ai_messages(thread_id, created_at);
@@ -79,17 +113,32 @@ export async function runAIMigrations(db: DB) {
     `);
 
 		await tx.execute(`
-      CREATE TABLE IF NOT EXISTS transactions (
-        id TEXT PRIMARY KEY,
-        amount REAL NOT NULL,
-        merchant TEXT,
-        category TEXT,
-        transaction_type TEXT CHECK (
-          transaction_type IN ('expense', 'income', 'transfer')
-        ),
-        date TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      );
+      CREATE INDEX IF NOT EXISTS idx_accounts_name
+      ON accounts(name);
+    `);
+
+		await tx.execute(`
+      CREATE INDEX IF NOT EXISTS idx_transactions_date
+      ON transactions(date, created_at);
     `);
 	});
+
+	// Post-migration checks and adjustments
+	const transactionColumns = await db.execute(
+		'PRAGMA table_info(transactions)',
+	);
+	const hasAccountIdColumn = transactionColumns.rows.some(
+		(row) => String(row.name) === 'account_id',
+	);
+
+	if (!hasAccountIdColumn) {
+		await db.execute(
+			'ALTER TABLE transactions ADD COLUMN account_id TEXT',
+		);
+	}
+
+	await db.execute(`
+    CREATE INDEX IF NOT EXISTS idx_transactions_account_date
+    ON transactions(account_id, date, created_at)
+  `);
 }

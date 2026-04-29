@@ -23,6 +23,8 @@ export const mapToAppStackScreen = (
 			return AppStackScreens.Test;
 		case AppStackScreens.Settings:
 			return AppStackScreens.Settings;
+		case AppStackScreens.ManualTransaction:
+			return AppStackScreens.ManualTransaction;
 		default:
 			console.warn(`Unknown screen requested: ${screen}`);
 			return null;

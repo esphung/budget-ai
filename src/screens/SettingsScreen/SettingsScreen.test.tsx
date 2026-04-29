@@ -1,4 +1,5 @@
 import { useAuthStore } from '@providers/AuthProvider';
+import { DatabaseProvider } from '@providers/DatabaseProvider';
 import { ThemeProvider } from '@providers/ThemeProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render } from '@testing-library/react-native';
@@ -18,9 +19,11 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 describe('SettingsScreen', () => {
 	const renderScreen = () =>
 		render(
-			<ThemeProvider>
-				<SettingsScreen />
-			</ThemeProvider>,
+			<DatabaseProvider db={{} as any}>
+				<ThemeProvider>
+					<SettingsScreen />
+				</ThemeProvider>
+			</DatabaseProvider>,
 		);
 
 	beforeEach(() => {

@@ -98,6 +98,12 @@ const HomeScreen = (_props: Props) => {
 	const footerActions = useMemo<ActionButtonItem[]>(
 		() => [
 			{
+				id: 'add_manual_transaction',
+				title: 'Add Transaction',
+				type: 'primary',
+				testID: `${TestID.HomeScreen}-AddTransactionButton`,
+			},
+			{
 				id: 'go_to_settings',
 				title: 'Go to Settings',
 				type: 'secondary',
@@ -170,6 +176,13 @@ const HomeScreen = (_props: Props) => {
 
 	const handleFooterAction = useCallback(
 		(itemId: string) => {
+			if (itemId === 'add_manual_transaction') {
+				_props.navigation.navigate(
+					AppStackScreens.ManualTransaction,
+				);
+				return;
+			}
+
 			if (itemId === 'go_to_settings') {
 				_props.navigation.navigate(AppStackScreens.Settings);
 			}

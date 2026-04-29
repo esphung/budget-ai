@@ -8,11 +8,11 @@ import { useApiClient } from '@providers/ApiClientProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { useOpenAiService } from '@providers/OpenAiServiceProvider';
 import { AppColors, radius, spacing, typography } from '@theme/tokens';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import useKeyboardShift from '../../hooks/useKeyboardShift';
+import { useCallback, useMemo, useState } from 'react';
 import {
 	Animated,
 	Keyboard,
-	Platform,
 	StyleSheet,
 	TextInput,
 	View,
@@ -28,60 +28,15 @@ const AiChatView = ({
 	const [text, setText] = useState<string>('');
 	const [isAwaitingAiResponse, setIsAwaitingAiResponse] =
 		useState<boolean>(false);
-	const keyboardShift = useRef(new Animated.Value(0)).current;
+	const { keyboardShift, dismissKeyboardOnTouchCapture } =
+		useKeyboardShift({
+			keyboardOffset: 100,
+		});
 	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { aiService } = useOpenAiService();
 	const checkHealth = useApiClient((api) => api.health.check);
 	const { backendStatus } = useBackendHealth(checkHealth);
-
-	const animateKeyboardShift = useCallback(
-		(keyboardHeight: number, duration?: number) => {
-			// const offset = Math.max(0, keyboardHeight - spacing.lg);
-			const offset = Math.max(0, keyboardHeight - spacing.lg - 80);
-			const durationMs =
-				typeof duration === 'number'
-					? duration < 10
-						? Math.round(duration * 1000)
-						: Math.round(duration)
-					: 220;
-
-			Animated.timing(keyboardShift, {
-				toValue: -offset,
-				duration: durationMs,
-				useNativeDriver: true,
-			}).start();
-		},
-		[keyboardShift],
-	);
-
-	useEffect(() => {
-		const showEvent =
-			Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-		const hideEvent =
-			Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-		const showSubscription = Keyboard.addListener(
-			showEvent,
-			(event) => {
-				animateKeyboardShift(
-					event.endCoordinates?.height ?? 0,
-					event.duration,
-				);
-			},
-		);
-		const hideSubscription = Keyboard.addListener(
-			hideEvent,
-			(event) => {
-				animateKeyboardShift(0, event.duration);
-			},
-		);
-
-		return () => {
-			showSubscription?.remove?.();
-			hideSubscription?.remove?.();
-		};
-	}, [animateKeyboardShift]);
 
 	const onSend = useCallback(async () => {
 		const trimmed = text.trim();
@@ -102,11 +57,6 @@ const AiChatView = ({
 			}
 		}
 	}, [backendStatus, text, threadId, aiService, isAwaitingAiResponse]);
-
-	const dismissKeyboardOnTouchCapture = useCallback(() => {
-		Keyboard.dismiss();
-		return false;
-	}, []);
 
 	const contentView = useMemo(() => {
 		if (!threadId) {
