@@ -42,9 +42,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { keyboardShift, dismissKeyboardOnTouchCapture } =
-		useKeyboardShift({
-			keyboardOffset: 100,
-		});
+		useKeyboardShift({ keyboardOffset: 100 });
 
 	const [amount, setAmount] = useState('');
 	const [merchant, setMerchant] = useState('');

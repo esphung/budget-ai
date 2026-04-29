@@ -7,6 +7,7 @@ import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { TestID } from '@enums/TestID';
 import useGreeting from '@hooks/useGreeting';
+import useKeyboardShift from '@hooks/useKeyboardShift';
 import useLoadThread from '@hooks/useLoadThread';
 import { useReactiveAIMessages } from '@hooks/useReactiveAIMessages';
 import { useReactiveTransactions } from '@hooks/useReactiveTransactions';
@@ -63,6 +64,8 @@ const HomeScreen = (_props: Props) => {
 	const [displayedView, setDisplayedView] = useState<
 		'chat' | 'transactions'
 	>('chat');
+	const { keyboardShift, dismissKeyboardOnTouchCapture } =
+		useKeyboardShift({ keyboardOffset: 160 });
 	const contentOpacity = useRef(new Animated.Value(1)).current;
 	const contentTranslateY = useRef(new Animated.Value(0)).current;
 	const pillProgress = useRef(new Animated.Value(0)).current;
@@ -192,126 +195,138 @@ const HomeScreen = (_props: Props) => {
 
 	return (
 		<ThemedScreen testID={TestID.HomeScreen}>
-			<View style={styles.screen}>
-				<View style={styles.header}>
-					<AppText style={styles.eyebrow}>Assistant</AppText>
-					<AppText variant="titleLarge" style={styles.title}>
-						Budget AI
-					</AppText>
-				</View>
-				<View style={styles.balanceSection}>
-					<BalanceHeader balance={balance} />
-				</View>
-				<View
-					style={styles.toggleContainer}
-					onLayout={(event) => {
-						setToggleWidth(event.nativeEvent.layout.width);
-					}}>
-					<Animated.View
-						pointerEvents="none"
-						style={[
-							styles.togglePillIndicator,
-							{
-								width: toggleWidth
-									? toggleWidth / 2 - 4
-									: 0,
-								transform: [
-									{
-										translateX: Animated.multiply(
-											pillProgress,
-											toggleWidth
-												? toggleWidth / 2
-												: 0,
-										),
-									},
-								],
-							},
-						]}
-					/>
-					<Pressable
-						testID={`${TestID.HomeScreen}-ViewChatPill`}
-						onPress={() => {
-							setActiveView('chat');
-						}}
-						style={({ pressed }) => [
-							styles.togglePill,
-							pressed && styles.togglePillPressed,
-						]}>
-						<AppText
-							style={[
-								styles.toggleLabel,
-								activeView === 'chat' &&
-									styles.toggleLabelActive,
-							]}>
-							Chat
+			<Animated.View
+				style={[
+					styles.flex,
+					{ transform: [{ translateY: keyboardShift }] },
+				]}
+				onStartShouldSetResponderCapture={
+					dismissKeyboardOnTouchCapture
+				}>
+				<View style={styles.screen}>
+					<View style={styles.header}>
+						<AppText style={styles.eyebrow}>Assistant</AppText>
+						<AppText variant="titleLarge" style={styles.title}>
+							Budget AI
 						</AppText>
-					</Pressable>
-					<Pressable
-						testID={`${TestID.HomeScreen}-ViewTransactionsPill`}
-						onPress={() => {
-							setActiveView('transactions');
-						}}
-						style={({ pressed }) => [
-							styles.togglePill,
-							pressed && styles.togglePillPressed,
-						]}>
-						<AppText
+					</View>
+					<View style={styles.balanceSection}>
+						<BalanceHeader balance={balance} />
+					</View>
+					<View
+						style={styles.toggleContainer}
+						onLayout={(event) => {
+							setToggleWidth(event.nativeEvent.layout.width);
+						}}>
+						<Animated.View
+							pointerEvents="none"
 							style={[
-								styles.toggleLabel,
-								activeView === 'transactions' &&
-									styles.toggleLabelActive,
+								styles.togglePillIndicator,
+								{
+									width: toggleWidth
+										? toggleWidth / 2 - 4
+										: 0,
+									transform: [
+										{
+											translateX: Animated.multiply(
+												pillProgress,
+												toggleWidth
+													? toggleWidth / 2
+													: 0,
+											),
+										},
+									],
+								},
+							]}
+						/>
+						<Pressable
+							testID={`${TestID.HomeScreen}-ViewChatPill`}
+							onPress={() => {
+								setActiveView('chat');
+							}}
+							style={({ pressed }) => [
+								styles.togglePill,
+								pressed && styles.togglePillPressed,
 							]}>
-							Transactions
-						</AppText>
-					</Pressable>
+							<AppText
+								style={[
+									styles.toggleLabel,
+									activeView === 'chat' &&
+										styles.toggleLabelActive,
+								]}>
+								Chat
+							</AppText>
+						</Pressable>
+						<Pressable
+							testID={`${TestID.HomeScreen}-ViewTransactionsPill`}
+							onPress={() => {
+								setActiveView('transactions');
+							}}
+							style={({ pressed }) => [
+								styles.togglePill,
+								pressed && styles.togglePillPressed,
+							]}>
+							<AppText
+								style={[
+									styles.toggleLabel,
+									activeView === 'transactions' &&
+										styles.toggleLabelActive,
+								]}>
+								Transactions
+							</AppText>
+						</Pressable>
+					</View>
+					<View style={styles.chatContainer}>
+						<Animated.View
+							style={[
+								styles.animatedContent,
+								{
+									opacity: contentOpacity,
+									transform: [
+										{ translateY: contentTranslateY },
+									],
+								},
+							]}>
+							{displayedView === 'chat' ? (
+								<AiChatView
+									threadId={threadId}
+									messages={messages}
+								/>
+							) : (
+								<View style={styles.transactionsContainer}>
+									{tableTransactions.length ? (
+										<TransactionsTable
+											transactions={tableTransactions}
+										/>
+									) : (
+										<AppText
+											style={
+												styles.emptyTransactionsText
+											}>
+											No transactions yet.
+										</AppText>
+									)}
+								</View>
+							)}
+						</Animated.View>
+					</View>
+					<View style={styles.footer}>
+						<ActionButtonList
+							items={footerActions}
+							onPressItem={handleFooterAction}
+						/>
+					</View>
 				</View>
-				<View style={styles.chatContainer}>
-					<Animated.View
-						style={[
-							styles.animatedContent,
-							{
-								opacity: contentOpacity,
-								transform: [
-									{ translateY: contentTranslateY },
-								],
-							},
-						]}>
-						{displayedView === 'chat' ? (
-							<AiChatView
-								threadId={threadId}
-								messages={messages}
-							/>
-						) : (
-							<View style={styles.transactionsContainer}>
-								{tableTransactions.length ? (
-									<TransactionsTable
-										transactions={tableTransactions}
-									/>
-								) : (
-									<AppText
-										style={
-											styles.emptyTransactionsText
-										}>
-										No transactions yet.
-									</AppText>
-								)}
-							</View>
-						)}
-					</Animated.View>
-				</View>
-				<View style={styles.footer}>
-					<ActionButtonList
-						items={footerActions}
-						onPressItem={handleFooterAction}
-					/>
-				</View>
-			</View>
+			</Animated.View>
 		</ThemedScreen>
 	);
 };
 
 const createStyles = (colors: AppColors) =>
 	StyleSheet.create({
+		flex: {
+			flex: 1,
+		},
 		screen: {
 			flex: 1,
 			backgroundColor: colors.neutral.background,
