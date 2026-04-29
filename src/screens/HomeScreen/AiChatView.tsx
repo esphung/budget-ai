@@ -133,25 +133,21 @@ const AiChatView = ({
 							]}
 						/>
 						<AppText
+							testID="AiChatView-BackendStatus"
 							style={[
 								styles.statusText,
 								backendStatus === 'offline' &&
 									styles.statusTextOffline,
 							]}>
-							{backendStatus === 'online'
+							{isAwaitingAiResponse
+								? 'AI is typing...'
+								: backendStatus === 'online'
 								? 'AI online'
 								: backendStatus === 'offline'
 								? 'AI temporarily unavailable'
 								: 'Checking AI connection...'}
 						</AppText>
 					</View>
-					{isAwaitingAiResponse && (
-						<AppText
-							style={styles.typingIndicator}
-							testID="AiChatView-TypingIndicator">
-							AI is typing...
-						</AppText>
-					)}
 					<TextInput
 						value={text}
 						onChangeText={setText}
@@ -184,7 +180,6 @@ const AiChatView = ({
 		styles.statusDotOffline,
 		styles.statusText,
 		styles.statusTextOffline,
-		styles.typingIndicator,
 		styles.input,
 		messages,
 		backendStatus,
@@ -258,11 +253,6 @@ const createStyles = (colors: AppColors) =>
 		},
 		statusTextOffline: {
 			color: colors.error,
-		},
-		typingIndicator: {
-			...typography.small,
-			color: colors.neutral.textSecondary,
-			paddingHorizontal: spacing.xs,
 		},
 		input: {
 			borderWidth: 1,

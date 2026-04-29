@@ -55,26 +55,4 @@ export const createStyles = (colors: AppColors) =>
 			color: colors.success,
 			fontWeight: '700',
 		},
-		expandedDetails: {
-			borderTopWidth: 1,
-			borderTopColor: colors.neutral.borderLight,
-			backgroundColor: colors.neutral.background,
-			paddingVertical: 8,
-			paddingHorizontal: 14,
-			borderWidth: 1,
-		},
-		detailRow: {
-			flexDirection: 'row',
-		},
-		detailLabel: {
-			fontSize: 12,
-			color: colors.neutral.textSecondary,
-			width: 72,
-		},
-		detailValue: {
-			fontSize: 12,
-			color: colors.neutral.text,
-			flex: 1,
-			textAlign: 'right',
-		},
 	});

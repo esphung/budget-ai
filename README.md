@@ -108,15 +108,8 @@ yarn format:fix
 yarn format:check
 ```
 
-### Starting Local Server 🎉
+### Backend Server 🎉
 
 ```sh
-cd budget-ai-backend
-cp .env.example .env   # fill in your keys
-yarn dev               # ts-node-dev with hot reload
-```
-
-```sh
-# render.com BE
-BASE_URL=https://budget-ai-backend.onrender.com
+BASE_URL=https://budget-ai-backend-f2124bc32a19.herokuapp.com
 ```

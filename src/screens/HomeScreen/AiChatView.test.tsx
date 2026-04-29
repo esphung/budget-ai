@@ -62,6 +62,7 @@ jest.mock('@providers/OpenAiServiceProvider', () => ({
 
 jest.mock('@providers/ThemeProvider', () => ({
 	useTheme: () => ({
+		isDarkMode: false,
 		colors: {
 			neutral: {
 				placeholder: '#94A3B8',
@@ -157,24 +158,24 @@ describe('AiChatView', () => {
 
 		fireEvent(
 			getByTestId('AiChatView-Container'),
-			'startShouldSetResponderCapture',
+			'onStartShouldSetResponderCapture',
 		);
 
 		expect(mockKeyboardDismiss).toHaveBeenCalled();
 	});
 
-	it('shows a typing indicator while waiting for AI response', async () => {
+	it('shows typing status text while waiting for AI response', async () => {
 		let resolveSend: (() => void) | undefined;
 		const pendingSend = new Promise<void>((resolve) => {
 			resolveSend = resolve;
 		});
 		mockSendMessageAndApplyActions.mockReturnValue(pendingSend);
 
-		const { getByPlaceholderText, getByText, queryByTestId } = render(
+		const { getByPlaceholderText, getByText, queryByText } = render(
 			<AiChatView threadId="thread-1" messages={[]} />,
 		);
 
-		expect(queryByTestId('AiChatView-TypingIndicator')).toBeNull();
+		expect(queryByText('AI is typing...')).toBeNull();
 
 		fireEvent.changeText(
 			getByPlaceholderText('Type your message...'),
@@ -183,25 +184,24 @@ describe('AiChatView', () => {
 		fireEvent.press(getByText('Send'));
 
 		await waitFor(() => {
-			expect(
-				queryByTestId('AiChatView-TypingIndicator'),
-			).toBeTruthy();
+			expect(queryByText('AI is typing...')).toBeTruthy();
 		});
 
 		resolveSend?.();
 		await waitFor(() => {
-			expect(queryByTestId('AiChatView-TypingIndicator')).toBeNull();
+			expect(queryByText('AI is typing...')).toBeNull();
+			expect(queryByText('AI online')).toBeTruthy();
 		});
 	});
 
-	it('does not show typing indicator when backend is offline', async () => {
+	it('does not show typing status when backend is offline', async () => {
 		mockUseBackendHealth.mockReturnValue({
 			backendStatus: 'offline',
 			isBackendOnline: false,
 			refreshHealth: jest.fn(),
 		});
 
-		const { getByPlaceholderText, getByText, queryByTestId } = render(
+		const { getByPlaceholderText, getByText, queryByText } = render(
 			<AiChatView threadId="thread-1" messages={[]} />,
 		);
 
@@ -212,7 +212,7 @@ describe('AiChatView', () => {
 		fireEvent.press(getByText('Send'));
 
 		await waitFor(() => {
-			expect(queryByTestId('AiChatView-TypingIndicator')).toBeNull();
+			expect(queryByText('AI is typing...')).toBeNull();
 			expect(mockSendMessageAndApplyActions).not.toHaveBeenCalled();
 		});
 	});

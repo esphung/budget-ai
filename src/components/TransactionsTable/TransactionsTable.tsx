@@ -1,9 +1,8 @@
 import AppText from '@components/AppText/AppText';
 import { useTheme } from '@providers/ThemeProvider';
 import { createStyles } from '@components/TransactionsTable/TransactionsTable.styles';
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { humanReadableDate } from '@utils/dateUtil';
+import { useMemo } from 'react';
+import { ScrollView, View } from 'react-native';
 
 export interface TransactionListItem {
 	id: string;
@@ -24,11 +23,6 @@ export default function TransactionsTable({
 }: TransactionsTableProps) {
 	const { colors } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
-	const [expandedId, setExpandedId] = useState<string | null>(null);
-
-	const handleRowPress = (id: string) => {
-		setExpandedId((prev) => (prev === id ? null : id));
-	};
 
 	return (
 		<View style={styles.tableContainer}>
@@ -67,13 +61,9 @@ export default function TransactionsTable({
 					const displayAmount = `${
 						isIncome ? '+' : '-'
 					}$${Math.abs(t.amount).toFixed(2)}`;
-					const isExpanded = expandedId === t.id;
 
 					return (
-						<Pressable
-							key={t.id}
-							onPress={() => handleRowPress(t.id)}
-							testID={`transaction-row-${t.id}`}>
+						<View key={t.id} testID={`transaction-row-${t.id}`}>
 							<View style={styles.tableRow}>
 								<AppText
 									style={[
@@ -92,66 +82,7 @@ export default function TransactionsTable({
 									{displayAmount}
 								</AppText>
 							</View>
-							{isExpanded && (
-								<View
-									style={[styles.expandedDetails]}
-									testID={`transaction-details-${t.id}`}>
-									{/* DATE */}
-									<View style={styles.detailRow}>
-										{/* LEFT */}
-										<AppText style={styles.detailLabel}>
-											Date
-										</AppText>
-										{/* RIGHT */}
-										<AppText style={styles.detailValue}>
-											{humanReadableDate(
-												new Date(t.date),
-												'long',
-												'numeric',
-												'2-digit',
-											)}
-										</AppText>
-									</View>
-
-									{/* TYPE */}
-									<View style={styles.detailRow}>
-										<AppText style={styles.detailLabel}>
-											Type
-										</AppText>
-										<AppText style={styles.detailValue}>
-											{t.transactionType
-												.charAt(0)
-												.toUpperCase() +
-												t.transactionType.slice(1)}
-										</AppText>
-									</View>
-
-									{/* CATEGORY */}
-									<View style={styles.detailRow}>
-										<View style={styles.detailRow}>
-											<AppText
-												style={styles.detailLabel}>
-												Category
-											</AppText>
-											<AppText
-												style={styles.detailValue}>
-												{t.category.join(' › ')}
-											</AppText>
-										</View>
-									</View>
-
-									{/* MERCHANT */}
-									<View style={styles.detailRow}>
-										<AppText style={styles.detailLabel}>
-											Merchant
-										</AppText>
-										<AppText style={styles.detailValue}>
-											{t.merchant}
-										</AppText>
-									</View>
-								</View>
-							)}
-						</Pressable>
+						</View>
 					);
 				})}
 			</ScrollView>
