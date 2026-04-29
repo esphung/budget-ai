@@ -14,8 +14,7 @@
 		"test": "npx jest",
 		"test:coverage": "npx jest --coverage",
 		"precommit": "yarn lint && yarn format:check && yarn test",
-		"db:open": "\"/Applications/DB Browser for SQLite.app/Contents/MacOS/DB Browser for SQLite\"",
-		"server": "(cd budget-ai-backend && yarn dev)"
+		"db:open": "\"/Applications/DB Browser for SQLite.app/Contents/MacOS/DB Browser for SQLite\""
 	},
 	"dependencies": {
 		"@op-engineering/op-sqlite": "^15.2.12",
