@@ -22,62 +22,10 @@ export const createStyles = (colors: AppColors) =>
 			textTransform: 'uppercase',
 			letterSpacing: 0.7,
 		},
-		tableRow: {
-			flexDirection: 'row',
-			alignItems: 'center',
-			borderTopWidth: 1,
-			borderTopColor: colors.neutral.borderLight,
-		},
-		tableCell: {
-			paddingVertical: 8,
-			paddingHorizontal: 8,
-			fontSize: 14,
-			color: colors.neutral.text,
-		},
-		tableCellWide: {
-			flex: 1,
-		},
-		tableHeader: {
-			fontWeight: '700',
-			backgroundColor: colors.neutral.background,
-			color: colors.neutral.textSecondary,
-		},
-		amountCell: {
-			width: 92,
-			textAlign: 'right',
-		},
-		actionCell: {
-			width: 76,
-			alignItems: 'flex-end',
-		},
-		actionCellLabel: {
-			width: 76,
-			textAlign: 'right',
-		},
 		rowsScroll: {
-			maxHeight: 320,
+			maxHeight: 420,
 		},
 		rowsScrollContent: {
-			paddingBottom: 16,
-		},
-		amountNegative: {
-			color: colors.error,
-			fontWeight: '700',
-		},
-		amountPositive: {
-			color: colors.success,
-			fontWeight: '700',
-		},
-		deleteButton: {
-			paddingVertical: 8,
-			paddingHorizontal: 8,
-		},
-		deleteButtonPressed: {
-			opacity: 0.65,
-		},
-		deleteButtonLabel: {
-			color: colors.error,
-			fontWeight: '700',
-			textAlign: 'right',
+			paddingBottom: 8,
 		},
 	});

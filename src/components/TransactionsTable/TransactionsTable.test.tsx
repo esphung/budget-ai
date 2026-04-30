@@ -59,13 +59,14 @@ describe('TransactionsTable', () => {
 		expect(getByText('Transactions')).toBeTruthy();
 	});
 
-	it('renders column headers', () => {
-		const { getByText } = render(
+	it('renders row test ids for all transactions', () => {
+		const { getByTestId } = render(
 			<TransactionsTable transactions={mockTransactions} />,
 		);
 
-		expect(getByText('Name')).toBeTruthy();
-		expect(getByText('Amount')).toBeTruthy();
+		expect(getByTestId('transaction-row-txn_1')).toBeTruthy();
+		expect(getByTestId('transaction-row-txn_2')).toBeTruthy();
+		expect(getByTestId('transaction-row-txn_3')).toBeTruthy();
 	});
 
 	it('renders all transaction rows with correct data', () => {
@@ -109,9 +110,8 @@ describe('TransactionsTable', () => {
 		);
 
 		expect(getByText('Transactions')).toBeTruthy();
-		expect(getByText('Name')).toBeTruthy();
 		// No transaction rows should render
-		expect(queryAllByTestId(/txn_/).length).toBe(0);
+		expect(queryAllByTestId(/transaction-row-/).length).toBe(0);
 	});
 
 	it('handles edge case amounts correctly', () => {
@@ -155,14 +155,13 @@ describe('TransactionsTable', () => {
 	});
 
 	it('renders delete controls when a delete handler is provided', () => {
-		const { getByText, getByTestId } = render(
+		const { getByTestId } = render(
 			<TransactionsTable
 				transactions={mockTransactions}
 				onDeleteTransaction={jest.fn()}
 			/>,
 		);
 
-		expect(getByText('Action')).toBeTruthy();
 		expect(getByTestId('transaction-delete-txn_1')).toBeTruthy();
 	});
 
