@@ -24,6 +24,7 @@ export const createStyles = (colors: AppColors) =>
 		},
 		tableRow: {
 			flexDirection: 'row',
+			alignItems: 'center',
 			borderTopWidth: 1,
 			borderTopColor: colors.neutral.borderLight,
 		},
@@ -41,6 +42,18 @@ export const createStyles = (colors: AppColors) =>
 			backgroundColor: colors.neutral.background,
 			color: colors.neutral.textSecondary,
 		},
+		amountCell: {
+			width: 92,
+			textAlign: 'right',
+		},
+		actionCell: {
+			width: 76,
+			alignItems: 'flex-end',
+		},
+		actionCellLabel: {
+			width: 76,
+			textAlign: 'right',
+		},
 		rowsScroll: {
 			maxHeight: 320,
 		},
@@ -54,5 +67,17 @@ export const createStyles = (colors: AppColors) =>
 		amountPositive: {
 			color: colors.success,
 			fontWeight: '700',
+		},
+		deleteButton: {
+			paddingVertical: 8,
+			paddingHorizontal: 8,
+		},
+		deleteButtonPressed: {
+			opacity: 0.65,
+		},
+		deleteButtonLabel: {
+			color: colors.error,
+			fontWeight: '700',
+			textAlign: 'right',
 		},
 	});

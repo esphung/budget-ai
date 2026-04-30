@@ -1,87 +1,77 @@
-import {
-	TransactionRecord,
-	useReactiveTransactions,
-} from '@hooks/useReactiveTransactions';
 import { notifyTableChanged } from '@db/databaseChangeNotifier';
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { useReactiveAccounts } from '@hooks/useReactiveAccounts';
+import { Account } from 'types/Account';
 import { act } from '@testing-library/react-native';
+import { renderHook, waitFor } from '@testing-library/react-native';
 import { DB } from '@op-engineering/op-sqlite';
 
-// TODO: move this
-const createMockTransactionRecord = (
-	overrides?: Partial<TransactionRecord>,
-) => ({
-	id: 'txn_1',
-	accountId: null,
-	amount: -12.5,
-	merchant: 'Lunch',
-	category: 'Food',
-	transactionType: 'expense',
-	date: '2026-04-28',
+const createMockAccount = (overrides?: Partial<Account>): Account => ({
+	id: 'acct_1',
+	name: 'Cash',
+	accountType: 'cash',
+	currency: 'USD',
 	createdAt: '2026-04-28T12:00:00.000Z',
+	updatedAt: '2026-04-28T12:00:00.000Z',
 	...overrides,
 });
 
-describe('useReactiveTransactions', () => {
+describe('useReactiveAccounts', () => {
 	afterEach(() => {
 		jest.clearAllMocks();
 	});
 
 	it('returns empty list when db is null', () => {
-		const { result } = renderHook(() => useReactiveTransactions(null));
+		const { result } = renderHook(() => useReactiveAccounts(null));
 
 		expect(result.current).toEqual([]);
 	});
 
-	it('loads transactions from database', async () => {
-		const rows: TransactionRecord[] = [createMockTransactionRecord()];
-
+	it('loads accounts from database', async () => {
+		const rows: Account[] = [createMockAccount()];
 		const mockDb = {
-			execute: jest.fn().mockResolvedValue({ rows: rows }),
+			execute: jest.fn().mockResolvedValue({ rows }),
 			reactiveExecute: jest.fn().mockReturnValue(jest.fn()),
 		} as unknown as DB;
 
-		const { result } = renderHook(() =>
-			useReactiveTransactions(mockDb),
-		);
+		const { result } = renderHook(() => useReactiveAccounts(mockDb));
 
 		await waitFor(() => {
 			expect(result.current).toEqual(rows);
 		});
 	});
 
-	it('sets up reactive listener for transactions table', async () => {
+	it('sets up reactive listener for accounts table', async () => {
 		const mockDb = {
 			execute: jest.fn().mockResolvedValue({ rows: [] }),
 			reactiveExecute: jest.fn().mockReturnValue(jest.fn()),
 		} as unknown as DB;
 
-		renderHook(() => useReactiveTransactions(mockDb));
+		renderHook(() => useReactiveAccounts(mockDb));
 
 		await waitFor(() => {
 			expect(mockDb.reactiveExecute).toHaveBeenCalledWith(
 				expect.objectContaining({
-					fireOn: [{ table: 'transactions' }],
+					fireOn: [{ table: 'accounts' }],
 				}),
 			);
 		});
 	});
 
-	it('refetches when transactions are explicitly notified', async () => {
-		const rows: TransactionRecord[] = [createMockTransactionRecord()];
+	it('refetches when accounts are explicitly notified', async () => {
+		const rows: Account[] = [createMockAccount()];
 		const mockDb = {
 			execute: jest.fn().mockResolvedValue({ rows }),
 			reactiveExecute: jest.fn().mockReturnValue(jest.fn()),
 		} as unknown as DB;
 
-		renderHook(() => useReactiveTransactions(mockDb));
+		renderHook(() => useReactiveAccounts(mockDb));
 
 		await waitFor(() => {
 			expect(mockDb.execute).toHaveBeenCalledTimes(1);
 		});
 
 		act(() => {
-			notifyTableChanged('transactions');
+			notifyTableChanged('accounts');
 		});
 
 		await waitFor(() => {

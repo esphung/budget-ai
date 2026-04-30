@@ -3,7 +3,6 @@ import AppStack from '@navigation/AppStack/AppStack';
 import { AuthProvider } from '@providers/AuthProvider';
 import { DatabaseProvider } from '@providers/DatabaseProvider';
 import { FeatureFlagsProvider } from '@providers/FeatureFlagsProvider';
-import { OpenAiServiceProvider } from '@providers/OpenAiServiceProvider';
 import { createAuthStore } from '@stores/AuthStore';
 import { render } from '@testing-library/react-native';
 import React from 'react';
@@ -66,17 +65,19 @@ jest.mock('@screens/HomeScreen/HomeScreen', () => {
 	};
 });
 
+jest.mock('@providers/DatabaseProvider', () => ({
+	DatabaseProvider: ({ children }: { children: React.ReactNode }) => (
+		<>{children}</>
+	),
+	useDatabase: jest.fn(() => ({ db: null })),
+}));
+
 const renderWithProviders = (ui: React.ReactElement) => {
 	const authStore = createAuthStore(); // Create a real auth store with the storage instance
-	const mockDb = {
-		getDbPath: jest.fn(() => '/tmp/budgetai.db'),
-	} as unknown as any;
 	return render(
-		<DatabaseProvider db={mockDb}>
+		<DatabaseProvider dbService={{} as any}>
 			<FeatureFlagsProvider>
-				<AuthProvider store={authStore}>
-					<OpenAiServiceProvider>{ui}</OpenAiServiceProvider>
-				</AuthProvider>
+				<AuthProvider store={authStore}>{ui}</AuthProvider>
 			</FeatureFlagsProvider>
 		</DatabaseProvider>,
 	);

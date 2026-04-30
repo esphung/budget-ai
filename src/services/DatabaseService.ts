@@ -6,14 +6,7 @@ export class DatabaseService {
 	private name: string;
 	private location: string;
 	private static instance: DatabaseService | null = null;
-	private listeners: Set<(newDb: DB | null) => void> = new Set();
-
-	getDb(): DB {
-		if (!this._db) {
-			throw new Error('DatabaseService is not initialized');
-		}
-		return this._db;
-	}
+	private listeners: Set<(newDb: DB) => void> = new Set();
 
 	static getInstance(name: string, location: string): DatabaseService {
 		if (!DatabaseService.instance) {
@@ -22,7 +15,7 @@ export class DatabaseService {
 		return DatabaseService.instance;
 	}
 
-	async init() {
+	init(): void {
 		if (!this._db) {
 			this._db = open({ name: this.name, location: this.location });
 			dbLog.debug('DatabaseService initialized');
@@ -43,15 +36,18 @@ export class DatabaseService {
 		return this._db.getDbPath();
 	}
 
-	addListener(listener: (_: DB | null) => void): void {
+	addListener(listener: (_: DB) => void): void {
 		this.listeners.add(listener);
+		if (this._db) {
+			listener(this._db);
+		}
 	}
 
-	removeListener(listener: (_: DB | null) => void): void {
+	removeListener(listener: (_: DB) => void): void {
 		this.listeners.delete(listener);
 	}
 
-	private notifyListeners(update: DB | null): void {
+	private notifyListeners(update: DB): void {
 		this.listeners.forEach((listener) => listener(update));
 	}
 

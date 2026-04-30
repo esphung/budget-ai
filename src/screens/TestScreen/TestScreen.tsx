@@ -23,6 +23,8 @@ interface Transaction {
 	amount: number;
 	date: string;
 	category: string[];
+	merchant: string;
+	transactionType: 'income' | 'expense' | 'transfer';
 }
 
 const TestScreen = () => {
@@ -70,6 +72,8 @@ const TestScreen = () => {
 					amount: -4.5,
 					date: '2024-04-20',
 					category: ['Food and Drink', 'Coffee Shop'],
+					merchant: 'Starbucks',
+					transactionType: 'expense',
 				},
 				{
 					id: 'txn_2',
@@ -77,6 +81,8 @@ const TestScreen = () => {
 					amount: 2500,
 					date: '2024-04-18',
 					category: ['Income', 'Salary'],
+					merchant: 'Foo',
+					transactionType: 'income',
 				},
 			]);
 			setInsight(
@@ -138,7 +144,17 @@ const TestScreen = () => {
 				</View>
 				{accounts && <LinkedAccountsTable accounts={accounts} />}
 				{transactions && (
-					<TransactionsTable transactions={transactions} />
+					<TransactionsTable
+						transactions={transactions.map((t) => ({
+							id: t.id,
+							name: t.name,
+							amount: t.amount,
+							date: t.date,
+							category: t.category.join(', '),
+							transactionType: t.transactionType,
+							merchant: t.merchant,
+						}))}
+					/>
 				)}
 				{insight && (
 					<View style={styles.insightCard}>

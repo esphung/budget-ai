@@ -20,7 +20,6 @@ export const createStyles = (colors: AppColors) =>
 			alignItems: 'stretch',
 			gap: spacing.md,
 			paddingHorizontal: spacing.lg,
-			paddingTop: spacing.lg,
 			paddingBottom: spacing.lg,
 		},
 		heroCard: {

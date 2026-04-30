@@ -1,7 +1,7 @@
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
 import { ErrorTools } from '@utils/ErrorTools';
 import { chatLog } from '@utils/logUtils';
-import { AIAction } from './types';
+import { AIAction } from 'types/AIAction';
 
 export const handleActionError = async (
 	repo: AIConversationRepository,

@@ -4,11 +4,16 @@ import LoadingView from '@components/LoadingView/LoadingView';
 import PrimaryButton from '@components/PrimaryButton';
 import { AIMessage } from '@db/types';
 import { useBackendHealth } from '@hooks/useBackendHealth';
+import useKeyboardShift from '@hooks/useKeyboardShift';
 import { useApiClient } from '@providers/ApiClientProvider';
+import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
-import { useOpenAiService } from '@providers/OpenAiServiceProvider';
+import { AIConversationRepository } from '@repositories/AIConversationRepository';
+import { TransactionRepository } from '@repositories/TransactionRepository';
 import { AppColors, radius, spacing, typography } from '@theme/tokens';
-import useKeyboardShift from '../../hooks/useKeyboardShift';
+import { AIActionHandler } from '@usecases/AIActionHandler';
+import { ErrorTools } from '@utils/ErrorTools';
+import { aiLog } from '@utils/logUtils';
 import { useCallback, useMemo, useState } from 'react';
 import {
 	Animated,
@@ -34,29 +39,42 @@ const AiChatView = ({
 		});
 	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
-	const { aiService } = useOpenAiService();
-	const checkHealth = useApiClient((api) => api.health.check);
-	const { backendStatus } = useBackendHealth(checkHealth);
+	const api = useApiClient((s) => s);
+	const { db } = useDatabase();
+	const { backendStatus } = useBackendHealth(api.health.check);
 
-	const onSend = useCallback(async () => {
+	const onMessageSend = useCallback(async () => {
 		const trimmed = text.trim();
 		if (!trimmed) return;
 		Keyboard.dismiss();
 		if (backendStatus === 'offline') return;
 		if (isAwaitingAiResponse) return;
 		setText('');
-		if (threadId && aiService) {
-			setIsAwaitingAiResponse(true);
+		if (threadId) {
 			try {
-				await aiService.sendMessageAndApplyActions({
+				setIsAwaitingAiResponse(true);
+
+				await new AIActionHandler(
+					new AIConversationRepository(db),
+					new TransactionRepository(db),
+					api,
+				).sendMessageAndApplyActions({
 					threadId: threadId,
 					userText: trimmed,
 				});
+				aiLog.info(
+					`AI message sent and actions applied successfully for thread ${threadId}`,
+				);
+			} catch (error) {
+				const errorMessage = ErrorTools.extractErrorMessage(error);
+				aiLog.error(
+					`Error sending message or applying actions: ${errorMessage}`,
+				);
 			} finally {
 				setIsAwaitingAiResponse(false);
 			}
 		}
-	}, [backendStatus, text, threadId, aiService, isAwaitingAiResponse]);
+	}, [text, backendStatus, isAwaitingAiResponse, threadId, db, api]);
 
 	const contentView = useMemo(() => {
 		if (!threadId) {
@@ -104,7 +122,7 @@ const AiChatView = ({
 						placeholder="Type your message..."
 						placeholderTextColor={colors.neutral.placeholder}
 						style={styles.input}
-						onSubmitEditing={onSend}
+						onSubmitEditing={onMessageSend}
 						blurOnSubmit={true}
 						returnKeyType="send"
 						submitBehavior="blurAndSubmit"
@@ -113,7 +131,7 @@ const AiChatView = ({
 					/>
 					<PrimaryButton
 						title="Send"
-						onPress={onSend}
+						onPress={onMessageSend}
 						width="100%"
 					/>
 				</View>
@@ -136,7 +154,7 @@ const AiChatView = ({
 		isAwaitingAiResponse,
 		text,
 		colors.neutral.placeholder,
-		onSend,
+		onMessageSend,
 		isDarkMode,
 	]);
 

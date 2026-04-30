@@ -15,7 +15,7 @@ import { AIConversationRepository } from '@repositories/AIConversationRepository
  * }
  */
 const useLoadThread = (
-	db: DB | null,
+	db: DB,
 ): { threadId: string | null; isLoading: boolean } => {
 	const [threadId, setThreadId] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
@@ -24,10 +24,6 @@ const useLoadThread = (
 		let cancelled = false;
 
 		async function loadThread() {
-			if (!db) {
-				setIsLoading(false);
-				return;
-			}
 			const repo = new AIConversationRepository(db);
 			const id: string = await repo.getOrCreateMainThread();
 

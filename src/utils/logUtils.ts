@@ -10,6 +10,7 @@ const log = logger.createLogger({
 			chatLog: 'blueBright',
 			healthCheckLog: 'yellowBright',
 			repositoryLog: 'redBright',
+			aiLog: 'whiteBright',
 		},
 	},
 	printLevel: false,
@@ -22,6 +23,7 @@ const log = logger.createLogger({
 		'chatLog',
 		'healthCheckLog',
 		'repositoryLog',
+		'aiLog',
 	],
 });
 
@@ -31,3 +33,4 @@ export const homeScreenLog = log.extend('homeScreenLog');
 export const chatLog = log.extend('chatLog');
 export const healthCheckLog = log.extend('healthCheckLog');
 export const repositoryLog = log.extend('repositoryLog');
+export const aiLog = log.extend('aiLog');

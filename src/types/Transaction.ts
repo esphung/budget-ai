@@ -8,6 +8,9 @@ export type Transaction = {
 	category: string | null;
 	transactionType: TransactionType;
 	date: string;
+	source: 'ai' | 'manual';
+	rawUserText?: string;
+	syncStatus?: 'pending' | 'synced';
 	createdAt: string;
 };
 
@@ -18,4 +21,6 @@ export type NewTransactionInput = {
 	category?: string | null;
 	transactionType: TransactionType;
 	date?: string;
+	source: 'ai' | 'manual';
+	rawUserText?: string;
 };

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
  * Sums all transaction amounts (income positive, expenses negative).
  * Reactive updates when transactions table changes.
  */
-export function useTransactionBalance(db: DB | null): number {
+export function useTransactionBalance(db: DB): number {
 	const [balance, setBalance] = useState<number>(0);
 	const [updateTrigger, setUpdateTrigger] = useState<number>(0);
 	const balanceQuery = `

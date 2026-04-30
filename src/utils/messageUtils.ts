@@ -1,5 +1,4 @@
 import { AIMessage } from '@db/types';
-import { AssistantResponse } from 'types/AssistantResponse';
 
 // sort in descending order by createdAt
 export const sortMessagesByCreatedAt = <T extends { createdAt?: string }>(
@@ -20,11 +19,15 @@ export const mapAIMessageForAI = (message: AIMessage) => ({
 	content: message.content || '',
 });
 
-export const parseAssistantResponse = (response: {
-	data: AssistantResponse;
-}) => {
-	const assistantResponse: AssistantResponse = JSON.parse(
-		response.data.message,
-	);
+type Response = {
+	message: string;
+	actions?: Array<{
+		type: 'save_transaction';
+		payload: Record<string, unknown>;
+	}>;
+};
+
+export const parseAssistantResponse = (response: { data: Response }) => {
+	const assistantResponse = JSON.parse(response.data.message);
 	return assistantResponse;
 };

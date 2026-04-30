@@ -26,6 +26,7 @@ module.exports = {
 					'@repositories': './src/repositories',
 					'@db': './src/db',
 					types: './src/types',
+					'@usecases': './src/usecases',
 				},
 			},
 		],

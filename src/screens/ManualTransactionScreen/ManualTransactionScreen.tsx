@@ -1,18 +1,20 @@
 import AppText from '@components/AppText/AppText';
 import PrimaryButton from '@components/PrimaryButton';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
+import { useReactiveAccounts } from '@hooks/useReactiveAccounts';
 import {
 	AppStackParamList,
 	AppStackScreens,
 } from '@navigation/AppStack/AppStack';
 import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
-import { Account } from '@models/Account';
 import { AccountRepository } from '@repositories/AccountRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
 import { AppColors, radius, spacing, typography } from '@theme/tokens';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CreateManualTransaction } from '@usecases/createManualTransaction';
+import { EnsureDefaultAccount } from '@usecases/ensureDefaultAccount';
 import useKeyboardShift from '../../hooks/useKeyboardShift';
 import {
 	Animated,
@@ -51,33 +53,48 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 	const [transactionType, setTransactionType] = useState<
 		'expense' | 'income' | 'transfer'
 	>('expense');
-	const [accounts, setAccounts] = useState<Account[]>([]);
 	const [selectedAccountId, setSelectedAccountId] = useState<
 		string | null
 	>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
+	const accounts = useReactiveAccounts(db);
 
 	useEffect(() => {
 		if (!db) {
 			return;
 		}
 
-		const loadAccounts = async () => {
-			const repo = new AccountRepository(db);
-			await repo.ensureDefaultAccount();
-			const accountRows = await repo.getAll();
-			setAccounts(accountRows);
-			if (!selectedAccountId && accountRows[0]?.id) {
-				setSelectedAccountId(accountRows[0].id);
-			}
+		const ensureDefaultAccount = async () => {
+			const useCase = new EnsureDefaultAccount(
+				new AccountRepository(db),
+			);
+			await useCase.execute();
 		};
 
-		loadAccounts().catch((error) => {
+		ensureDefaultAccount().catch((error) => {
 			console.error('Failed to load accounts', error);
 			setErrorMessage('Unable to load accounts.');
 		});
-	}, [db, selectedAccountId]);
+	}, [db]);
+
+	useEffect(() => {
+		if (!accounts.length) {
+			setSelectedAccountId(null);
+			return;
+		}
+
+		setSelectedAccountId((currentAccountId) => {
+			if (
+				currentAccountId &&
+				accounts.some((account) => account.id === currentAccountId)
+			) {
+				return currentAccountId;
+			}
+
+			return accounts[0].id;
+		});
+	}, [accounts]);
 
 	const saveManualTransaction = useCallback(async () => {
 		if (!db || isSaving) {
@@ -85,34 +102,29 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		}
 
 		setErrorMessage(null);
-		const parsedAmount = Number(amount);
-		if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-			setErrorMessage('Enter an amount greater than zero.');
-			return;
-		}
-
-		if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-			setErrorMessage('Date must use YYYY-MM-DD.');
-			return;
-		}
-
-		const transactionDate = new Date(`${date}T12:00:00.000Z`);
-		if (Number.isNaN(transactionDate.getTime())) {
-			setErrorMessage('Date is invalid.');
-			return;
-		}
 
 		setIsSaving(true);
 		try {
-			const transactionRepo = new TransactionRepository(db);
-			await transactionRepo.create({
-				accountId: selectedAccountId,
-				amount: parsedAmount,
+			const useCase = new CreateManualTransaction(
+				new TransactionRepository(db),
+			);
+			const result = await useCase.execute({
+				amount,
 				merchant,
 				category,
+				date,
+				accountId: selectedAccountId,
 				transactionType,
-				date: transactionDate.toISOString(),
 			});
+
+			if (!result.success) {
+				setErrorMessage(
+					result.error ??
+						'Unable to save transaction. Try again.',
+				);
+				return;
+			}
+
 			navigation.goBack();
 		} catch (error) {
 			console.error('Failed to save transaction', error);
