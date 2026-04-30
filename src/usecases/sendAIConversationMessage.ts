@@ -1,4 +1,5 @@
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
+import { CategoryRepository } from '@repositories/CategoryRepository';
 import { ApiClient } from '@services/ApiClient';
 
 const GPT_MODEL = 'gpt-4.1-nano';
@@ -24,6 +25,7 @@ export class SendAIConversationMessage {
 	constructor(
 		private aiConversationRepo: AIConversationRepository,
 		private api: ApiClient,
+		private categoryRepo?: CategoryRepository,
 	) {}
 
 	async execute({
@@ -40,15 +42,32 @@ export class SendAIConversationMessage {
 		const messages = await this.aiConversationRepo.getMessages(
 			threadId,
 		);
-		const response = await this.api.openai.sendMessage(
-			messages.map((message) => ({
+
+		const categoryNames = this.categoryRepo
+			? (await this.categoryRepo.list())
+					.map((category) => category.name.trim())
+					.filter(Boolean)
+			: [];
+
+		const categoryGuidance = categoryNames.length
+			? `When creating a save_transaction action, include payload.category and prefer one of these categories when it fits: ${categoryNames.join(
+					', ',
+			  )}.`
+			: 'When creating a save_transaction action, always include payload.category with a concise spending category.';
+
+		const response = await this.api.openai.sendMessage([
+			{
+				role: 'system',
+				content: categoryGuidance,
+			},
+			...messages.map((message) => ({
 				role:
 					message.role === 'tool'
 						? 'assistant'
 						: (message.role as 'user' | 'assistant'),
 				content: message.content ?? '',
 			})),
-		);
+		]);
 
 		const assistantMessageId =
 			await this.aiConversationRepo.saveMessage({

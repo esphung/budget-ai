@@ -103,6 +103,34 @@ export async function runAIMigrations(db: DB) {
       );
     `);
 
+		// CATEGORIES TABLE
+		await tx.execute(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        color TEXT,
+        icon TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+
+		// BUDGETS TABLE
+		await tx.execute(`
+      CREATE TABLE IF NOT EXISTS budgets (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        amount REAL NOT NULL,
+        category_id TEXT,
+        period_start TEXT NOT NULL,
+        period_end TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (category_id) REFERENCES categories(id)
+          ON DELETE SET NULL
+      );
+    `);
+
 		// INDEXES
 		await tx.execute(`
       CREATE INDEX IF NOT EXISTS idx_ai_messages_thread_created
@@ -122,6 +150,16 @@ export async function runAIMigrations(db: DB) {
 		await tx.execute(`
       CREATE INDEX IF NOT EXISTS idx_transactions_date
       ON transactions(date, created_at);
+    `);
+
+		await tx.execute(`
+      CREATE INDEX IF NOT EXISTS idx_categories_name
+      ON categories(name);
+    `);
+
+		await tx.execute(`
+      CREATE INDEX IF NOT EXISTS idx_budgets_period
+      ON budgets(period_start, period_end);
     `);
 	});
 

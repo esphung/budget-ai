@@ -1,5 +1,6 @@
 import { handleActionError } from '@db/handleActionError';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
+import { CategoryRepository } from '@repositories/CategoryRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
 import { ApiClient } from '@services/ApiClient';
 import { CreateTransactionFromAI } from '@usecases/createTransactionFromAI';
@@ -18,9 +19,11 @@ export class AIActionHandler {
 		private aiConversationRepo: AIConversationRepository,
 		transactionRepo: TransactionRepository,
 		api: ApiClient,
+		categoryRepo?: CategoryRepository,
 	) {
 		const createTransaction = new CreateTransactionFromAI(
 			transactionRepo,
+			categoryRepo,
 		);
 		this.executeAIAction = new ExecuteAIAction(
 			aiConversationRepo,
@@ -29,6 +32,7 @@ export class AIActionHandler {
 		this.sendAIConversationMessage = new SendAIConversationMessage(
 			aiConversationRepo,
 			api,
+			categoryRepo,
 		);
 	}
 

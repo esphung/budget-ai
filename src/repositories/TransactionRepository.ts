@@ -12,15 +12,6 @@ export class TransactionRepository
 {
 	constructor(private db: DB) {}
 
-	update: (
-		id: string,
-		input: Partial<NewTransactionInput>,
-	) => Promise<Transaction> = async (_id, _input) => {
-		throw new Error(
-			'Update method not implemented for TransactionRepository',
-		);
-	};
-
 	delete: (id: string) => Promise<void> = async (_id) => {
 		if (!this.db) {
 			throw new Error('Database not initialized');
@@ -98,6 +89,112 @@ export class TransactionRepository
 			date: transactionDate,
 			source: input.source,
 			createdAt,
+		};
+	}
+
+	async update(
+		id: string,
+		input: Partial<NewTransactionInput>,
+	): Promise<Transaction> {
+		const existingRows = await this.executeQuery<{
+			id: string;
+			account_id: string | null;
+			amount: number;
+			merchant: string | null;
+			category: string | null;
+			transaction_type: 'expense' | 'income' | 'transfer';
+			date: string;
+			source: string | null;
+			created_at: string;
+			sync_status: string | null;
+		}>(
+			`
+			SELECT
+				id,
+				account_id,
+				amount,
+				merchant,
+				category,
+				transaction_type,
+				date,
+				source,
+				created_at,
+				sync_status
+			FROM transactions
+			WHERE id = ?
+			LIMIT 1
+		`,
+			[id],
+		);
+
+		if (!existingRows[0]) {
+			throw new Error('Transaction not found');
+		}
+
+		const existing = existingRows[0];
+		const accountId =
+			input.accountId === undefined
+				? existing.account_id
+				: input.accountId ?? null;
+		const amount =
+			input.amount === undefined
+				? Number(existing.amount)
+				: Math.abs(input.amount);
+		const merchant =
+			input.merchant === undefined
+				? existing.merchant
+				: input.merchant?.trim() || null;
+		const category =
+			input.category === undefined
+				? existing.category
+				: input.category?.trim() || null;
+		const transactionType =
+			input.transactionType ?? existing.transaction_type;
+		const source = input.source ?? existing.source ?? 'manual';
+		const date = input.date ?? existing.date;
+
+		await executeTransaction(this.db, [
+			{
+				sql: `
+					UPDATE transactions
+					SET account_id = ?,
+						amount = ?,
+						merchant = ?,
+						category = ?,
+						transaction_type = ?,
+						source = ?,
+						date = ?
+					WHERE id = ?
+				`,
+				args: [
+					accountId,
+					amount,
+					merchant,
+					category,
+					transactionType,
+					source,
+					date,
+					id,
+				],
+			},
+		]);
+		notifyTableChanged('transactions');
+
+		return {
+			id: String(existing.id),
+			accountId,
+			amount,
+			merchant,
+			category,
+			transactionType,
+			date,
+			source: source as Transaction['source'],
+			createdAt: String(existing.created_at),
+			syncStatus: existing.sync_status
+				? (String(
+						existing.sync_status,
+				  ) as Transaction['syncStatus'])
+				: 'synced',
 		};
 	}
 
