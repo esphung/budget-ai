@@ -1,18 +1,25 @@
 import AppText from '@components/AppText/AppText';
-import { useTheme } from '@providers/ThemeProvider';
 import { createStyles } from '@components/TransactionsTable/TransactionsTable.styles';
+import { useTheme } from '@providers/ThemeProvider';
+import { formatIntlCurrencyDisplay } from '@utils/moneyUtils';
 import { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { Transaction } from 'types/Transaction';
 
-export interface TransactionListItem {
-	id: string;
-	name: string;
-	amount: number;
-	date: string;
+// export interface TransactionListItem {
+// 	id: string;
+// 	name: string;
+// 	amount: number;
+// 	transactionType: TransactionType;
+// 	date: string;
+// 	category: string[];
+// 	merchant: string;
+// }
+
+export type TransactionListItem = Transaction & {
 	category: string[];
-	transactionType: 'income' | 'expense' | 'transfer';
-	merchant: string;
-}
+	name: string;
+};
 
 interface TransactionsTableProps {
 	transactions: TransactionListItem[];
@@ -63,17 +70,15 @@ export default function TransactionsTable({
 			<ScrollView
 				style={styles.rowsScroll}
 				contentContainerStyle={styles.rowsScrollContent}
+				contentInset={{ bottom: 16 }}
+				scrollIndicatorInsets={{ bottom: 16 }}
+				automaticallyAdjustContentInsets={false}
 				nestedScrollEnabled
 				showsVerticalScrollIndicator={false}>
 				{transactions.map((t) => {
-					const isIncome =
-						t.transactionType != null
-							? t.transactionType === 'income'
-							: t.amount >= 0;
-					const displayAmount = `${
-						isIncome ? '+' : '-'
-					}$${Math.abs(t.amount).toFixed(2)}`;
-
+					const displayAmount = formatIntlCurrencyDisplay(
+						Math.abs(t.amount),
+					);
 					return (
 						<View key={t.id} testID={`transaction-row-${t.id}`}>
 							<View style={styles.tableRow}>
@@ -82,13 +87,15 @@ export default function TransactionsTable({
 										styles.tableCell,
 										styles.tableCellWide,
 									]}>
-									{t.name}
+									{t.name || ''}
 								</AppText>
 								<AppText
+									ellipsizeMode="tail"
+									numberOfLines={1}
 									style={[
 										styles.tableCell,
 										styles.amountCell,
-										isIncome
+										t.transactionType === 'income'
 											? styles.amountPositive
 											: styles.amountNegative,
 									]}>

@@ -58,7 +58,7 @@ export const createStyles = (colors: AppColors) =>
 			maxHeight: 320,
 		},
 		rowsScrollContent: {
-			paddingBottom: 2,
+			paddingBottom: 16,
 		},
 		amountNegative: {
 			color: colors.error,

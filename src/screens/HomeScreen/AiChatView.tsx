@@ -35,7 +35,7 @@ const AiChatView = ({
 		useState<boolean>(false);
 	const { keyboardShift, dismissKeyboardOnTouchCapture } =
 		useKeyboardShift({
-			keyboardOffset: 100,
+			keyboardOffset: 140,
 		});
 	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
