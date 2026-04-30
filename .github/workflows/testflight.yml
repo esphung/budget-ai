@@ -23,12 +23,22 @@ env:
 jobs:
     upload-testflight:
         name: Build and Upload to TestFlight
-        runs-on: macos-latest
+        runs-on: macos-26
         timeout-minutes: 60
 
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+
+            - name: Set up Xcode
+              uses: maxim-lobanov/setup-xcode@v1
+              with:
+                  xcode-version: latest-stable
+
+            - name: Print Xcode version
+              run: |
+                  xcodebuild -version
+                  xcodebuild -showsdks
 
             - name: Set up Node.js
               uses: actions/setup-node@v4
@@ -83,7 +93,12 @@ jobs:
                   PROFILE_PATH="$RUNNER_TEMP/app_store.mobileprovision"
                   PROFILE_PLIST="$RUNNER_TEMP/app_store_profile.plist"
 
-                  echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+                  if [ -z "$IOS_PROVISIONING_PROFILE_BASE64" ]; then
+                      echo "::error::IOS_PROVISIONING_PROFILE_BASE64 is empty. Add a base64-encoded App Store provisioning profile as a GitHub Actions secret."
+                      exit 1
+                  fi
+
+                  printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
                   security cms -D -i "$PROFILE_PATH" > "$PROFILE_PLIST"
 
                   PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$PROFILE_PLIST")
