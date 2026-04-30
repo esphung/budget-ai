@@ -3,6 +3,7 @@ import ActionButtonList, {
 } from '@components/ActionButtonList/ActionButtonList';
 import AppText from '@components/AppText/AppText';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
+import TopCard from '@components/TopCard';
 import { TestID } from '@enums/TestID';
 import { AppStackScreens } from '@navigation/AppStack/AppStack';
 import { NavigationService } from '@navigation/navigationService';
@@ -199,7 +200,7 @@ const SettingsScreen = () => {
 	return (
 		<ThemedScreen>
 			<View style={styles.screen} testID={TestID.SettingsScreen}>
-				<View style={styles.card}>
+				<TopCard>
 					<AppText variant="eyebrow" style={styles.eyebrow}>
 						Account
 					</AppText>
@@ -214,7 +215,7 @@ const SettingsScreen = () => {
 						onClearTransactions={clearTransactions}
 						onClearAccounts={clearAccounts}
 					/>
-				</View>
+				</TopCard>
 
 				<View style={styles.switchesCard}>
 					<AppText variant="eyebrow" style={styles.eyebrow}>
@@ -240,21 +241,10 @@ const createStyles = (colors: AppColors) =>
 			paddingBottom: spacing.lg,
 			backgroundColor: colors.neutral.background,
 		},
-		card: {
-			width: '100%',
-			maxWidth: 480,
-			alignSelf: 'center',
-			backgroundColor: colors.neutral.surface,
-			borderRadius: radius.lg,
-			paddingVertical: spacing.xl,
-			paddingHorizontal: spacing.lg,
-			...shadows.xl,
-		},
 		switchesCard: {
 			width: '100%',
 			maxWidth: 480,
 			alignSelf: 'center',
-			marginTop: spacing.lg,
 			backgroundColor: colors.neutral.surface,
 			borderRadius: radius.lg,
 			paddingVertical: spacing.lg,

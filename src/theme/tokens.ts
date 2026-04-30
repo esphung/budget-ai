@@ -7,42 +7,42 @@
 export const lightColors = {
 	// Primary
 	primary: {
-		base: '#0B5FFF',
-		light: '#3B82F6',
-		dark: '#0047CC',
+		base: '#2D72FF',
+		light: '#60A5FA',
+		dark: '#1A5CE6',
 	},
 
 	// Neutral
 	neutral: {
-		background: '#F3F6FB',
+		background: '#F8FAFF',
 		surface: '#FFFFFF',
-		border: '#CBD5E1',
-		borderLight: '#E2E8F0',
-		text: '#0F172A',
-		textSecondary: '#475569',
-		textTertiary: '#64748B',
-		placeholder: '#94A3B8',
-		disabled: '#CBD5E1',
+		border: '#DDE4F0',
+		borderLight: '#EDF1F9',
+		text: '#1A2540',
+		textSecondary: '#5B6B87',
+		textTertiary: '#7A8CA3',
+		placeholder: '#A8B5C8',
+		disabled: '#DDE4F0',
 	},
 
 	// Semantic
-	success: '#15803D',
-	error: '#B91C1C',
-	warning: '#C2410C',
-	info: '#0047CC',
+	success: '#1A9E50',
+	error: '#E02D2D',
+	warning: '#D4580A',
+	info: '#1A5CE6',
 
 	// Chat
 	chat: {
-		user: '#0B5FFF',
-		assistant: '#E2E8F0',
+		user: '#2D72FF',
+		assistant: '#EDF1F9',
 		userText: '#FFFFFF',
-		assistantText: '#0F172A',
+		assistantText: '#1A2540',
 	},
 
 	// UI State
-	loading: '#EEF2FF',
-	insight: '#FFF7ED',
-	insightBorder: '#FDBA74',
+	loading: '#F0F4FF',
+	insight: '#FFFBF5',
+	insightBorder: '#FEC97A',
 };
 
 export const darkColors = {

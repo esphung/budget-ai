@@ -19,6 +19,7 @@ import useKeyboardShift from '../../hooks/useKeyboardShift';
 import {
 	Animated,
 	Keyboard,
+	Platform,
 	Pressable,
 	ScrollView,
 	StyleSheet,
@@ -44,7 +45,9 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { keyboardShift, dismissKeyboardOnTouchCapture } =
-		useKeyboardShift({ keyboardOffset: 100 });
+		useKeyboardShift({
+			keyboardOffset: Platform.OS === 'ios' ? 250 : 180,
+		});
 
 	const [amount, setAmount] = useState('');
 	const [merchant, setMerchant] = useState('');

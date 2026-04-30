@@ -4,9 +4,9 @@ import ActionButtonList, {
 import AppText from '@components/AppText/AppText';
 import BalanceHeader from '@components/BalanceHeader/BalanceHeader';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
+import TopCard from '@components/TopCard';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { TestID } from '@enums/TestID';
-import useKeyboardShift from '@hooks/useKeyboardShift';
 import useLoadThread from '@hooks/useLoadThread';
 import { useReactiveAIMessages } from '@hooks/useReactiveAIMessages';
 import { useReactiveTransactions } from '@hooks/useReactiveTransactions';
@@ -66,8 +66,6 @@ const HomeScreen = (_props: Props) => {
 	const [displayedView, setDisplayedView] = useState<
 		'chat' | 'transactions'
 	>('chat');
-	const { keyboardShift, dismissKeyboardOnTouchCapture } =
-		useKeyboardShift({ keyboardOffset: 160 });
 	const contentOpacity = useRef(new Animated.Value(1)).current;
 	const contentTranslateY = useRef(new Animated.Value(0)).current;
 	const pillProgress = useRef(new Animated.Value(0)).current;
@@ -216,24 +214,27 @@ const HomeScreen = (_props: Props) => {
 
 	return (
 		<ThemedScreen testID={TestID.HomeScreen}>
-			<Animated.View
-				style={[
-					styles.flex,
-					{ transform: [{ translateY: keyboardShift }] },
-				]}
-				onStartShouldSetResponderCapture={
-					dismissKeyboardOnTouchCapture
-				}>
+			<Animated.View style={styles.flex}>
 				<View style={styles.screen}>
-					<View style={styles.header}>
-						<AppText style={styles.eyebrow}>Assistant</AppText>
-						<AppText variant="titleLarge" style={styles.title}>
-							Budget AI
-						</AppText>
-					</View>
-					<View style={styles.balanceSection}>
-						<BalanceHeader balance={balance} />
-					</View>
+					<TopCard>
+						<View style={styles.header}>
+							<AppText style={styles.eyebrow}>
+								Assistant
+							</AppText>
+							<AppText
+								variant="titleLarge"
+								style={styles.title}>
+								Budget AI
+							</AppText>
+						</View>
+						<View style={styles.balanceSection}>
+							<BalanceHeader
+								balance={balance}
+								variant="plain"
+							/>
+						</View>
+					</TopCard>
+
 					<View
 						style={styles.toggleContainer}
 						onLayout={(event) => {
@@ -363,11 +364,11 @@ const createStyles = (colors: AppColors) =>
 			paddingBottom: spacing.lg,
 		},
 		header: {
-			paddingHorizontal: spacing.sm,
-			marginBottom: spacing.sm,
+			alignItems: 'center',
+			marginBottom: spacing.md,
 		},
 		balanceSection: {
-			marginBottom: spacing.md,
+			marginBottom: 0,
 		},
 		toggleContainer: {
 			position: 'relative',

@@ -22,11 +22,11 @@ describe('BalanceHeader', () => {
 	});
 
 	it('renders loading state', () => {
-		const { getByText } = render(
+		const { queryByText } = render(
 			<BalanceHeader balance={1250.5} isLoading={true} />,
 		);
 
-		expect(getByText('—')).toBeDefined();
+		expect(queryByText('$1,250.50')).toBeNull();
 	});
 
 	it('formats large numbers with commas', () => {

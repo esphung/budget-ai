@@ -1,12 +1,14 @@
 import AppText from '@components/AppText/AppText';
 import { useTheme } from '@providers/ThemeProvider';
 import { AppColors, radius, spacing, typography } from '@theme/tokens';
+import { formatIntlCurrencyDisplay } from '@utils/moneyUtils';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 type BalanceHeaderProps = {
 	balance: number;
 	isLoading?: boolean;
+	variant?: 'card' | 'plain';
 };
 
 /**
@@ -16,31 +18,30 @@ type BalanceHeaderProps = {
 const BalanceHeader = ({
 	balance,
 	isLoading = false,
+	variant = 'card',
 }: BalanceHeaderProps) => {
 	const { colors } = useTheme();
 	const styles = React.useMemo(() => createStyles(colors), [colors]);
 	const isPositive = balance >= 0;
 	const balanceColor = isPositive ? colors.success : colors.error;
 
-	const formattedBalance = new Intl.NumberFormat('en-US', {
-		style: 'currency',
-		currency: 'USD',
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-	}).format(balance);
+	const formattedBalance = formatIntlCurrencyDisplay(balance);
 
 	return (
-		<View style={styles.container}>
+		<View
+			style={[
+				styles.base,
+				variant === 'card'
+					? styles.cardContainer
+					: styles.plainContainer,
+			]}>
 			<AppText style={styles.label}>Total Balance</AppText>
 			<AppText
 				variant="heroTitle"
-				style={[
-					styles.balance,
-					{
-						color: balanceColor,
-					},
-				]}>
-				{isLoading ? '—' : formattedBalance}
+				numberOfLines={1}
+				ellipsizeMode="tail"
+				style={[styles.balance, { color: balanceColor }]}>
+				{isLoading || formattedBalance}
 			</AppText>
 		</View>
 	);
@@ -48,13 +49,19 @@ const BalanceHeader = ({
 
 const createStyles = (colors: AppColors) =>
 	StyleSheet.create({
-		container: {
+		base: {
+			alignItems: 'center',
+			gap: spacing.sm,
+		},
+		cardContainer: {
 			paddingHorizontal: spacing.lg,
 			paddingVertical: spacing.md,
 			backgroundColor: colors.neutral.surface,
 			borderRadius: radius.lg,
-			alignItems: 'center',
-			gap: spacing.sm,
+		},
+		plainContainer: {
+			paddingHorizontal: 0,
+			paddingVertical: 0,
 		},
 		label: {
 			...typography.eyebrow,
