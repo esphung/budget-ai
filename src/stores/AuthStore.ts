@@ -1,4 +1,5 @@
 import { StorageKey } from '@enums/StorageKey';
+import { Auth0Service, type AuthService } from '@services/Auth0Service';
 import type { StorageService } from '@services/StorageService';
 import type { Dispatch } from 'react';
 
@@ -8,7 +9,8 @@ export type AuthState = {
 
 export type AuthActions = {
 	setToken: (newToken: string | null) => void;
-	logout: () => void;
+	login: () => Promise<void>;
+	logout: () => Promise<void>;
 };
 
 export type AuthStore = AuthState & AuthActions;
@@ -26,7 +28,9 @@ export type AuthStoreFactory = {
 	) => AuthActions;
 };
 
-export const createAuthStore = (): AuthStoreFactory => {
+export const createAuthStore = (
+	authService: AuthService = Auth0Service.getInstance(),
+): AuthStoreFactory => {
 	const initialState: AuthState = {
 		token: null,
 	};
@@ -51,15 +55,40 @@ export const createAuthStore = (): AuthStoreFactory => {
 		): AuthActions {
 			function setToken(token: string | null) {
 				dispatch({ type: 'SET_TOKEN', token });
-				storage.saveItem(token, StorageKey.AuthToken);
+				async function persistToken(): Promise<void> {
+					try {
+						await storage.saveItem(token, StorageKey.AuthToken);
+					} catch (error) {
+						console.error(
+							'[AuthStore] Failed to persist auth token:',
+							error,
+						);
+					}
+				}
+
+				persistToken();
 			}
 
-			function logout() {
+			async function login() {
+				const token = await authService.login();
+				dispatch({ type: 'SET_TOKEN', token });
+				await storage.saveItem(token, StorageKey.AuthToken);
+			}
+
+			async function logout() {
+				try {
+					await authService.logout();
+				} catch (error) {
+					console.error(
+						'[AuthStore] Remote logout failed. Clearing local auth state anyway:',
+						error,
+					);
+				}
 				dispatch({ type: 'LOGOUT' });
-				storage.clearItem(StorageKey.AuthToken);
+				await storage.clearItem(StorageKey.AuthToken);
 			}
 
-			return { setToken, logout };
+			return { setToken, login, logout };
 		},
 	};
 };

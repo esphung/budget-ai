@@ -30,6 +30,12 @@ const DATA: ActionButtonItem[] = [
 		type: 'secondary',
 		testID: 'SettingsOption-go_back',
 	},
+	{
+		id: 'logout',
+		title: 'Logout',
+		type: 'secondary',
+		testID: 'SettingsOption-logout',
+	},
 	// {
 	// 	id: 'clear_transactions',
 	// 	title: 'Clear Transactions',

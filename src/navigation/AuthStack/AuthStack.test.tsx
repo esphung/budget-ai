@@ -4,6 +4,11 @@ import { AuthProvider } from '@providers/AuthProvider';
 import { createAuthStore } from '@stores/AuthStore';
 import { render } from '@testing-library/react-native';
 
+const mockAuthService = {
+	login: jest.fn().mockResolvedValue('mock-auth0-token'),
+	logout: jest.fn().mockResolvedValue(undefined),
+};
+
 // @react-native-async-storage/async-storage
 jest.mock('@react-native-async-storage/async-storage', () => {
 	return {
@@ -20,9 +25,9 @@ jest.mock('@services/StorageService', () => {
 	return {
 		StorageService: {
 			getInstance: jest.fn(() => ({
-				saveItem: jest.fn(),
+				saveItem: jest.fn().mockResolvedValue(undefined),
 				loadItem: jest.fn().mockResolvedValue('mock-token'),
-				clearItem: jest.fn(),
+				clearItem: jest.fn().mockResolvedValue(undefined),
 			})),
 		},
 	};
@@ -30,7 +35,7 @@ jest.mock('@services/StorageService', () => {
 
 // render with auth provider to provide necessary context
 function renderWithAuthProvider(ui: React.ReactElement) {
-	const store = createAuthStore();
+	const store = createAuthStore(mockAuthService);
 	return render(<AuthProvider store={store}>{ui}</AuthProvider>);
 }
 

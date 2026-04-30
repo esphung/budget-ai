@@ -1,4 +1,27 @@
 PODS:
+  - A0Auth0 (5.5.1):
+    - Auth0 (= 2.18.0)
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - AsyncStorage (3.0.2):
     - hermes-engine
     - RCTRequired
@@ -21,10 +44,14 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - Auth0 (2.18.0):
+    - JWTDecode (= 3.3.0)
+    - SimpleKeychain (= 1.3.0)
   - FBLazyVector (0.85.2)
   - hermes-engine (250829098.0.10):
     - hermes-engine/Pre-built (= 250829098.0.10)
   - hermes-engine/Pre-built (250829098.0.10)
+  - JWTDecode (3.3.0)
   - op-sqlite (15.2.12):
     - hermes-engine
     - RCTRequired
@@ -1931,9 +1958,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - SimpleKeychain (1.3.0)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
+  - A0Auth0 (from `../node_modules/react-native-auth0`)
   - "AsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
@@ -2017,9 +2046,14 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - Auth0
+    - JWTDecode
     - Plaid
+    - SimpleKeychain
 
 EXTERNAL SOURCES:
+  A0Auth0:
+    :path: "../node_modules/react-native-auth0"
   AsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   FBLazyVector:
@@ -2179,9 +2213,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  A0Auth0: 6a412a3d1dec52bd9624bbe65b795140f9fc565a
   AsyncStorage: 857a13f3c66a30d6b02efa09babba3d457e8e8ca
+  Auth0: ddc5c6c7eb17e2484fd8d50a15d99b657c36c72c
   FBLazyVector: 26fd21c75314e101f280d401e97f27d54f3f7064
   hermes-engine: b4b7cbfc35525b90e18ffa75c5fb29ec4b914cc1
+  JWTDecode: 1ca6f765844457d0dd8690436860fecee788f631
   op-sqlite: 7aab3dd83d2c2cd28a050b6fd799b59a26b6006e
   Plaid: 2f4e0d6deb335e141ac62e082a872414ca058b74
   RCTDeprecation: c7a2768f905d76ca6d2cfefb26e4349eacbdfca3
@@ -2257,6 +2294,7 @@ SPEC CHECKSUMS:
   ReactCommon: a804bb8d1dcf3ecdec3a77eb8bba19b7863bbbdb
   ReactNativeDependencies: 1c8c4bb4b4bab61473376042ddf9d54e7d45db65
   RNScreens: 01b065ded2dfe7987bcce770ff3a196be417ff41
+  SimpleKeychain: 9c0f3ca8458fed74e01db864d181c5cbe278603e
   Yoga: df8920a8f8ca99996048f6aea23a529f44992eac
 
 PODFILE CHECKSUM: 58c9460442c1ef458592ffae3bab856287df01a5
