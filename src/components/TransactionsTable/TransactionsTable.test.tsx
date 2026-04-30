@@ -3,35 +3,52 @@ import TransactionsTable, {
 } from '@components/TransactionsTable/TransactionsTable';
 import { fireEvent, render } from '@testing-library/react-native';
 
+const createMockTransaction = (
+	overrides?: Partial<TransactionListItem>,
+): TransactionListItem => ({
+	id: 'txn_edge_3',
+	name: 'Manual Expense',
+	amount: 4.5,
+	transactionType: 'expense',
+	date: '2024-04-21',
+	category: 'Other',
+	merchant: '',
+	accountId: null,
+	source: 'ai',
+	syncStatus: 'synced',
+	createdAt: new Date().toISOString(),
+	...overrides,
+});
+
 describe('TransactionsTable', () => {
 	const mockTransactions: TransactionListItem[] = [
-		{
+		createMockTransaction({
 			id: 'txn_1',
 			name: 'Starbucks',
 			amount: -4.5,
 			transactionType: 'expense',
 			date: '2024-04-20',
-			category: 'Food & Drink' as const,
+			category: 'Food & Drink',
 			merchant: 'Starbucks',
-		},
-		{
+		}),
+		createMockTransaction({
 			id: 'txn_2',
 			name: 'Payroll Deposit',
-			amount: 2500,
+			amount: 2500.0,
 			transactionType: 'income',
-			date: '2024-04-18',
-			category: 'Salary' as const,
-			merchant: 'Foo',
-		},
-		{
+			date: '2024-04-15',
+			category: 'Salary',
+			merchant: 'Employer Inc.',
+		}),
+		createMockTransaction({
 			id: 'txn_3',
 			name: 'Gas Station',
 			amount: -45.0,
 			transactionType: 'expense',
 			date: '2024-04-19',
-			category: 'Transportation' as const,
+			category: 'Transportation',
 			merchant: 'Bar',
-		},
+		}),
 	];
 
 	it('renders the component with title', () => {
@@ -74,7 +91,7 @@ describe('TransactionsTable', () => {
 			<TransactionsTable transactions={mockTransactions} />,
 		);
 
-		expect(getByText('+$2500.00')).toBeTruthy();
+		expect(getByText('+$2,500.00')).toBeTruthy();
 	});
 
 	it('formats negative amounts with - sign', () => {
@@ -99,52 +116,42 @@ describe('TransactionsTable', () => {
 
 	it('handles edge case amounts correctly', () => {
 		const edgeCaseTransactions: TransactionListItem[] = [
-			{
+			createMockTransaction({
 				id: 'txn_edge_1',
 				name: 'Zero Amount',
 				amount: 0,
 				transactionType: 'income',
 				date: '2024-04-20',
-				category: ['Other'],
 				merchant: '',
-			},
-			{
+			}),
+			createMockTransaction({
 				id: 'txn_edge_2',
 				name: 'Large Negative',
 				amount: -9999.99,
 				transactionType: 'expense',
 				date: '2024-04-19',
-				category: ['Other'],
 				merchant: '',
-			},
+			}),
 		];
 
 		const { getByText } = render(
 			<TransactionsTable transactions={edgeCaseTransactions} />,
 		);
 
-		expect(getByText('+$0.00')).toBeTruthy();
-		expect(getByText('-$9999.99')).toBeTruthy();
+		expect(getByText('+$0.00')).toBeVisible();
+		expect(getByText('-$9,999.99')).toBeVisible();
 	});
 
 	it('treats non-income transactions as expense labels even when amount is positive', () => {
 		const transactions: TransactionListItem[] = [
-			{
-				id: 'txn_edge_3',
-				name: 'Manual Expense',
-				amount: 4.5,
-				transactionType: 'expense',
-				date: '2024-04-21',
-				category: ['Other'],
-				merchant: '',
-			},
+			createMockTransaction(),
 		];
 
 		const { getByText } = render(
 			<TransactionsTable transactions={transactions} />,
 		);
 
-		expect(getByText('-$4.50')).toBeTruthy();
+		expect(getByText('-$4.50')).toBeVisible();
 	});
 
 	it('renders delete controls when a delete handler is provided', () => {

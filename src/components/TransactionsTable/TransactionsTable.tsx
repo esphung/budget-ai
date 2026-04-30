@@ -65,9 +65,10 @@ export default function TransactionsTable({
 				nestedScrollEnabled
 				showsVerticalScrollIndicator={false}>
 				{transactions.map((t) => {
-					const displayAmount = formatIntlCurrencyDisplay(
-						Math.abs(t.amount),
-					);
+					const sign = t.transactionType === 'income' ? '+' : '-';
+					const displayAmount =
+						sign +
+						formatIntlCurrencyDisplay(Math.abs(t.amount));
 					return (
 						<View key={t.id} testID={`transaction-row-${t.id}`}>
 							<View style={styles.tableRow}>
