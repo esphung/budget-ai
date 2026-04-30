@@ -29,9 +29,7 @@ export class SendAIConversationMessage {
 	async execute({
 		threadId,
 		userText,
-	}: SendAIConversationMessageParams): Promise<
-		SendAIConversationMessageResult
-	> {
+	}: SendAIConversationMessageParams): Promise<SendAIConversationMessageResult> {
 		await this.aiConversationRepo.saveMessage({
 			threadId,
 			role: 'user',
@@ -39,7 +37,9 @@ export class SendAIConversationMessage {
 			content: userText,
 		});
 
-		const messages = await this.aiConversationRepo.getMessages(threadId);
+		const messages = await this.aiConversationRepo.getMessages(
+			threadId,
+		);
 		const response = await this.api.openai.sendMessage(
 			messages.map((message) => ({
 				role:

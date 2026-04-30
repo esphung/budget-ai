@@ -19,7 +19,9 @@ export class AIActionHandler {
 		transactionRepo: TransactionRepository,
 		api: ApiClient,
 	) {
-		const createTransaction = new CreateTransactionFromAI(transactionRepo);
+		const createTransaction = new CreateTransactionFromAI(
+			transactionRepo,
+		);
 		this.executeAIAction = new ExecuteAIAction(
 			aiConversationRepo,
 			createTransaction,
@@ -71,7 +73,9 @@ export class AIActionHandler {
 			userText,
 		});
 
-		aiLog.info(`Number of actions to apply: ${response.actions.length}`);
+		aiLog.info(
+			`Number of actions to apply: ${response.actions.length}`,
+		);
 
 		for (const action of response.actions) {
 			if (!action.type) {
