@@ -1,6 +1,3 @@
-import ActionButtonList, {
-	ActionButtonItem,
-} from '@components/ActionButtonList/ActionButtonList';
 import AppText from '@components/AppText/AppText';
 import BalanceHeader from '@components/BalanceHeader/BalanceHeader';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
@@ -92,29 +89,14 @@ const HomeScreen = (_props: Props) => {
 						.split(',')
 						.map((value) => value.trim())
 						.filter(Boolean)
-				: [],
+						.join(', ') || null
+				: null,
 			merchant: transaction.merchant || '',
+			source: 'manual' as const,
 		}));
 	}, [transactions]);
 
 	const balance = useTransactionBalance(db);
-	const footerActions = useMemo<ActionButtonItem[]>(
-		() => [
-			{
-				id: 'add_manual_transaction',
-				title: 'Add Transaction',
-				type: 'primary',
-				testID: `${TestID.HomeScreen}-AddTransactionButton`,
-			},
-			{
-				id: 'go_to_settings',
-				title: 'Go to Settings',
-				type: 'secondary',
-				testID: `${TestID.HomeScreen}-GoToSettingsButton`,
-			},
-		],
-		[],
-	);
 
 	const handleDeleteTransaction = useCallback(
 		(transactionId: string, transactionName: string) => {
@@ -196,21 +178,13 @@ const HomeScreen = (_props: Props) => {
 		}).start();
 	}, [activeView, pillProgress]);
 
-	const handleFooterAction = useCallback(
-		(itemId: string) => {
-			if (itemId === 'add_manual_transaction') {
-				_props.navigation.navigate(
-					AppStackScreens.ManualTransaction,
-				);
-				return;
-			}
+	const handleAddTransaction = useCallback(() => {
+		_props.navigation.navigate(AppStackScreens.ManualTransaction);
+	}, [_props.navigation]);
 
-			if (itemId === 'go_to_settings') {
-				_props.navigation.navigate(AppStackScreens.Settings);
-			}
-		},
-		[_props.navigation],
-	);
+	const handleGoToSettings = useCallback(() => {
+		_props.navigation.navigate(AppStackScreens.Settings);
+	}, [_props.navigation]);
 
 	return (
 		<ThemedScreen testID={TestID.HomeScreen}>
@@ -341,10 +315,43 @@ const HomeScreen = (_props: Props) => {
 						</Animated.View>
 					</View>
 					<View style={styles.footer}>
-						<ActionButtonList
-							items={footerActions}
-							onPressItem={handleFooterAction}
-						/>
+						<Pressable
+							style={({ pressed }) => [
+								styles.iconButton,
+								pressed && styles.iconButtonPressed,
+							]}
+							onPress={handleAddTransaction}
+							testID={`${TestID.HomeScreen}-AddTransactionButton`}>
+							<AppText style={styles.iconButtonSymbol}>
+								+
+							</AppText>
+							<AppText style={styles.iconButtonLabel}>
+								Add
+							</AppText>
+						</Pressable>
+						<Pressable
+							style={({ pressed }) => [
+								styles.iconButton,
+								styles.iconButtonSecondary,
+								pressed && styles.iconButtonPressed,
+							]}
+							onPress={handleGoToSettings}
+							testID={`${TestID.HomeScreen}-GoToSettingsButton`}>
+							<AppText
+								style={[
+									styles.iconButtonSymbol,
+									styles.iconButtonSymbolSecondary,
+								]}>
+								⚙️
+							</AppText>
+							<AppText
+								style={[
+									styles.iconButtonLabel,
+									styles.iconButtonLabelSecondary,
+								]}>
+								Settings
+							</AppText>
+						</Pressable>
 					</View>
 				</View>
 			</Animated.View>
@@ -441,6 +448,50 @@ const createStyles = (colors: AppColors) =>
 			width: '100%',
 			maxWidth: 480,
 			alignSelf: 'center',
+			flexDirection: 'row',
+			justifyContent: 'center',
+			gap: spacing.lg,
+		},
+		iconButton: {
+			alignItems: 'center',
+			gap: 6,
+			paddingVertical: spacing.sm,
+			paddingHorizontal: spacing.lg,
+			borderRadius: radius.xl,
+			backgroundColor: colors.primary.base,
+			shadowColor: colors.primary.base,
+			shadowOffset: { width: 0, height: 6 },
+			shadowOpacity: 0.22,
+			shadowRadius: 12,
+			elevation: 3,
+			minWidth: 88,
+		},
+		iconButtonSecondary: {
+			backgroundColor: colors.neutral.surface,
+			shadowColor: colors.neutral.border,
+			shadowOpacity: 0.12,
+		},
+		iconButtonPressed: {
+			opacity: 0.75,
+			transform: [{ scale: 0.96 }],
+		},
+		iconButtonSymbol: {
+			fontSize: 24,
+			lineHeight: 28,
+			color: '#FFFFFF',
+			fontWeight: '600',
+		},
+		iconButtonSymbolSecondary: {
+			color: colors.neutral.text,
+		},
+		iconButtonLabel: {
+			fontSize: 11,
+			fontWeight: '600',
+			letterSpacing: 0.3,
+			color: 'rgba(255,255,255,0.85)',
+		},
+		iconButtonLabelSecondary: {
+			color: colors.neutral.textSecondary,
 		},
 	});
 

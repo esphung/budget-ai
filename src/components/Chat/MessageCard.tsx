@@ -14,6 +14,18 @@ const parseContent = (content: string, textColor: string) => {
 	));
 };
 
+const formatMessageTimestamp = (createdAt: string): string => {
+	const parsed = new Date(createdAt);
+	if (Number.isNaN(parsed.getTime())) {
+		return '';
+	}
+
+	return parsed.toLocaleTimeString(undefined, {
+		hour: 'numeric',
+		minute: '2-digit',
+	});
+};
+
 const MessageCard = ({ item }: { item: AIMessage }) => {
 	const { colors } = useTheme();
 	const styles = React.useMemo(() => createStyles(colors), [colors]);
@@ -22,6 +34,7 @@ const MessageCard = ({ item }: { item: AIMessage }) => {
 	const textColor = isUser
 		? colors.chat.userText
 		: colors.chat.assistantText;
+	const timestamp = formatMessageTimestamp(item.createdAt);
 	const enterProgress = useRef(new Animated.Value(0)).current;
 
 	useEffect(() => {
@@ -51,6 +64,18 @@ const MessageCard = ({ item }: { item: AIMessage }) => {
 				},
 			]}>
 			<View>{parseContent(displayContent, textColor)}</View>
+			{timestamp ? (
+				<AppText
+					testID={`message-timestamp-${item.id}`}
+					style={[
+						styles.timestamp,
+						isUser
+							? styles.userTimestamp
+							: styles.assistantTimestamp,
+					]}>
+					{timestamp}
+				</AppText>
+			) : null}
 		</Animated.View>
 	);
 };
@@ -73,6 +98,17 @@ const createStyles = (colors: AppColors) =>
 			alignSelf: 'flex-start',
 			backgroundColor: colors.chat.assistant,
 			borderBottomLeftRadius: spacing.sm,
+		},
+		timestamp: {
+			marginTop: spacing.xs,
+			fontSize: 11,
+			alignSelf: 'flex-end',
+		},
+		userTimestamp: {
+			color: 'rgba(255,255,255,0.78)',
+		},
+		assistantTimestamp: {
+			color: colors.neutral.textTertiary,
 		},
 	});
 

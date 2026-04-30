@@ -22,62 +22,62 @@ export const createStyles = (colors: AppColors) =>
 			textTransform: 'uppercase',
 			letterSpacing: 0.7,
 		},
-		tableRow: {
-			flexDirection: 'row',
-			alignItems: 'center',
+		sectionHeader: {
+			paddingHorizontal: 14,
+			paddingVertical: 10,
+			backgroundColor: colors.neutral.background,
 			borderTopWidth: 1,
 			borderTopColor: colors.neutral.borderLight,
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
 		},
-		tableCell: {
-			paddingVertical: 8,
-			paddingHorizontal: 8,
-			fontSize: 14,
+		sectionHeaderLeft: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 8,
+		},
+		sectionHeaderTitle: {
+			fontSize: 13,
+			fontWeight: '700',
 			color: colors.neutral.text,
 		},
-		tableCellWide: {
-			flex: 1,
+		sectionHeaderCount: {
+			fontSize: 11,
+			fontWeight: '600',
+			color: colors.neutral.textTertiary,
+			textTransform: 'uppercase',
+			letterSpacing: 0.3,
 		},
-		tableHeader: {
+		dailyNetBadge: {
+			paddingHorizontal: 10,
+			paddingVertical: 5,
+			borderRadius: radius.full,
+			borderWidth: 1,
+		},
+		dailyNetBadgePositive: {
+			backgroundColor: 'rgba(0,180,90,0.08)',
+			borderColor: 'rgba(0,180,90,0.22)',
+		},
+		dailyNetBadgeNegative: {
+			backgroundColor: 'rgba(219,68,55,0.08)',
+			borderColor: 'rgba(219,68,55,0.22)',
+		},
+		dailyNetText: {
+			fontSize: 11,
 			fontWeight: '700',
-			backgroundColor: colors.neutral.background,
-			color: colors.neutral.textSecondary,
+			letterSpacing: 0.2,
 		},
-		amountCell: {
-			width: 92,
-			textAlign: 'right',
+		dailyNetTextPositive: {
+			color: colors.success,
 		},
-		actionCell: {
-			width: 76,
-			alignItems: 'flex-end',
-		},
-		actionCellLabel: {
-			width: 76,
-			textAlign: 'right',
+		dailyNetTextNegative: {
+			color: colors.error,
 		},
 		rowsScroll: {
-			maxHeight: 320,
+			maxHeight: 420,
 		},
 		rowsScrollContent: {
-			paddingBottom: 16,
-		},
-		amountNegative: {
-			color: colors.error,
-			fontWeight: '700',
-		},
-		amountPositive: {
-			color: colors.success,
-			fontWeight: '700',
-		},
-		deleteButton: {
-			paddingVertical: 8,
-			paddingHorizontal: 8,
-		},
-		deleteButtonPressed: {
-			opacity: 0.65,
-		},
-		deleteButtonLabel: {
-			color: colors.error,
-			fontWeight: '700',
-			textAlign: 'right',
+			paddingBottom: 28,
 		},
 	});
