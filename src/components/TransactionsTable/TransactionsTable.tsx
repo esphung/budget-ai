@@ -6,18 +6,7 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Transaction } from 'types/Transaction';
 
-// export interface TransactionListItem {
-// 	id: string;
-// 	name: string;
-// 	amount: number;
-// 	transactionType: TransactionType;
-// 	date: string;
-// 	category: string[];
-// 	merchant: string;
-// }
-
 export type TransactionListItem = Transaction & {
-	category: string[];
 	name: string;
 };
 

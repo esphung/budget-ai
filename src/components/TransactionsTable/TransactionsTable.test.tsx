@@ -11,7 +11,7 @@ describe('TransactionsTable', () => {
 			amount: -4.5,
 			transactionType: 'expense',
 			date: '2024-04-20',
-			category: ['Food and Drink', 'Coffee Shop'],
+			category: 'Food & Drink' as const,
 			merchant: 'Starbucks',
 		},
 		{
@@ -20,7 +20,7 @@ describe('TransactionsTable', () => {
 			amount: 2500,
 			transactionType: 'income',
 			date: '2024-04-18',
-			category: ['Income', 'Salary'],
+			category: 'Salary' as const,
 			merchant: 'Foo',
 		},
 		{
@@ -29,7 +29,7 @@ describe('TransactionsTable', () => {
 			amount: -45.0,
 			transactionType: 'expense',
 			date: '2024-04-19',
-			category: ['Transportation', 'Gas'],
+			category: 'Transportation' as const,
 			merchant: 'Bar',
 		},
 	];
