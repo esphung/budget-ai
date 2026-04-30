@@ -14,7 +14,8 @@
 		"test": "npx jest",
 		"test:coverage": "npx jest --coverage",
 		"precommit": "yarn lint && yarn format:check && yarn test",
-		"db:open": "\"/Applications/DB Browser for SQLite.app/Contents/MacOS/DB Browser for SQLite\""
+		"db:open": "\"/Applications/DB Browser for SQLite.app/Contents/MacOS/DB Browser for SQLite\"",
+		"sim:uninstall": "xcrun simctl uninstall booted com.budgetai.app"
 	},
 	"dependencies": {
 		"@op-engineering/op-sqlite": "^15.2.12",

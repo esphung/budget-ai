@@ -82,8 +82,8 @@ android {
         applicationId "com.budgetai"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "0.0.1"
         manifestPlaceholders = [
             auth0Domain: "YOUR_AUTH0_DOMAIN"
         ]
