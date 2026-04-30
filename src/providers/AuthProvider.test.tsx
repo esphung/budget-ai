@@ -8,13 +8,18 @@ import * as React from 'react';
 import { AuthProvider, useAuthStore } from './AuthProvider';
 import { StorageService } from '@services/StorageService';
 
+const mockAuthService = {
+	login: jest.fn().mockResolvedValue('mock-auth0-token'),
+	logout: jest.fn().mockResolvedValue(undefined),
+};
+
 jest.mock('@services/StorageService', () => {
 	return {
 		StorageService: {
 			getInstance: jest.fn(() => ({
-				saveItem: jest.fn(),
+				saveItem: jest.fn().mockResolvedValue(undefined),
 				loadItem: jest.fn().mockResolvedValue('saved-token'),
-				clearItem: jest.fn(),
+				clearItem: jest.fn().mockResolvedValue(undefined),
 			})),
 		},
 	};
@@ -30,7 +35,7 @@ jest.mock('@react-native-async-storage/async-storage', () => {
 
 describe('AuthProvider', () => {
 	it('renders children when token is set', () => {
-		const store = createAuthStore();
+		const store = createAuthStore(mockAuthService);
 		const wrapper = ({ children }: { children: React.ReactNode }) => (
 			<AuthProvider store={store}>{children}</AuthProvider>
 		);
@@ -45,7 +50,7 @@ describe('AuthProvider', () => {
 	});
 
 	it('loads persisted token on mount', async () => {
-		const store = createAuthStore();
+		const store = createAuthStore(mockAuthService);
 		const mockStorage = StorageService.getInstance('@auth');
 		const actions = store.createActions(jest.fn(), mockStorage);
 
@@ -67,7 +72,7 @@ describe('AuthProvider', () => {
 	});
 
 	it('setToken action updates token in context', () => {
-		const store = createAuthStore();
+		const store = createAuthStore(mockAuthService);
 
 		const wrapper = ({ children }: { children: React.ReactNode }) => (
 			<AuthProvider store={store}>{children}</AuthProvider>
@@ -86,8 +91,8 @@ describe('AuthProvider', () => {
 		expect(result.current.token).toBe('new-token');
 	});
 
-	it('logout action resets token to null', () => {
-		const store = createAuthStore();
+	it('logout action resets token to null', async () => {
+		const store = createAuthStore(mockAuthService);
 
 		const wrapper = ({ children }: { children: React.ReactNode }) => (
 			<AuthProvider store={store}>{children}</AuthProvider>
@@ -102,8 +107,8 @@ describe('AuthProvider', () => {
 		expect(result.current.token).toBe('token-to-logout');
 
 		// Then logout
-		testAct(() => {
-			result.current.logout();
+		await testAct(async () => {
+			await result.current.logout();
 		});
 		expect(result.current.token).toBeNull();
 	});

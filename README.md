@@ -113,3 +113,44 @@ yarn format:check
 ```sh
 BASE_URL=https://budget-ai-backend-f2124bc32a19.herokuapp.com
 ```
+
+### Auth0 Setup
+
+1. Install dependencies and iOS pods:
+
+```sh
+yarn install
+npx pod-install
+```
+
+2. Update Auth0 credentials in:
+
+```txt
+src/services/Auth0Service.ts
+```
+
+Set:
+
+```txt
+domain: YOUR_AUTH0_DOMAIN
+clientId: YOUR_AUTH0_CLIENT_ID
+```
+
+3. Update Android Auth0 domain placeholder in:
+
+```txt
+android/app/build.gradle
+```
+
+Set:
+
+```txt
+manifestPlaceholders = [auth0Domain: "YOUR_AUTH0_DOMAIN"]
+```
+
+4. In the Auth0 dashboard, register callback/logout URLs:
+
+-   iOS callback: `com.phung.budget-ai.auth0://YOUR_AUTH0_DOMAIN/ios/com.phung.budget-ai/callback`
+-   iOS logout: `com.phung.budget-ai.auth0://YOUR_AUTH0_DOMAIN/ios/com.phung.budget-ai/logout`
+-   Android callback: `com.budgetai://YOUR_AUTH0_DOMAIN/android/com.budgetai/callback`
+-   Android logout: `com.budgetai://YOUR_AUTH0_DOMAIN/android/com.budgetai/logout`

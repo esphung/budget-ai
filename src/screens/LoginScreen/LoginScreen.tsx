@@ -4,17 +4,33 @@ import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import { TestID } from '@enums/TestID';
 import { useAuthStore } from '@providers/AuthProvider';
 import { colors, radius, spacing, shadows } from '@theme/tokens';
-import { useMemo } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 const LoginScreen = () => {
-	const setToken = useAuthStore((s) => s.setToken);
+	const login = useAuthStore((s) => s.login);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	const handleLogin = useMemo(() => {
-		return () => {
-			setToken('authenticated');
-		};
-	}, [setToken]);
+	const handleLogin = useCallback(async () => {
+		if (isSubmitting) {
+			return;
+		}
+
+		setErrorMessage(null);
+		setIsSubmitting(true);
+
+		try {
+			await login();
+		} catch (error) {
+			console.error('[LoginScreen] Login failed:', error);
+			setErrorMessage(
+				'Unable to log in right now. Check Auth0 config and try again.',
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
+	}, [isSubmitting, login]);
 
 	return (
 		<ThemedScreen>
@@ -29,8 +45,13 @@ const LoginScreen = () => {
 					<AppText variant="subtitle" style={styles.subtitle}>
 						Welcome to BudgetAI!
 					</AppText>
+					{errorMessage ? (
+						<AppText style={styles.errorText}>
+							{errorMessage}
+						</AppText>
+					) : null}
 					<PrimaryButton
-						title="Login"
+						title={isSubmitting ? 'Logging in...' : 'Login'}
 						onPress={handleLogin}
 						width="100%"
 					/>
@@ -67,6 +88,10 @@ const styles = StyleSheet.create({
 	},
 	subtitle: {
 		color: colors.neutral.textSecondary,
+		marginBottom: spacing.sm,
+	},
+	errorText: {
+		color: colors.error,
 		marginBottom: spacing.sm,
 	},
 	text: {

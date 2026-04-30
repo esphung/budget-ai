@@ -4,6 +4,11 @@ import { AuthProvider } from '@providers/AuthProvider';
 import { createAuthStore } from '@stores/AuthStore';
 import { render, waitFor } from '@testing-library/react-native';
 
+const mockAuthService = {
+	login: jest.fn().mockResolvedValue('mock-auth0-token'),
+	logout: jest.fn().mockResolvedValue(undefined),
+};
+
 // @op-engineering/op-sqlite
 jest.mock('@op-engineering/op-sqlite', () => ({
 	__esModule: true,
@@ -40,9 +45,9 @@ jest.mock('@navigation/AuthStack/AuthStack', () => {
 
 jest.mock('@services/StorageService', () => {
 	const mockStorage = {
-		saveItem: jest.fn(),
+		saveItem: jest.fn().mockResolvedValue(undefined),
 		loadItem: jest.fn(),
-		clearItem: jest.fn(),
+		clearItem: jest.fn().mockResolvedValue(undefined),
 	};
 
 	return {
@@ -59,7 +64,7 @@ jest.mock('@db/runAIMigrations', () => ({
 }));
 
 function renderWithProviders(ui: React.ReactElement) {
-	const store = createAuthStore();
+	const store = createAuthStore(mockAuthService);
 
 	return render(<AuthProvider store={store}>{ui}</AuthProvider>);
 }

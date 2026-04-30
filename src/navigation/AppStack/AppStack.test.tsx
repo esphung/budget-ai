@@ -7,6 +7,11 @@ import { createAuthStore } from '@stores/AuthStore';
 import { render } from '@testing-library/react-native';
 import React from 'react';
 
+const mockAuthService = {
+	login: jest.fn().mockResolvedValue('mock-auth0-token'),
+	logout: jest.fn().mockResolvedValue(undefined),
+};
+
 jest.mock('@react-navigation/native-stack', () => {
 	const ReactLib = require('react');
 
@@ -73,7 +78,7 @@ jest.mock('@providers/DatabaseProvider', () => ({
 }));
 
 const renderWithProviders = (ui: React.ReactElement) => {
-	const authStore = createAuthStore(); // Create a real auth store with the storage instance
+	const authStore = createAuthStore(mockAuthService);
 	return render(
 		<DatabaseProvider dbService={{} as any}>
 			<FeatureFlagsProvider>

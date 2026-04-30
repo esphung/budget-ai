@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import LoginScreen from './LoginScreen';
 import { TestID } from '@enums/TestID';
 import { useAuthStore } from '@providers/AuthProvider';
@@ -9,9 +9,17 @@ jest.mock('@providers/AuthProvider', () => ({
 }));
 
 describe('LoginScreen', () => {
-	it('renders the LoginScreen with welcome text', () => {
-		(useAuthStore as jest.Mock).mockReturnValue(jest.fn());
+	const mockLogin = jest.fn().mockResolvedValue(undefined);
 
+	beforeEach(() => {
+		mockLogin.mockClear();
+		(useAuthStore as jest.Mock).mockImplementation((selector) => {
+			const store = { login: mockLogin };
+			return selector ? selector(store) : store;
+		});
+	});
+
+	it('renders the LoginScreen with welcome text', () => {
 		const { getByTestId, getByText } = render(<LoginScreen />);
 
 		// Check if the LoginScreen container is rendered
@@ -23,17 +31,15 @@ describe('LoginScreen', () => {
 		expect(welcomeText).toBeTruthy();
 	});
 
-	it('calls setToken when the Login button is pressed', () => {
-		const mockSetToken = jest.fn();
-		(useAuthStore as jest.Mock).mockReturnValue(mockSetToken);
-
+	it('calls login when the Login button is pressed', async () => {
 		const { getByText } = render(<LoginScreen />);
 
 		// Press the Login button
 		const loginButton = getByText('Login');
 		fireEvent.press(loginButton);
 
-		// Verify that setToken was called with the correct argument
-		expect(mockSetToken).toHaveBeenCalledWith('authenticated');
+		await waitFor(() => {
+			expect(mockLogin).toHaveBeenCalledTimes(1);
+		});
 	});
 });

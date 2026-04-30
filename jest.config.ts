@@ -112,6 +112,7 @@ const config: Config = {
 			'<rootDir>/jest/mocks/NativeAnimatedHelper.ts',
 		'^react-native/src/private/animated/NativeAnimatedHelper$':
 			'<rootDir>/jest/mocks/NativeAnimatedHelper.ts',
+		'^react-native-auth0$': '<rootDir>/jest/mocks/reactNativeAuth0.ts',
 		'^react-native-plaid-link-sdk$':
 			'<rootDir>/jest/mocks/reactNativePlaidLinkSdk.ts',
 	},
