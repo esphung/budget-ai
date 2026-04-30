@@ -1,15 +1,32 @@
+import { notifyTableChanged } from '@db/databaseChangeNotifier';
 import { executeTransaction } from '@db/executeTransaction';
-import { Account, NewAccountInput } from '@models/Account';
+import { Account, NewAccountInput } from 'types/Account';
 import { DB, Scalar } from '@op-engineering/op-sqlite';
+import { nowIso } from '@utils/dateUtil';
 import { generateUniqueId } from '@utils/randomIdUtils';
 import type { Repository } from 'types/Repository';
-
-const nowIso = () => new Date().toISOString();
 
 export class AccountRepository
 	implements Repository<NewAccountInput, Account>
 {
 	constructor(private db: DB) {}
+
+	update: (
+		id: string,
+		input: Partial<NewAccountInput>,
+	) => Promise<Account> = async (_id, _input) => {
+		throw new Error(
+			'Update method not implemented for AccountRepository',
+		);
+	};
+
+	delete: (id: string) => Promise<void> = async (_id) => {
+		throw new Error(
+			'Delete method not implemented for AccountRepository',
+		);
+	};
+
+	getAll: () => Promise<Account[]> = async () => this.list();
 
 	private async executeQuery<T>(
 		query: string,
@@ -19,7 +36,7 @@ export class AccountRepository
 		return result.rows as T[];
 	}
 
-	async getAll(): Promise<Account[]> {
+	async list(): Promise<Account[]> {
 		const rows = await this.executeQuery<{
 			id: string;
 			name: string;
@@ -69,6 +86,7 @@ export class AccountRepository
 		`,
 			[id, input.name.trim(), accountType, currency, now, now],
 		);
+		notifyTableChanged('accounts');
 
 		return {
 			id,
@@ -126,5 +144,6 @@ export class AccountRepository
 				args: [],
 			},
 		]);
+		notifyTableChanged('accounts');
 	}
 }

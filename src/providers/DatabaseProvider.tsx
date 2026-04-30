@@ -1,4 +1,6 @@
+import { runAIMigrations } from '@db/runAIMigrations';
 import { DB } from '@op-engineering/op-sqlite';
+import { DatabaseService } from '@services/DatabaseService';
 import { dbLog } from '@utils/logUtils';
 import React, {
 	createContext,
@@ -9,43 +11,55 @@ import React, {
 import { DevSettings } from 'react-native';
 
 // Define the shape of the context state
-type DatabaseStore = { db: DB | null; isInitializing: boolean };
+type DatabaseStore = { db: DB };
 
 // Create the context
 const DatabaseContext = createContext<DatabaseStore | undefined>(undefined);
 
 export const DatabaseProvider: React.FC<{
 	children: ReactNode;
-	db: DB | null;
-}> = ({ children, db }) => {
-	const [isInitializing, setIsInitializing] = React.useState(true);
+	dbService: DatabaseService;
+}> = ({ children, dbService }) => {
+	const [db, setDb] = React.useState<DB | null>(null);
 
-	// add debug menu item to show database debug info - only in dev mode
+	useEffect(() => {
+		const onUpdate = async (update: DB) => {
+			await runAIMigrations(update);
+
+			dbLog.debug('Received DB update in DatabaseProvider');
+			setDb(update);
+			dbLog.debug('Database instance updated in DatabaseProvider');
+		};
+
+		dbService.addListener(onUpdate);
+		dbService.init();
+
+		return () => {
+			dbService.removeListener(onUpdate);
+		};
+	}, [dbService]);
+
+	// Add a dev menu item to log database debug info
 	useEffect(() => {
 		if (__DEV__) {
-			DevSettings.addMenuItem(
-				'Show DatabaseService Debug Info',
-				() => {
-					const debugInfo = {
-						path: db?.getDbPath() || 'No DB instance',
-						ready: !!db,
-						isInitializing,
-					};
-					dbLog.debug('Print Database Debug:', debugInfo);
-				},
-			);
+			DevSettings.addMenuItem('Log Database Info', () => {
+				const info = dbService.getDebugInfo();
+				dbLog.debug(
+					'Database Debug Info:',
+					JSON.stringify(info, null, 2),
+				);
+			});
 		}
-	}, [db, isInitializing]);
+	}, [dbService]);
 
-	useEffect(() => {
-		if (!isInitializing) return;
-		if (db) {
-			setIsInitializing(false);
-		}
-	}, [db, isInitializing]);
+	// If db is not ready yet, we can choose to render null or a loading state
+	if (!db) {
+		dbLog.debug('Database instance is not ready');
+		return null;
+	}
 
 	return (
-		<DatabaseContext.Provider value={{ db, isInitializing }}>
+		<DatabaseContext.Provider value={{ db }}>
 			{children}
 		</DatabaseContext.Provider>
 	);

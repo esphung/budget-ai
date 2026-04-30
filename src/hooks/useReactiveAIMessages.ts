@@ -4,14 +4,14 @@ import { AIConversationRepository } from '@repositories/AIConversationRepository
 import { useEffect, useState } from 'react';
 
 export function useReactiveAIMessages(
-	db: DB | null,
+	db: DB,
 	threadId: string | null,
 ): { messages: AIMessage[]; isLoaded: boolean } {
 	const [messages, setMessages] = useState<AIMessage[]>([]);
 	const [isLoaded, setIsLoaded] = useState(false);
 
 	useEffect(() => {
-		if (!db || !threadId) {
+		if (!threadId) {
 			return;
 		}
 

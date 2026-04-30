@@ -10,6 +10,13 @@ jest.mock('@providers/AuthProvider', () => ({
 	useAuthStore: jest.fn(),
 }));
 
+jest.mock('@providers/DatabaseProvider', () => ({
+	DatabaseProvider: ({ children }: { children: React.ReactNode }) => (
+		<>{children}</>
+	),
+	useDatabase: jest.fn(() => ({ db: null })),
+}));
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
 	getItem: jest.fn(),
 	setItem: jest.fn(),
@@ -19,7 +26,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 describe('SettingsScreen', () => {
 	const renderScreen = () =>
 		render(
-			<DatabaseProvider db={{} as any}>
+			<DatabaseProvider>
 				<ThemeProvider>
 					<SettingsScreen />
 				</ThemeProvider>

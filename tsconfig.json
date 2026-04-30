@@ -19,7 +19,8 @@
 			"@mocks/*": ["./src/mocks/*"],
 			"@repositories/*": ["./src/repositories/*"],
 			"@db/*": ["./src/db/*"],
-			"types/*": ["./src/types/*"]
+			"types/*": ["./src/types/*"],
+			"@usecases/*": ["./src/usecases/*"]
 		}
 	},
 	"include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "*.json"],

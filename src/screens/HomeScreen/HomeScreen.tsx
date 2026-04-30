@@ -6,7 +6,6 @@ import BalanceHeader from '@components/BalanceHeader/BalanceHeader';
 import ThemedScreen from '@components/ThemedScreen/ThemedScreen';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { TestID } from '@enums/TestID';
-import useGreeting from '@hooks/useGreeting';
 import useKeyboardShift from '@hooks/useKeyboardShift';
 import useLoadThread from '@hooks/useLoadThread';
 import { useReactiveAIMessages } from '@hooks/useReactiveAIMessages';
@@ -18,22 +17,24 @@ import {
 } from '@navigation/AppStack/AppStack';
 import { useAuthStore } from '@providers/AuthProvider';
 import { useDatabase } from '@providers/DatabaseProvider';
-import { useOpenAiService } from '@providers/OpenAiServiceProvider';
+import { useTheme } from '@providers/ThemeProvider';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { TransactionRepository } from '@repositories/TransactionRepository';
+import AiChatView from '@screens/HomeScreen/AiChatView';
+import { benchmarkService } from '@services/BenchmarkService';
 import {
 	AppColors,
 	radius,
-	spacing,
 	shadows,
+	spacing,
 	typography,
 } from '@theme/tokens';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import AiChatView from '@screens/HomeScreen/AiChatView';
-import { useTheme } from '@providers/ThemeProvider';
-import { benchmarkService } from '@services/BenchmarkService';
+import { DeleteTransaction } from '@usecases/deleteTransaction';
 import { sortMessagesByCreatedAt } from '@utils/messageUtils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	Animated,
+	Alert,
 	DevSettings,
 	Easing,
 	Pressable,
@@ -54,10 +55,11 @@ const HomeScreen = (_props: Props) => {
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { db } = useDatabase();
 	const { threadId } = useLoadThread(db);
-	const { messages: reactiveAiMessages, isLoaded: isMessagesLoaded } =
-		useReactiveAIMessages(db, threadId);
+	const { messages: reactiveAiMessages } = useReactiveAIMessages(
+		db,
+		threadId,
+	);
 	const transactions = useReactiveTransactions(db);
-	const { aiService } = useOpenAiService();
 	const [activeView, setActiveView] = useState<'chat' | 'transactions'>(
 		'chat',
 	);
@@ -116,12 +118,31 @@ const HomeScreen = (_props: Props) => {
 		[],
 	);
 
-	useGreeting({
-		threadId,
-		messages: reactiveAiMessages,
-		isMessagesLoaded,
-		aiService,
-	});
+	const handleDeleteTransaction = useCallback(
+		(transactionId: string, transactionName: string) => {
+			if (!db) {
+				return;
+			}
+
+			Alert.alert(
+				'Delete transaction?',
+				`This will permanently remove ${transactionName} from local storage.`,
+				[
+					{ text: 'Cancel', style: 'cancel' },
+					{
+						text: 'Delete',
+						style: 'destructive',
+						onPress: async () => {
+							await new DeleteTransaction(
+								new TransactionRepository(db),
+							).execute(transactionId);
+						},
+					},
+				],
+			);
+		},
+		[db],
+	);
 
 	// side effects
 	useEffect(() => {
@@ -297,6 +318,14 @@ const HomeScreen = (_props: Props) => {
 									{tableTransactions.length ? (
 										<TransactionsTable
 											transactions={tableTransactions}
+											onDeleteTransaction={(
+												transaction,
+											) => {
+												handleDeleteTransaction(
+													transaction.id,
+													transaction.name,
+												);
+											}}
 										/>
 									) : (
 										<AppText
@@ -331,7 +360,6 @@ const createStyles = (colors: AppColors) =>
 			flex: 1,
 			backgroundColor: colors.neutral.background,
 			paddingHorizontal: spacing.lg,
-			paddingTop: spacing.md + 1,
 			paddingBottom: spacing.lg,
 		},
 		header: {

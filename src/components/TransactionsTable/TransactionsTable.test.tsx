@@ -1,7 +1,7 @@
 import TransactionsTable, {
 	TransactionListItem,
 } from '@components/TransactionsTable/TransactionsTable';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 
 describe('TransactionsTable', () => {
 	const mockTransactions: TransactionListItem[] = [
@@ -145,5 +145,33 @@ describe('TransactionsTable', () => {
 		);
 
 		expect(getByText('-$4.50')).toBeTruthy();
+	});
+
+	it('renders delete controls when a delete handler is provided', () => {
+		const { getByText, getByTestId } = render(
+			<TransactionsTable
+				transactions={mockTransactions}
+				onDeleteTransaction={jest.fn()}
+			/>,
+		);
+
+		expect(getByText('Action')).toBeTruthy();
+		expect(getByTestId('transaction-delete-txn_1')).toBeTruthy();
+	});
+
+	it('invokes delete handler with the selected transaction', () => {
+		const onDeleteTransaction = jest.fn();
+		const { getByTestId } = render(
+			<TransactionsTable
+				transactions={mockTransactions}
+				onDeleteTransaction={onDeleteTransaction}
+			/>,
+		);
+
+		fireEvent.press(getByTestId('transaction-delete-txn_2'));
+
+		expect(onDeleteTransaction).toHaveBeenCalledWith(
+			mockTransactions[1],
+		);
 	});
 });

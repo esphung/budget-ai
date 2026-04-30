@@ -96,6 +96,8 @@ export async function runAIMigrations(db: DB) {
         ),
         date TEXT NOT NULL,
         created_at TEXT NOT NULL,
+        sync_status TEXT,
+        source TEXT,
         FOREIGN KEY (account_id) REFERENCES accounts(id)
           ON DELETE SET NULL
       );
@@ -127,14 +129,25 @@ export async function runAIMigrations(db: DB) {
 	const transactionColumns = await db.execute(
 		'PRAGMA table_info(transactions)',
 	);
-	const hasAccountIdColumn = transactionColumns.rows.some(
-		(row) => String(row.name) === 'account_id',
-	);
+	const hasTransactionColumn = (columnName: string) =>
+		transactionColumns.rows.some(
+			(row) => String(row.name) === columnName,
+		);
 
-	if (!hasAccountIdColumn) {
+	if (!hasTransactionColumn('account_id')) {
 		await db.execute(
 			'ALTER TABLE transactions ADD COLUMN account_id TEXT',
 		);
+	}
+
+	if (!hasTransactionColumn('sync_status')) {
+		await db.execute(
+			'ALTER TABLE transactions ADD COLUMN sync_status TEXT',
+		);
+	}
+
+	if (!hasTransactionColumn('source')) {
+		await db.execute('ALTER TABLE transactions ADD COLUMN source TEXT');
 	}
 
 	await db.execute(`

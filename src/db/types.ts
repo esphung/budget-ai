@@ -1,3 +1,5 @@
+import { AIAction } from 'types/AIAction';
+
 export type AIMessageRole = 'system' | 'user' | 'assistant' | 'tool';
 
 export type AIMessageType =
@@ -16,21 +18,6 @@ export type AIMessage = {
 	metadata?: Record<string, unknown> | null;
 	model?: string | null;
 	createdAt: string;
-};
-
-export type AIActionStatus = 'pending' | 'applied' | 'rejected' | 'failed';
-
-export type AIAction = {
-	id: string;
-	threadId: string;
-	messageId: string;
-	actionType: string;
-	payload: Record<string, unknown>;
-	status: AIActionStatus;
-	result?: Record<string, unknown> | null;
-	errorMessage?: string | null;
-	createdAt: string;
-	appliedAt?: string | null;
 };
 
 export type Message = {

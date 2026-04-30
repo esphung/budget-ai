@@ -12,6 +12,8 @@ import { useTheme } from '@providers/ThemeProvider';
 import { AccountRepository } from '@repositories/AccountRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
 import { AppColors, radius, spacing, shadows } from '@theme/tokens';
+import { ClearAccounts } from '@usecases/clearAccounts';
+import { ClearTransactions } from '@usecases/clearTransactions';
 import { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet, Switch, View } from 'react-native';
 
@@ -28,18 +30,18 @@ const DATA: ActionButtonItem[] = [
 		type: 'secondary',
 		testID: 'SettingsOption-go_back',
 	},
-	{
-		id: 'clear_transactions',
-		title: 'Clear Transactions',
-		type: 'tertiary',
-		testID: 'SettingsOption-clear_transactions',
-	},
-	{
-		id: 'clear_accounts',
-		title: 'Clear Accounts',
-		type: 'tertiary',
-		testID: 'SettingsOption-clear_accounts',
-	},
+	// {
+	// 	id: 'clear_transactions',
+	// 	title: 'Clear Transactions',
+	// 	type: 'tertiary',
+	// 	testID: 'SettingsOption-clear_transactions',
+	// },
+	// {
+	// 	id: 'clear_accounts',
+	// 	title: 'Clear Accounts',
+	// 	type: 'tertiary',
+	// 	testID: 'SettingsOption-clear_accounts',
+	// },
 ];
 
 type SwitchItem = {
@@ -156,7 +158,9 @@ const SettingsScreen = () => {
 					text: 'Clear',
 					style: 'destructive',
 					onPress: async () => {
-						await new TransactionRepository(db).clearAll();
+						await new ClearTransactions(
+							new TransactionRepository(db),
+						).execute();
 					},
 				},
 			],
@@ -177,7 +181,9 @@ const SettingsScreen = () => {
 					text: 'Clear',
 					style: 'destructive',
 					onPress: async () => {
-						await new AccountRepository(db).clearAll();
+						await new ClearAccounts(
+							new AccountRepository(db),
+						).execute();
 					},
 				},
 			],
@@ -225,7 +231,6 @@ const createStyles = (colors: AppColors) =>
 		screen: {
 			flex: 1,
 			paddingHorizontal: spacing.lg,
-			paddingTop: spacing.lg,
 			paddingBottom: spacing.lg,
 			backgroundColor: colors.neutral.background,
 		},

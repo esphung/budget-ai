@@ -1,18 +1,17 @@
-import {
-	AIAction,
-	AIActionStatus,
-	AIMessage,
-	AIMessageRole,
-	AIMessageType,
-} from '@db/types';
+import { AIMessage, AIMessageRole, AIMessageType } from '@db/types';
 import { DB, Scalar } from '@op-engineering/op-sqlite';
+import { nowIso } from '@utils/dateUtil';
 import { generateUniqueId } from '@utils/randomIdUtils';
-
-const nowIso = () => new Date().toISOString();
+import type { AIAction, AIActionStatus } from 'types/AIAction';
 
 export class AIConversationRepository {
-	constructor(private db: DB) {}
+	private db: DB;
 
+	constructor(db: DB) {
+		this.db = db;
+	}
+
+	// Methods for managing threads, messages, and actions will go here
 	private async executeQuery<T>(
 		query: string,
 		args: Scalar[],
@@ -198,6 +197,7 @@ export class AIConversationRepository {
 			id: String(row.id),
 			threadId: String(row.thread_id),
 			messageId: String(row.message_id),
+			type: String(row.action_type) as AIAction['type'],
 			actionType: String(row.action_type),
 			payload:
 				row.payload_json && typeof row.payload_json === 'string'

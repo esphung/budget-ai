@@ -1,5 +1,34 @@
+import { subscribeToTableChanges } from '@db/databaseChangeNotifier';
 import { DB } from '@op-engineering/op-sqlite';
 import { useEffect, useState } from 'react';
+
+const TRANSACTIONS_QUERY = `
+	SELECT
+		id,
+		account_id as accountId,
+		amount,
+		merchant,
+		category,
+		transaction_type as transactionType,
+		date,
+		created_at as createdAt
+	FROM transactions
+	ORDER BY date DESC, created_at DESC
+`;
+
+const LEGACY_TRANSACTIONS_QUERY = `
+	SELECT
+		id,
+		NULL as accountId,
+		amount,
+		merchant,
+		category,
+		transaction_type as transactionType,
+		date,
+		created_at as createdAt
+	FROM transactions
+	ORDER BY date DESC, created_at DESC
+`;
 
 export type TransactionRecord = {
 	id: string;
@@ -20,24 +49,13 @@ export function useReactiveTransactions(db: DB | null) {
 
 	useEffect(() => {
 		if (!db) {
+			setTransactions([]);
 			return;
 		}
 
 		const fetchTransactions = async () => {
 			try {
-				const result = await db.execute(`
-					SELECT
-						id,
-						account_id as accountId,
-						amount,
-						merchant,
-						category,
-						transaction_type as transactionType,
-						date,
-						created_at as createdAt
-					FROM transactions
-					ORDER BY date DESC, created_at DESC
-				`);
+				const result = await db.execute(TRANSACTIONS_QUERY);
 
 				setTransactions(result.rows as TransactionRecord[]);
 			} catch (error) {
@@ -55,19 +73,9 @@ export function useReactiveTransactions(db: DB | null) {
 
 				try {
 					// Backward compatibility for existing databases before account_id migration.
-					const fallbackResult = await db.execute(`
-						SELECT
-							id,
-							NULL as accountId,
-							amount,
-							merchant,
-							category,
-							transaction_type as transactionType,
-							date,
-							created_at as createdAt
-						FROM transactions
-						ORDER BY date DESC, created_at DESC
-					`);
+					const fallbackResult = await db.execute(
+						LEGACY_TRANSACTIONS_QUERY,
+					);
 
 					setTransactions(
 						fallbackResult.rows as TransactionRecord[],
@@ -86,12 +94,20 @@ export function useReactiveTransactions(db: DB | null) {
 	}, [db, updateTrigger]);
 
 	useEffect(() => {
+		const unsubscribe = subscribeToTableChanges('transactions', () => {
+			setUpdateTrigger((prev) => prev + 1);
+		});
+
+		return unsubscribe;
+	}, []);
+
+	useEffect(() => {
 		if (!db) {
 			return;
 		}
 
 		const unsubscribe = db.reactiveExecute({
-			query: 'SELECT id FROM transactions ORDER BY created_at DESC LIMIT 1',
+			query: TRANSACTIONS_QUERY,
 			arguments: [],
 			fireOn: [{ table: 'transactions' }],
 			callback: () => {
