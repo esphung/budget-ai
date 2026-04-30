@@ -59,7 +59,13 @@ jobs:
                   CERTIFICATE_PATH="$RUNNER_TEMP/ios_distribution.p12"
                   KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
 
-                  echo "$IOS_DISTRIBUTION_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+                  printf '%s' "$IOS_DISTRIBUTION_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+
+                  if ! openssl pkcs12 -in "$CERTIFICATE_PATH" -nokeys -passin "pass:$IOS_DISTRIBUTION_CERTIFICATE_PASSWORD" >/dev/null 2>&1 && \
+                     ! openssl pkcs12 -legacy -in "$CERTIFICATE_PATH" -nokeys -passin "pass:$IOS_DISTRIBUTION_CERTIFICATE_PASSWORD" >/dev/null 2>&1; then
+                      echo "::error::IOS_DISTRIBUTION_CERTIFICATE_BASE64 must be a base64-encoded .p12 file, and IOS_DISTRIBUTION_CERTIFICATE_PASSWORD must match the .p12 export password."
+                      exit 1
+                  fi
 
                   security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
                   security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
