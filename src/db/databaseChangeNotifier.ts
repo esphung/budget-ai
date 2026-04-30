@@ -1,4 +1,4 @@
-type DatabaseTable = 'transactions' | 'accounts';
+type DatabaseTable = 'transactions' | 'accounts' | 'budgets' | 'categories';
 
 type Listener = () => void;
 

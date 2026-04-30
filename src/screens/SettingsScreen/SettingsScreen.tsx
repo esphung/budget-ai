@@ -11,14 +11,18 @@ import { useAuthStore } from '@providers/AuthProvider';
 import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { AccountRepository } from '@repositories/AccountRepository';
+import { BudgetRepository } from '@repositories/BudgetRepository';
+import { CategoryRepository } from '@repositories/CategoryRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
 import { AppColors, radius, spacing, shadows } from '@theme/tokens';
 import { ClearAccounts } from '@usecases/clearAccounts';
+import { ClearBudgets } from '@usecases/clearBudgets';
+import { ClearCategories } from '@usecases/clearCategories';
 import { ClearTransactions } from '@usecases/clearTransactions';
 import { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet, Switch, View } from 'react-native';
 
-const DATA: ActionButtonItem[] = [
+const BASE_ACTIONS: ActionButtonItem[] = [
 	{
 		id: 'test_screen',
 		title: 'Go to Test Screen',
@@ -37,18 +41,33 @@ const DATA: ActionButtonItem[] = [
 		type: 'secondary',
 		testID: 'SettingsOption-logout',
 	},
-	// {
-	// 	id: 'clear_transactions',
-	// 	title: 'Clear Transactions',
-	// 	type: 'tertiary',
-	// 	testID: 'SettingsOption-clear_transactions',
-	// },
-	// {
-	// 	id: 'clear_accounts',
-	// 	title: 'Clear Accounts',
-	// 	type: 'tertiary',
-	// 	testID: 'SettingsOption-clear_accounts',
-	// },
+];
+
+const DEV_ACTIONS: ActionButtonItem[] = [
+	{
+		id: 'clear_transactions',
+		title: 'Clear Transactions',
+		type: 'tertiary',
+		testID: 'SettingsOption-clear_transactions',
+	},
+	{
+		id: 'clear_accounts',
+		title: 'Clear Accounts',
+		type: 'tertiary',
+		testID: 'SettingsOption-clear_accounts',
+	},
+	{
+		id: 'clear_budgets',
+		title: 'Clear Budgets',
+		type: 'tertiary',
+		testID: 'SettingsOption-clear_budgets',
+	},
+	{
+		id: 'clear_categories',
+		title: 'Clear Categories',
+		type: 'tertiary',
+		testID: 'SettingsOption-clear_categories',
+	},
 ];
 
 type SwitchItem = {
@@ -69,11 +88,20 @@ const SettingsActions = ({
 	onLogout,
 	onClearTransactions,
 	onClearAccounts,
+	onClearBudgets,
+	onClearCategories,
 }: {
 	onLogout: () => void;
 	onClearTransactions: () => void;
 	onClearAccounts: () => void;
+	onClearBudgets: () => void;
+	onClearCategories: () => void;
 }) => {
+	const actions = useMemo(
+		() => (__DEV__ ? [...BASE_ACTIONS, ...DEV_ACTIONS] : BASE_ACTIONS),
+		[],
+	);
+
 	const handleAction = useCallback(
 		(itemId: string) => {
 			if (itemId === 'go_back') {
@@ -86,12 +114,22 @@ const SettingsActions = ({
 				onClearTransactions();
 			} else if (itemId === 'clear_accounts') {
 				onClearAccounts();
+			} else if (itemId === 'clear_budgets') {
+				onClearBudgets();
+			} else if (itemId === 'clear_categories') {
+				onClearCategories();
 			}
 		},
-		[onClearAccounts, onClearTransactions, onLogout],
+		[
+			onClearAccounts,
+			onClearBudgets,
+			onClearCategories,
+			onClearTransactions,
+			onLogout,
+		],
 	);
 
-	return <ActionButtonList items={DATA} onPressItem={handleAction} />;
+	return <ActionButtonList items={actions} onPressItem={handleAction} />;
 };
 
 const SettingsSwitches = ({
@@ -197,6 +235,52 @@ const SettingsScreen = () => {
 		);
 	}, [db]);
 
+	const clearBudgets = useCallback(() => {
+		if (!db) {
+			return;
+		}
+
+		Alert.alert(
+			'Clear budgets?',
+			'This will remove all budgets from local state and database.',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{
+					text: 'Clear',
+					style: 'destructive',
+					onPress: async () => {
+						await new ClearBudgets(
+							new BudgetRepository(db),
+						).execute();
+					},
+				},
+			],
+		);
+	}, [db]);
+
+	const clearCategories = useCallback(() => {
+		if (!db) {
+			return;
+		}
+
+		Alert.alert(
+			'Clear categories?',
+			'This will remove all categories from local state and database.',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{
+					text: 'Clear',
+					style: 'destructive',
+					onPress: async () => {
+						await new ClearCategories(
+							new CategoryRepository(db),
+						).execute();
+					},
+				},
+			],
+		);
+	}, [db]);
+
 	return (
 		<ThemedScreen>
 			<View style={styles.screen} testID={TestID.SettingsScreen}>
@@ -214,6 +298,8 @@ const SettingsScreen = () => {
 						onLogout={logout}
 						onClearTransactions={clearTransactions}
 						onClearAccounts={clearAccounts}
+						onClearBudgets={clearBudgets}
+						onClearCategories={clearCategories}
 					/>
 				</TopCard>
 

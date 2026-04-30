@@ -1,7 +1,11 @@
 import { DB } from '@op-engineering/op-sqlite';
 import { AccountRepository } from '@repositories/AccountRepository';
+import { BudgetRepository } from '@repositories/BudgetRepository';
+import { CategoryRepository } from '@repositories/CategoryRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
 import { ClearAccounts } from '@usecases/clearAccounts';
+import { ClearBudgets } from '@usecases/clearBudgets';
+import { ClearCategories } from '@usecases/clearCategories';
 import { ClearTransactions } from '@usecases/clearTransactions';
 import { dbLog } from '@utils/logUtils';
 import { useEffect, useRef } from 'react';
@@ -43,6 +47,29 @@ export const useDevDataReset = (db: DB) => {
 			} catch (error) {
 				dbLog.error(
 					'Failed to clear accounts from dev menu',
+					error,
+				);
+			}
+		});
+
+		DevSettings.addMenuItem('Clear Budgets (Dev)', async () => {
+			try {
+				await new ClearBudgets(new BudgetRepository(db)).execute();
+				dbLog.debug('Dev menu cleared budgets');
+			} catch (error) {
+				dbLog.error('Failed to clear budgets from dev menu', error);
+			}
+		});
+
+		DevSettings.addMenuItem('Clear Categories (Dev)', async () => {
+			try {
+				await new ClearCategories(
+					new CategoryRepository(db),
+				).execute();
+				dbLog.debug('Dev menu cleared categories');
+			} catch (error) {
+				dbLog.error(
+					'Failed to clear categories from dev menu',
 					error,
 				);
 			}

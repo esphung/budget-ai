@@ -9,6 +9,7 @@ import { useApiClient } from '@providers/ApiClientProvider';
 import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
+import { CategoryRepository } from '@repositories/CategoryRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
 import { AppColors, radius, spacing, typography } from '@theme/tokens';
 import { AIActionHandler } from '@usecases/AIActionHandler';
@@ -58,6 +59,7 @@ const AiChatView = ({
 					new AIConversationRepository(db),
 					new TransactionRepository(db),
 					api,
+					new CategoryRepository(db),
 				).sendMessageAndApplyActions({
 					threadId: threadId,
 					userText: trimmed,

@@ -9,6 +9,7 @@ import {
 import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { AccountRepository } from '@repositories/AccountRepository';
+import { CategoryRepository } from '@repositories/CategoryRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
 import { AppColors, radius, spacing, typography } from '@theme/tokens';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -16,6 +17,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CreateManualTransaction } from '@usecases/createManualTransaction';
 import { EnsureDefaultAccount } from '@usecases/ensureDefaultAccount';
 import useKeyboardShift from '../../hooks/useKeyboardShift';
+import { Category } from 'types/Category';
 import {
 	Animated,
 	Keyboard,
@@ -59,6 +61,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 	const [selectedAccountId, setSelectedAccountId] = useState<
 		string | null
 	>(null);
+	const [categories, setCategories] = useState<Category[]>([]);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
 	const accounts = useReactiveAccounts(db);
@@ -79,6 +82,26 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 			console.error('Failed to load accounts', error);
 			setErrorMessage('Unable to load accounts.');
 		});
+	}, [db]);
+
+	useEffect(() => {
+		if (!db) {
+			setCategories([]);
+			return;
+		}
+
+		const loadCategories = async () => {
+			try {
+				const loadedCategories = await new CategoryRepository(
+					db,
+				).list();
+				setCategories(loadedCategories);
+			} catch (error) {
+				console.error('Failed to load categories', error);
+			}
+		};
+
+		loadCategories();
 	}, [db]);
 
 	useEffect(() => {
@@ -108,13 +131,29 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 
 		setIsSaving(true);
 		try {
+			const normalizedCategory = category.trim();
+			if (normalizedCategory) {
+				const categoryRepo = new CategoryRepository(db);
+				const hasCategory = (await categoryRepo.list()).some(
+					(existingCategory) =>
+						existingCategory.name.toLowerCase() ===
+						normalizedCategory.toLowerCase(),
+				);
+
+				if (!hasCategory) {
+					await categoryRepo.create({
+						name: normalizedCategory,
+					});
+				}
+			}
+
 			const useCase = new CreateManualTransaction(
 				new TransactionRepository(db),
 			);
 			const result = await useCase.execute({
 				amount,
 				merchant,
-				category,
+				category: normalizedCategory,
 				date,
 				accountId: selectedAccountId,
 				transactionType,
@@ -239,6 +278,45 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 						style={styles.input}
 						keyboardAppearance={isDarkMode ? 'dark' : 'light'}
 					/>
+
+					{categories.length ? (
+						<>
+							<AppText style={styles.categorySuggestionLabel}>
+								Suggestions
+							</AppText>
+							<View style={styles.categoryList}>
+								{categories.map((categoryItem) => {
+									const isSelected =
+										category.trim().toLowerCase() ===
+										categoryItem.name.toLowerCase();
+
+									return (
+										<Pressable
+											key={categoryItem.id}
+											onPress={() => {
+												setCategory(
+													categoryItem.name,
+												);
+											}}
+											style={[
+												styles.categoryChip,
+												isSelected &&
+													styles.categoryChipSelected,
+											]}>
+											<AppText
+												style={[
+													styles.categoryChipText,
+													isSelected &&
+														styles.categoryChipTextSelected,
+												]}>
+												{categoryItem.name}
+											</AppText>
+										</Pressable>
+									);
+								})}
+							</View>
+						</>
+					) : null}
 
 					<AppText style={styles.label}>Date</AppText>
 					<TextInput
@@ -385,6 +463,34 @@ const createStyles = (colors: AppColors) =>
 			color: colors.neutral.textSecondary,
 		},
 		accountChipTextSelected: {
+			color: colors.neutral.surface,
+		},
+		categorySuggestionLabel: {
+			...typography.small,
+			color: colors.neutral.textTertiary,
+		},
+		categoryList: {
+			flexDirection: 'row',
+			flexWrap: 'wrap',
+			gap: spacing.sm,
+		},
+		categoryChip: {
+			paddingHorizontal: spacing.md,
+			paddingVertical: spacing.sm,
+			borderRadius: radius.full,
+			borderWidth: 1,
+			borderColor: colors.neutral.border,
+			backgroundColor: colors.neutral.surface,
+		},
+		categoryChipSelected: {
+			borderColor: colors.primary.base,
+			backgroundColor: colors.primary.base,
+		},
+		categoryChipText: {
+			...typography.small,
+			color: colors.neutral.textSecondary,
+		},
+		categoryChipTextSelected: {
 			color: colors.neutral.surface,
 		},
 		errorText: {

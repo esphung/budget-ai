@@ -11,21 +11,6 @@ export class AccountRepository
 {
 	constructor(private db: DB) {}
 
-	update: (
-		id: string,
-		input: Partial<NewAccountInput>,
-	) => Promise<Account> = async (_id, _input) => {
-		throw new Error(
-			'Update method not implemented for AccountRepository',
-		);
-	};
-
-	delete: (id: string) => Promise<void> = async (_id) => {
-		throw new Error(
-			'Delete method not implemented for AccountRepository',
-		);
-	};
-
 	getAll: () => Promise<Account[]> = async () => this.list();
 
 	private async executeQuery<T>(
@@ -96,6 +81,80 @@ export class AccountRepository
 			createdAt: now,
 			updatedAt: now,
 		};
+	}
+
+	async update(
+		id: string,
+		input: Partial<NewAccountInput>,
+	): Promise<Account> {
+		const existing = await this.executeQuery<{
+			id: string;
+			name: string;
+			account_type: string;
+			currency: string;
+			created_at: string;
+			updated_at: string;
+		}>(
+			`
+			SELECT
+				id,
+				name,
+				account_type,
+				currency,
+				created_at,
+				updated_at
+			FROM accounts
+			WHERE id = ?
+			LIMIT 1
+		`,
+			[id],
+		);
+
+		if (!existing[0]) {
+			throw new Error('Account not found');
+		}
+
+		const row = existing[0];
+		const now = nowIso();
+		const name = input.name?.trim() || String(row.name);
+		const accountType =
+			input.accountType ??
+			(String(row.account_type) as Account['accountType']);
+		const currency = input.currency ?? String(row.currency);
+
+		await executeTransaction(this.db, [
+			{
+				sql: `
+					UPDATE accounts
+					SET name = ?,
+						account_type = ?,
+						currency = ?,
+						updated_at = ?
+					WHERE id = ?
+				`,
+				args: [name, accountType, currency, now, id],
+			},
+		]);
+		notifyTableChanged('accounts');
+
+		return {
+			id: String(row.id),
+			name,
+			accountType,
+			currency,
+			createdAt: String(row.created_at),
+			updatedAt: now,
+		};
+	}
+
+	async delete(id: string): Promise<void> {
+		await executeTransaction(this.db, [
+			{
+				sql: 'DELETE FROM accounts WHERE id = ?',
+				args: [id],
+			},
+		]);
+		notifyTableChanged('accounts');
 	}
 
 	async ensureDefaultAccount(): Promise<Account> {

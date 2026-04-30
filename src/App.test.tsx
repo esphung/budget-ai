@@ -1,6 +1,5 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import App from './App';
 
 jest.mock('@enums/TestID', () => ({
 	__esModule: true,
@@ -65,6 +64,7 @@ jest.mock('@services/BenchmarkService', () => ({
 
 describe('App', () => {
 	it('renders the RootStack component', () => {
+		const App = require('./App').default;
 		const MockTestID = jest.requireActual('@enums/TestID').TestID;
 		const { getByTestId } = render(<App />);
 		const rootStack = getByTestId(MockTestID.RootStack);

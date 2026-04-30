@@ -1,5 +1,6 @@
 // usecases/createTransactionFromAI.ts
 
+import { CategoryRepository } from '@repositories/CategoryRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
 import { generateUniqueId } from '@utils/randomIdUtils';
 import { AIAction } from 'types/AIAction';
@@ -12,7 +13,10 @@ export type TransactionResult = {
 };
 
 export class CreateTransactionFromAI {
-	constructor(private transactionRepo: TransactionRepository) {}
+	constructor(
+		private transactionRepo: TransactionRepository,
+		private categoryRepo?: CategoryRepository,
+	) {}
 
 	async execute(
 		action: AIAction,
@@ -61,6 +65,22 @@ export class CreateTransactionFromAI {
 		const savedTransaction = await this.transactionRepo.create(
 			transaction,
 		);
+
+		if (this.categoryRepo && transaction.category?.trim()) {
+			const normalizedCategory = transaction.category.trim();
+			const categories = await this.categoryRepo.list();
+			const hasCategory = categories.some(
+				(existingCategory) =>
+					existingCategory.name.toLowerCase() ===
+					normalizedCategory.toLowerCase(),
+			);
+
+			if (!hasCategory) {
+				await this.categoryRepo.create({
+					name: normalizedCategory,
+				});
+			}
+		}
 
 		if (!savedTransaction) {
 			return {
