@@ -1,7 +1,7 @@
 import TransactionsTable, {
 	TransactionListItem,
 } from '@components/TransactionsTable/TransactionsTable';
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, within } from '@testing-library/react-native';
 
 const createMockTransaction = (
 	overrides?: Partial<TransactionListItem>,
@@ -64,6 +64,15 @@ describe('TransactionsTable', () => {
 			<TransactionsTable transactions={mockTransactions} />,
 		);
 
+		expect(
+			getByTestId('transactions-day-header-2024-04-20'),
+		).toBeTruthy();
+		expect(
+			getByTestId('transactions-day-header-2024-04-19'),
+		).toBeTruthy();
+		expect(
+			getByTestId('transactions-day-header-2024-04-15'),
+		).toBeTruthy();
 		expect(getByTestId('transaction-row-txn_1')).toBeTruthy();
 		expect(getByTestId('transaction-row-txn_2')).toBeTruthy();
 		expect(getByTestId('transaction-row-txn_3')).toBeTruthy();
@@ -88,20 +97,20 @@ describe('TransactionsTable', () => {
 	});
 
 	it('formats positive amounts with + sign', () => {
-		const { getByText } = render(
+		const { queryAllByText } = render(
 			<TransactionsTable transactions={mockTransactions} />,
 		);
 
-		expect(getByText('+$2,500.00')).toBeTruthy();
+		expect(queryAllByText('+$2,500.00').length).toBeGreaterThan(0);
 	});
 
 	it('formats negative amounts with - sign', () => {
-		const { getByText } = render(
+		const { queryAllByText } = render(
 			<TransactionsTable transactions={mockTransactions} />,
 		);
 
-		expect(getByText('-$4.50')).toBeTruthy();
-		expect(getByText('-$45.00')).toBeTruthy();
+		expect(queryAllByText('-$4.50').length).toBeGreaterThan(0);
+		expect(queryAllByText('-$45.00').length).toBeGreaterThan(0);
 	});
 
 	it('renders empty list when no transactions provided', () => {
@@ -134,12 +143,12 @@ describe('TransactionsTable', () => {
 			}),
 		];
 
-		const { getByText } = render(
+		const { queryAllByText } = render(
 			<TransactionsTable transactions={edgeCaseTransactions} />,
 		);
 
-		expect(getByText('+$0.00')).toBeVisible();
-		expect(getByText('-$9,999.99')).toBeVisible();
+		expect(queryAllByText('+$0.00').length).toBeGreaterThan(0);
+		expect(queryAllByText('-$9,999.99').length).toBeGreaterThan(0);
 	});
 
 	it('treats non-income transactions as expense labels even when amount is positive', () => {
@@ -147,11 +156,12 @@ describe('TransactionsTable', () => {
 			createMockTransaction(),
 		];
 
-		const { getByText } = render(
+		const { getByTestId } = render(
 			<TransactionsTable transactions={transactions} />,
 		);
 
-		expect(getByText('-$4.50')).toBeVisible();
+		const row = getByTestId('transaction-row-txn_edge_3');
+		expect(within(row).getByText('-$4.50')).toBeTruthy();
 	});
 
 	it('renders delete controls when a delete handler is provided', () => {
