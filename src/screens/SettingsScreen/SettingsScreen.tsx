@@ -8,6 +8,7 @@ import { TestID } from '@enums/TestID';
 import { AppStackScreens } from '@navigation/AppStack/AppStack';
 import { NavigationService } from '@navigation/navigationService';
 import { useAuthStore } from '@providers/AuthProvider';
+import { useApiClient } from '@providers/ApiClientProvider';
 import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { AccountRepository } from '@repositories/AccountRepository';
@@ -184,13 +185,14 @@ const SettingsSwitches = ({
 };
 
 const SettingsScreen = () => {
-	const { logout } = useAuthStore();
+	const { logout, userId } = useAuthStore();
+	const { api } = useApiClient();
 	const { db } = useDatabase();
 	const { colors } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 
 	const clearTransactions = useCallback(() => {
-		if (!db) {
+		if (!db || !userId) {
 			return;
 		}
 
@@ -204,13 +206,13 @@ const SettingsScreen = () => {
 					style: 'destructive',
 					onPress: async () => {
 						await new ClearTransactions(
-							new TransactionRepository(db),
+							new TransactionRepository(db, userId, api),
 						).execute();
 					},
 				},
 			],
 		);
-	}, [db]);
+	}, [api, db, userId]);
 
 	const clearAccounts = useCallback(() => {
 		if (!db) {

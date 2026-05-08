@@ -110,11 +110,12 @@ export async function runAIMigrations(db: DB) {
       CREATE TABLE IF NOT EXISTS categories (
         id TEXT PRIMARY KEY,
         owner_id TEXT,
-        name TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
         color TEXT,
         icon TEXT,
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
+        updated_at TEXT NOT NULL,
+        UNIQUE(owner_id, name)
       );
     `);
 
@@ -208,7 +209,9 @@ export async function runAIMigrations(db: DB) {
 	}
 
 	// Post-migration checks for categories table
-	const categoryColumns = await db.execute('PRAGMA table_info(categories)');
+	const categoryColumns = await db.execute(
+		'PRAGMA table_info(categories)',
+	);
 	const hasCategoryColumn = (columnName: string) =>
 		categoryColumns.rows.some((row) => String(row.name) === columnName);
 
@@ -229,4 +232,107 @@ export async function runAIMigrations(db: DB) {
     CREATE INDEX IF NOT EXISTS idx_transactions_account_date
     ON transactions(account_id, date, created_at)
   `);
+
+	await db.execute(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_owner_name
+    ON categories(owner_id, name)
+  `);
+
+	const categoryIndexes = await db.execute(
+		'PRAGMA index_list(categories)',
+	);
+	let hasOwnerNameUniqueConstraint = false;
+	let hasLegacyGlobalNameUniqueConstraint = false;
+
+	for (const indexRow of categoryIndexes.rows) {
+		const isUnique = Number(indexRow.unique) === 1;
+		if (!isUnique) {
+			continue;
+		}
+
+		const indexName = String(indexRow.name ?? '');
+		if (!indexName) {
+			continue;
+		}
+
+		const indexInfo = await db.execute(
+			`PRAGMA index_info('${indexName.replace(/'/g, "''")}')`,
+		);
+		const columnNames = indexInfo.rows
+			.sort((a, b) => Number(a.seqno) - Number(b.seqno))
+			.map((row) => String(row.name));
+
+		if (
+			columnNames.length === 2 &&
+			columnNames[0] === 'owner_id' &&
+			columnNames[1] === 'name'
+		) {
+			hasOwnerNameUniqueConstraint = true;
+		}
+
+		if (columnNames.length === 1 && columnNames[0] === 'name') {
+			hasLegacyGlobalNameUniqueConstraint = true;
+		}
+	}
+
+	// Migrate legacy categories schema from UNIQUE(name) to UNIQUE(owner_id, name).
+	if (
+		hasLegacyGlobalNameUniqueConstraint ||
+		!hasOwnerNameUniqueConstraint
+	) {
+		await db.execute('PRAGMA foreign_keys = OFF');
+
+		await db.transaction(async (tx) => {
+			await tx.execute(`
+        CREATE TABLE categories_new (
+          id TEXT PRIMARY KEY,
+          owner_id TEXT,
+          name TEXT NOT NULL,
+          color TEXT,
+          icon TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          UNIQUE(owner_id, name)
+        )
+      `);
+
+			await tx.execute(`
+        INSERT INTO categories_new (
+          id,
+          owner_id,
+          name,
+          color,
+          icon,
+          created_at,
+          updated_at
+        )
+        SELECT
+          id,
+          owner_id,
+          name,
+          color,
+          icon,
+          created_at,
+          updated_at
+        FROM categories
+      `);
+
+			await tx.execute('DROP TABLE categories');
+			await tx.execute(
+				'ALTER TABLE categories_new RENAME TO categories',
+			);
+
+			await tx.execute(`
+        CREATE INDEX IF NOT EXISTS idx_categories_name
+        ON categories(name)
+      `);
+
+			await tx.execute(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_owner_name
+        ON categories(owner_id, name)
+      `);
+		});
+
+		await db.execute('PRAGMA foreign_keys = ON');
+	}
 }

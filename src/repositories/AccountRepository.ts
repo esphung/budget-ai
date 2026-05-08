@@ -25,6 +25,10 @@ export class AccountRepository
 	}
 
 	async list(): Promise<Account[]> {
+		const ownerFilter = this.userId
+			? 'WHERE owner_id = ?'
+			: '';
+		const args = this.userId ? [this.userId] : [];
 		const rows = await this.executeQuery<{
 			id: string;
 			owner_id: string | null;
@@ -43,8 +47,9 @@ export class AccountRepository
 				created_at,
 				updated_at
 			FROM accounts
+			${ownerFilter}
 			ORDER BY name ASC
-		`);
+		`, args);
 
 		return rows.map((row) => ({
 			id: String(row.id),
@@ -182,6 +187,10 @@ export class AccountRepository
 	}
 
 	async ensureDefaultAccount(): Promise<Account> {
+		const ownerFilter = this.userId
+			? 'AND owner_id = ?'
+			: '';
+		const args = this.userId ? ['Cash', this.userId] : ['Cash'];
 		const existing = await this.executeQuery<{
 			id: string;
 			owner_id: string | null;
@@ -202,9 +211,10 @@ export class AccountRepository
 				updated_at
 			FROM accounts
 			WHERE name = ?
+			${ownerFilter}
 			LIMIT 1
 		`,
-			['Cash'],
+			args,
 		);
 
 		if (existing[0]) {

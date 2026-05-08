@@ -1,4 +1,5 @@
 import { useAuthStore } from '@providers/AuthProvider';
+import { useApiClient } from '@providers/ApiClientProvider';
 import { DatabaseProvider } from '@providers/DatabaseProvider';
 import { ThemeProvider } from '@providers/ThemeProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,6 +9,10 @@ import SettingsScreen from './SettingsScreen';
 
 jest.mock('@providers/AuthProvider', () => ({
 	useAuthStore: jest.fn(),
+}));
+
+jest.mock('@providers/ApiClientProvider', () => ({
+	useApiClient: jest.fn(),
 }));
 
 jest.mock('@providers/DatabaseProvider', () => ({
@@ -43,6 +48,15 @@ describe('SettingsScreen', () => {
 
 		(useAuthStore as jest.Mock).mockReturnValue({
 			logout: jest.fn(),
+			userId: 'auth0|test-user',
+		});
+
+		(useApiClient as jest.Mock).mockReturnValue({
+			api: {
+				transactions: {
+					clear: jest.fn(),
+				},
+			},
 		});
 	});
 

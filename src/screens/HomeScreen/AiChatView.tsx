@@ -59,7 +59,7 @@ const AiChatView = ({
 
 				await new AIActionHandler(
 					new AIConversationRepository(db),
-					new TransactionRepository(db, userId),
+					new TransactionRepository(db, userId, api),
 					api,
 					new CategoryRepository(db, userId),
 				).sendMessageAndApplyActions({
@@ -78,7 +78,15 @@ const AiChatView = ({
 				setIsAwaitingAiResponse(false);
 			}
 		}
-	}, [text, backendStatus, isAwaitingAiResponse, threadId, db, api, userId]);
+	}, [
+		text,
+		backendStatus,
+		isAwaitingAiResponse,
+		threadId,
+		db,
+		api,
+		userId,
+	]);
 
 	const contentView = useMemo(() => {
 		if (!threadId) {

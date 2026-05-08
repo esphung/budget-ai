@@ -3,6 +3,7 @@ import { AccountRepository } from '@repositories/AccountRepository';
 import { BudgetRepository } from '@repositories/BudgetRepository';
 import { CategoryRepository } from '@repositories/CategoryRepository';
 import { TransactionRepository } from '@repositories/TransactionRepository';
+import { ApiClient } from '@services/ApiClient';
 import { ClearAccounts } from '@usecases/clearAccounts';
 import { ClearBudgets } from '@usecases/clearBudgets';
 import { ClearCategories } from '@usecases/clearCategories';
@@ -14,7 +15,7 @@ import { DevSettings } from 'react-native';
 /**
  * Dev-only helper for quickly clearing local financial tables.
  */
-export const useDevDataReset = (db: DB) => {
+export const useDevDataReset = (db: DB, api: ApiClient) => {
 	const hasRegisteredMenuItems = useRef(false);
 
 	useEffect(() => {
@@ -27,7 +28,7 @@ export const useDevDataReset = (db: DB) => {
 		DevSettings.addMenuItem('Clear Transactions (Dev)', async () => {
 			try {
 				await new ClearTransactions(
-					new TransactionRepository(db),
+					new TransactionRepository(db, null, api),
 				).execute();
 				dbLog.debug('Dev menu cleared transactions');
 			} catch (error) {
@@ -74,5 +75,5 @@ export const useDevDataReset = (db: DB) => {
 				);
 			}
 		});
-	}, [db]);
+	}, [api, db]);
 };

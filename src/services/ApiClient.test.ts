@@ -62,6 +62,13 @@ function makeAxiosErrorWithErrorField(status: number, error: string) {
 	return err;
 }
 
+function makeAxiosErrorWithObjectMessage(status: number, message: unknown) {
+	const err = new Error('Bad Request') as any;
+	err.response = { status, data: { message } };
+	(axios.isAxiosError as unknown as jest.Mock).mockReturnValueOnce(true);
+	return err;
+}
+
 // ── health.check ────────────────────────────────────────────────────────────
 
 describe('apiClient.health.check', () => {
@@ -223,6 +230,23 @@ describe('apiClient.plaid.exchangePublicToken', () => {
 		).rejects.toMatchObject<Partial<ApiError>>({
 			status: 400,
 			message: 'Missing publicToken in request body',
+		});
+	});
+
+	it('normalizes backend payloads where message is an object', async () => {
+		mockAxiosInstance.post.mockRejectedValueOnce(
+			makeAxiosErrorWithObjectMessage(400, {
+				error: 'Validation failed: amount must be positive',
+			}),
+		);
+
+		await expect(
+			apiClient.plaid.exchangePublicToken({
+				publicToken: '',
+			}),
+		).rejects.toMatchObject<Partial<ApiError>>({
+			status: 400,
+			message: 'Validation failed: amount must be positive',
 		});
 	});
 

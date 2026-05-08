@@ -139,6 +139,10 @@ export class BudgetRepository
 	}
 
 	async list(): Promise<Budget[]> {
+		const ownerFilter = this.userId
+			? 'WHERE owner_id = ?'
+			: '';
+		const args = this.userId ? [this.userId] : [];
 		const rows = await this.executeQuery<{
 			id: string;
 			owner_id: string | null;
@@ -161,8 +165,9 @@ export class BudgetRepository
 				created_at,
 				updated_at
 			FROM budgets
+			${ownerFilter}
 			ORDER BY period_start DESC, created_at DESC
-		`);
+		`, args);
 
 		return rows.map((row) => ({
 			id: String(row.id),
@@ -188,6 +193,10 @@ export class BudgetRepository
 	}
 
 	private async getById(id: string): Promise<Budget | null> {
+		const ownerFilter = this.userId
+			? 'AND owner_id = ?'
+			: '';
+		const args = this.userId ? [id, this.userId] : [id];
 		const rows = await this.executeQuery<{
 			id: string;
 			owner_id: string | null;
@@ -212,9 +221,10 @@ export class BudgetRepository
 				updated_at
 			FROM budgets
 			WHERE id = ?
+			${ownerFilter}
 			LIMIT 1
 		`,
-			[id],
+			args,
 		);
 
 		if (!rows[0]) {

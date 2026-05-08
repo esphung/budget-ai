@@ -32,6 +32,7 @@ const LEGACY_TRANSACTIONS_QUERY = `
 
 export type TransactionRecord = {
 	id: string;
+	ownerId?: string | null;
 	accountId: string | null;
 	amount: number;
 	merchant: string | null;
@@ -41,7 +42,10 @@ export type TransactionRecord = {
 	createdAt: string;
 };
 
-export function useReactiveTransactions(db: DB | null) {
+export function useReactiveTransactions(
+	db: DB | null,
+	ownerId: string | null = null,
+) {
 	const [transactions, setTransactions] = useState<TransactionRecord[]>(
 		[],
 	);
@@ -55,7 +59,12 @@ export function useReactiveTransactions(db: DB | null) {
 
 		const fetchTransactions = async () => {
 			try {
-				const result = await db.execute(TRANSACTIONS_QUERY);
+				const query = ownerId
+					? `${TRANSACTIONS_QUERY.trim().replace('ORDER BY date DESC, created_at DESC', 'WHERE owner_id = ? ORDER BY date DESC, created_at DESC')}`
+					: TRANSACTIONS_QUERY;
+				const result = ownerId
+					? await db.execute(query, [ownerId])
+					: await db.execute(query);
 
 				setTransactions(result.rows as TransactionRecord[]);
 			} catch (error) {
@@ -72,10 +81,13 @@ export function useReactiveTransactions(db: DB | null) {
 				}
 
 				try {
+					const fallbackQuery = ownerId
+						? `${LEGACY_TRANSACTIONS_QUERY.trim().replace('ORDER BY date DESC, created_at DESC', 'WHERE owner_id = ? ORDER BY date DESC, created_at DESC')}`
+						: LEGACY_TRANSACTIONS_QUERY;
 					// Backward compatibility for existing databases before account_id migration.
-					const fallbackResult = await db.execute(
-						LEGACY_TRANSACTIONS_QUERY,
-					);
+					const fallbackResult = ownerId
+						? await db.execute(fallbackQuery, [ownerId])
+						: await db.execute(LEGACY_TRANSACTIONS_QUERY);
 
 					setTransactions(
 						fallbackResult.rows as TransactionRecord[],
@@ -91,7 +103,7 @@ export function useReactiveTransactions(db: DB | null) {
 		};
 
 		fetchTransactions();
-	}, [db, updateTrigger]);
+	}, [db, ownerId, updateTrigger]);
 
 	useEffect(() => {
 		const unsubscribe = subscribeToTableChanges('transactions', () => {
@@ -106,9 +118,14 @@ export function useReactiveTransactions(db: DB | null) {
 			return;
 		}
 
+		const query = ownerId
+			? `${TRANSACTIONS_QUERY.trim().replace('ORDER BY date DESC, created_at DESC', 'WHERE owner_id = ? ORDER BY date DESC, created_at DESC')}`
+			: TRANSACTIONS_QUERY;
+		const argumentsArray = ownerId ? [ownerId] : [];
+
 		const unsubscribe = db.reactiveExecute({
-			query: TRANSACTIONS_QUERY,
-			arguments: [],
+			query,
+			arguments: argumentsArray,
 			fireOn: [{ table: 'transactions' }],
 			callback: () => {
 				setUpdateTrigger((prev) => prev + 1);
@@ -118,7 +135,7 @@ export function useReactiveTransactions(db: DB | null) {
 		return () => {
 			unsubscribe?.();
 		};
-	}, [db]);
+	}, [db, ownerId]);
 
 	return [...transactions];
 }
