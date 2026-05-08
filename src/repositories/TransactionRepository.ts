@@ -8,7 +8,9 @@ import { generateUniqueId } from '@utils/randomIdUtils';
 import type { Repository } from 'types/Repository';
 import { NewTransactionInput, Transaction } from 'types/Transaction';
 
-function isDuplicateTransactionIdError(error: ApiError | undefined): boolean {
+function isDuplicateTransactionIdError(
+	error: ApiError | undefined,
+): boolean {
 	if (!error) {
 		return false;
 	}

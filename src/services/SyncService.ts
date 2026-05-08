@@ -115,7 +115,9 @@ function asArray(payload: unknown): unknown[] {
 	return [];
 }
 
-function isDuplicateTransactionIdError(error: ApiError | undefined): boolean {
+function isDuplicateTransactionIdError(
+	error: ApiError | undefined,
+): boolean {
 	if (!error) {
 		return false;
 	}

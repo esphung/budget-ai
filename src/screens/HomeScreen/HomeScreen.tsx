@@ -117,11 +117,7 @@ const HomeScreen = (_props: Props) => {
 						style: 'destructive',
 						onPress: async () => {
 							await new DeleteTransaction(
-								new TransactionRepository(
-									db,
-									userId,
-									api,
-								),
+								new TransactionRepository(db, userId, api),
 							).execute(transactionId);
 						},
 					},

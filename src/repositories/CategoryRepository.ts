@@ -110,9 +110,7 @@ export class CategoryRepository
 	}
 
 	async list(): Promise<Category[]> {
-		const ownerFilter = this.userId
-			? 'WHERE owner_id = ?'
-			: '';
+		const ownerFilter = this.userId ? 'WHERE owner_id = ?' : '';
 		const args = this.userId ? [this.userId] : [];
 		const rows = await this.executeQuery<{
 			id: string;
@@ -122,7 +120,8 @@ export class CategoryRepository
 			icon: string | null;
 			created_at: string;
 			updated_at: string;
-		}>(`
+		}>(
+			`
 			SELECT
 				id,
 				owner_id,
@@ -134,7 +133,9 @@ export class CategoryRepository
 			FROM categories
 			${ownerFilter}
 			ORDER BY name ASC
-		`, args);
+		`,
+			args,
+		);
 
 		return rows.map((row) => ({
 			id: String(row.id),
@@ -158,9 +159,7 @@ export class CategoryRepository
 	}
 
 	private async getById(id: string): Promise<Category | null> {
-		const ownerFilter = this.userId
-			? 'AND owner_id = ?'
-			: '';
+		const ownerFilter = this.userId ? 'AND owner_id = ?' : '';
 		const args = this.userId ? [id, this.userId] : [id];
 		const rows = await this.executeQuery<{
 			id: string;

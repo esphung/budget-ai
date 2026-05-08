@@ -9,10 +9,7 @@ import { Budget, NewBudgetInput } from 'types/Budget';
 export class BudgetRepository
 	implements Repository<NewBudgetInput, Budget>
 {
-	constructor(
-		private db: DB,
-		private userId: string | null = null,
-	) {}
+	constructor(private db: DB, private userId: string | null = null) {}
 
 	private async executeQuery<T>(
 		query: string,
@@ -139,9 +136,7 @@ export class BudgetRepository
 	}
 
 	async list(): Promise<Budget[]> {
-		const ownerFilter = this.userId
-			? 'WHERE owner_id = ?'
-			: '';
+		const ownerFilter = this.userId ? 'WHERE owner_id = ?' : '';
 		const args = this.userId ? [this.userId] : [];
 		const rows = await this.executeQuery<{
 			id: string;
@@ -153,7 +148,8 @@ export class BudgetRepository
 			period_end: string;
 			created_at: string;
 			updated_at: string;
-		}>(`
+		}>(
+			`
 			SELECT
 				id,
 				owner_id,
@@ -167,7 +163,9 @@ export class BudgetRepository
 			FROM budgets
 			${ownerFilter}
 			ORDER BY period_start DESC, created_at DESC
-		`, args);
+		`,
+			args,
+		);
 
 		return rows.map((row) => ({
 			id: String(row.id),
@@ -193,9 +191,7 @@ export class BudgetRepository
 	}
 
 	private async getById(id: string): Promise<Budget | null> {
-		const ownerFilter = this.userId
-			? 'AND owner_id = ?'
-			: '';
+		const ownerFilter = this.userId ? 'AND owner_id = ?' : '';
 		const args = this.userId ? [id, this.userId] : [id];
 		const rows = await this.executeQuery<{
 			id: string;

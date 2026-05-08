@@ -60,7 +60,10 @@ export function useReactiveTransactions(
 		const fetchTransactions = async () => {
 			try {
 				const query = ownerId
-					? `${TRANSACTIONS_QUERY.trim().replace('ORDER BY date DESC, created_at DESC', 'WHERE owner_id = ? ORDER BY date DESC, created_at DESC')}`
+					? `${TRANSACTIONS_QUERY.trim().replace(
+							'ORDER BY date DESC, created_at DESC',
+							'WHERE owner_id = ? ORDER BY date DESC, created_at DESC',
+					  )}`
 					: TRANSACTIONS_QUERY;
 				const result = ownerId
 					? await db.execute(query, [ownerId])
@@ -82,7 +85,10 @@ export function useReactiveTransactions(
 
 				try {
 					const fallbackQuery = ownerId
-						? `${LEGACY_TRANSACTIONS_QUERY.trim().replace('ORDER BY date DESC, created_at DESC', 'WHERE owner_id = ? ORDER BY date DESC, created_at DESC')}`
+						? `${LEGACY_TRANSACTIONS_QUERY.trim().replace(
+								'ORDER BY date DESC, created_at DESC',
+								'WHERE owner_id = ? ORDER BY date DESC, created_at DESC',
+						  )}`
 						: LEGACY_TRANSACTIONS_QUERY;
 					// Backward compatibility for existing databases before account_id migration.
 					const fallbackResult = ownerId
@@ -119,7 +125,10 @@ export function useReactiveTransactions(
 		}
 
 		const query = ownerId
-			? `${TRANSACTIONS_QUERY.trim().replace('ORDER BY date DESC, created_at DESC', 'WHERE owner_id = ? ORDER BY date DESC, created_at DESC')}`
+			? `${TRANSACTIONS_QUERY.trim().replace(
+					'ORDER BY date DESC, created_at DESC',
+					'WHERE owner_id = ? ORDER BY date DESC, created_at DESC',
+			  )}`
 			: TRANSACTIONS_QUERY;
 		const argumentsArray = ownerId ? [ownerId] : [];
 

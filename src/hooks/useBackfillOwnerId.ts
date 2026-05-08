@@ -52,7 +52,10 @@ export function useBackfillOwnerId(db: DB, userId: string | null): void {
 				notifyTableChanged('categories');
 				notifyTableChanged('budgets');
 			} catch (error) {
-				console.error('[useBackfillOwnerId] Failed to backfill owner_id', error);
+				console.error(
+					'[useBackfillOwnerId] Failed to backfill owner_id',
+					error,
+				);
 			}
 		};
 

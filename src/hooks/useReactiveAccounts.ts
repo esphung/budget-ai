@@ -31,7 +31,10 @@ export function useReactiveAccounts(
 		const fetchAccounts = async () => {
 			try {
 				const query = ownerId
-					? `${ACCOUNTS_QUERY.trim().replace('ORDER BY name ASC', 'WHERE owner_id = ? ORDER BY name ASC')}`
+					? `${ACCOUNTS_QUERY.trim().replace(
+							'ORDER BY name ASC',
+							'WHERE owner_id = ? ORDER BY name ASC',
+					  )}`
 					: ACCOUNTS_QUERY;
 				const result = ownerId
 					? await db.execute(query, [ownerId])
@@ -60,7 +63,10 @@ export function useReactiveAccounts(
 		}
 
 		const query = ownerId
-			? `${ACCOUNTS_QUERY.trim().replace('ORDER BY name ASC', 'WHERE owner_id = ? ORDER BY name ASC')}`
+			? `${ACCOUNTS_QUERY.trim().replace(
+					'ORDER BY name ASC',
+					'WHERE owner_id = ? ORDER BY name ASC',
+			  )}`
 			: ACCOUNTS_QUERY;
 		const argumentsArray = ownerId ? [ownerId] : [];
 

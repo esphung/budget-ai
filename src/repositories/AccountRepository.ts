@@ -9,10 +9,7 @@ import type { Repository } from 'types/Repository';
 export class AccountRepository
 	implements Repository<NewAccountInput, Account>
 {
-	constructor(
-		private db: DB,
-		private userId: string | null = null,
-	) {}
+	constructor(private db: DB, private userId: string | null = null) {}
 
 	getAll: () => Promise<Account[]> = async () => this.list();
 
@@ -25,9 +22,7 @@ export class AccountRepository
 	}
 
 	async list(): Promise<Account[]> {
-		const ownerFilter = this.userId
-			? 'WHERE owner_id = ?'
-			: '';
+		const ownerFilter = this.userId ? 'WHERE owner_id = ?' : '';
 		const args = this.userId ? [this.userId] : [];
 		const rows = await this.executeQuery<{
 			id: string;
@@ -37,7 +32,8 @@ export class AccountRepository
 			currency: string;
 			created_at: string;
 			updated_at: string;
-		}>(`
+		}>(
+			`
 			SELECT
 				id,
 				owner_id,
@@ -49,7 +45,9 @@ export class AccountRepository
 			FROM accounts
 			${ownerFilter}
 			ORDER BY name ASC
-		`, args);
+		`,
+			args,
+		);
 
 		return rows.map((row) => ({
 			id: String(row.id),
@@ -187,9 +185,7 @@ export class AccountRepository
 	}
 
 	async ensureDefaultAccount(): Promise<Account> {
-		const ownerFilter = this.userId
-			? 'AND owner_id = ?'
-			: '';
+		const ownerFilter = this.userId ? 'AND owner_id = ?' : '';
 		const args = this.userId ? ['Cash', this.userId] : ['Cash'];
 		const existing = await this.executeQuery<{
 			id: string;
