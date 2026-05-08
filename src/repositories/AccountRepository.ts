@@ -2,6 +2,7 @@ import { notifyTableChanged } from '@db/databaseChangeNotifier';
 import { executeTransaction } from '@db/executeTransaction';
 import { Account, NewAccountInput } from 'types/Account';
 import { DB, Scalar } from '@op-engineering/op-sqlite';
+import { ApiClient, type ApiError } from '@services/ApiClient';
 import { nowIso } from '@utils/dateUtil';
 import { generateUniqueId } from '@utils/randomIdUtils';
 import type { Repository } from 'types/Repository';
@@ -9,7 +10,80 @@ import type { Repository } from 'types/Repository';
 export class AccountRepository
 	implements Repository<NewAccountInput, Account>
 {
-	constructor(private db: DB, private userId: string | null = null) {}
+	constructor(
+		private db: DB,
+		private userId: string | null = null,
+		private api: ApiClient,
+	) {}
+
+	private async syncCreatedAccount(account: Account): Promise<void> {
+		try {
+			await this.api.accounts.create({
+				id: account.id,
+				name: account.name,
+				accountType: account.accountType,
+				currency: account.currency,
+				createdAt: account.createdAt,
+				updatedAt: account.updatedAt,
+			});
+		} catch (error) {
+			console.warn(
+				`[AccountRepository] Failed to sync created account ${
+					account.id
+				}: ${(error as ApiError)?.message ?? 'Unknown error'}`,
+			);
+		}
+	}
+
+	private async syncUpdatedAccount(
+		id: string,
+		account: Account,
+	): Promise<void> {
+		try {
+			await this.api.accounts.update(id, {
+				name: account.name,
+				accountType: account.accountType,
+				currency: account.currency,
+				updatedAt: account.updatedAt,
+			});
+		} catch (error) {
+			console.warn(
+				`[AccountRepository] Failed to sync updated account ${id}: ${
+					(error as ApiError)?.message ?? 'Unknown error'
+				}`,
+			);
+		}
+	}
+
+	private async syncDeletedAccount(id: string): Promise<void> {
+		try {
+			await this.api.accounts.delete(id);
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError?.status !== 404) {
+				console.warn(
+					`[AccountRepository] Failed to sync deleted account ${id}: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
+			}
+		}
+	}
+
+	private async syncClearedAccounts(): Promise<void> {
+		try {
+			await this.api.accounts.clear();
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError?.status !== 404) {
+				console.warn(
+					`[AccountRepository] Failed to sync cleared accounts: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
+			}
+		}
+	}
 
 	getAll: () => Promise<Account[]> = async () => this.list();
 
@@ -92,7 +166,7 @@ export class AccountRepository
 		);
 		notifyTableChanged('accounts');
 
-		return {
+		const created: Account = {
 			id,
 			ownerId,
 			name: input.name.trim(),
@@ -101,6 +175,10 @@ export class AccountRepository
 			createdAt: now,
 			updatedAt: now,
 		};
+
+		await this.syncCreatedAccount(created);
+
+		return created;
 	}
 
 	async update(
@@ -163,7 +241,7 @@ export class AccountRepository
 		]);
 		notifyTableChanged('accounts');
 
-		return {
+		const updated: Account = {
 			id: String(row.id),
 			ownerId,
 			name,
@@ -172,9 +250,15 @@ export class AccountRepository
 			createdAt: String(row.created_at),
 			updatedAt: now,
 		};
+
+		await this.syncUpdatedAccount(id, updated);
+
+		return updated;
 	}
 
 	async delete(id: string): Promise<void> {
+		await this.syncDeletedAccount(id);
+
 		await executeTransaction(this.db, [
 			{
 				sql: 'DELETE FROM accounts WHERE id = ?',
@@ -230,6 +314,8 @@ export class AccountRepository
 	}
 
 	async clearAll(): Promise<void> {
+		await this.syncClearedAccounts();
+
 		await executeTransaction(this.db, [
 			{
 				sql: 'DELETE FROM accounts',

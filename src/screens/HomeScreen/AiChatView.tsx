@@ -61,7 +61,7 @@ const AiChatView = ({
 					new AIConversationRepository(db),
 					new TransactionRepository(db, userId, api),
 					api,
-					new CategoryRepository(db, userId),
+					new CategoryRepository(db, userId, api),
 				).sendMessageAndApplyActions({
 					threadId: threadId,
 					userText: trimmed,

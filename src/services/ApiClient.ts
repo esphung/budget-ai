@@ -240,12 +240,86 @@ export class ApiClient extends BaseService {
 			this.request(() =>
 				this.http.get<{ data: unknown[] }>('/budgets', { signal }),
 			),
+		create: (
+			body: {
+				id?: string;
+				name: string;
+				amount: number;
+				categoryId?: string | null;
+				periodStart: string;
+				periodEnd: string;
+				createdAt?: string;
+				updatedAt?: string;
+			},
+			signal?: AbortSignal,
+		): Promise<unknown> =>
+			this.request(() =>
+				this.http.post('/budgets', body, { signal }),
+			),
+		update: (
+			id: string,
+			body: {
+				name?: string;
+				amount?: number;
+				categoryId?: string | null;
+				periodStart?: string;
+				periodEnd?: string;
+				updatedAt?: string;
+			},
+			signal?: AbortSignal,
+		): Promise<unknown> =>
+			this.request(() =>
+				this.http.put(`/budgets/${id}`, body, { signal }),
+			),
+		delete: (id: string, signal?: AbortSignal): Promise<unknown> =>
+			this.request(() =>
+				this.http.delete(`/budgets/${id}`, { signal }),
+			),
+		clear: (signal?: AbortSignal): Promise<unknown> =>
+			this.request(() =>
+				this.http.delete('/budgets/all', { signal }),
+			),
 	};
 
 	readonly accounts = {
 		list: (signal?: AbortSignal): Promise<{ data: unknown[] }> =>
 			this.request(() =>
 				this.http.get<{ data: unknown[] }>('/accounts', { signal }),
+			),
+		create: (
+			body: {
+				id?: string;
+				name: string;
+				accountType: string;
+				currency: string;
+				createdAt?: string;
+				updatedAt?: string;
+			},
+			signal?: AbortSignal,
+		): Promise<unknown> =>
+			this.request(() =>
+				this.http.post('/accounts', body, { signal }),
+			),
+		update: (
+			id: string,
+			body: {
+				name?: string;
+				accountType?: string;
+				currency?: string;
+				updatedAt?: string;
+			},
+			signal?: AbortSignal,
+		): Promise<unknown> =>
+			this.request(() =>
+				this.http.put(`/accounts/${id}`, body, { signal }),
+			),
+		delete: (id: string, signal?: AbortSignal): Promise<unknown> =>
+			this.request(() =>
+				this.http.delete(`/accounts/${id}`, { signal }),
+			),
+		clear: (signal?: AbortSignal): Promise<unknown> =>
+			this.request(() =>
+				this.http.delete('/accounts/all', { signal }),
 			),
 	};
 
@@ -255,6 +329,41 @@ export class ApiClient extends BaseService {
 				this.http.get<{ data: unknown[] }>('/categories', {
 					signal,
 				}),
+			),
+		create: (
+			body: {
+				id?: string;
+				name: string;
+				color?: string | null;
+				icon?: string | null;
+				createdAt?: string;
+				updatedAt?: string;
+			},
+			signal?: AbortSignal,
+		): Promise<unknown> =>
+			this.request(() =>
+				this.http.post('/categories', body, { signal }),
+			),
+		update: (
+			id: string,
+			body: {
+				name?: string;
+				color?: string | null;
+				icon?: string | null;
+				updatedAt?: string;
+			},
+			signal?: AbortSignal,
+		): Promise<unknown> =>
+			this.request(() =>
+				this.http.put(`/categories/${id}`, body, { signal }),
+			),
+		delete: (id: string, signal?: AbortSignal): Promise<unknown> =>
+			this.request(() =>
+				this.http.delete(`/categories/${id}`, { signal }),
+			),
+		clear: (signal?: AbortSignal): Promise<unknown> =>
+			this.request(() =>
+				this.http.delete('/categories/all', { signal }),
 			),
 	};
 }

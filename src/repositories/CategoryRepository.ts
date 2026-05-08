@@ -1,6 +1,7 @@
 import { notifyTableChanged } from '@db/databaseChangeNotifier';
 import { executeTransaction } from '@db/executeTransaction';
 import { DB, Scalar } from '@op-engineering/op-sqlite';
+import { ApiClient, type ApiError } from '@services/ApiClient';
 import { nowIso } from '@utils/dateUtil';
 import { generateUniqueId } from '@utils/randomIdUtils';
 import type { Repository } from 'types/Repository';
@@ -9,7 +10,80 @@ import { Category, NewCategoryInput } from 'types/Category';
 export class CategoryRepository
 	implements Repository<NewCategoryInput, Category>
 {
-	constructor(private db: DB, private userId: string | null = null) {}
+	constructor(
+		private db: DB,
+		private userId: string | null = null,
+		private api: ApiClient,
+	) {}
+
+	private async syncCreatedCategory(category: Category): Promise<void> {
+		try {
+			await this.api.categories.create({
+				id: category.id,
+				name: category.name,
+				color: category.color,
+				icon: category.icon,
+				createdAt: category.createdAt,
+				updatedAt: category.updatedAt,
+			});
+		} catch (error) {
+			console.warn(
+				`[CategoryRepository] Failed to sync created category ${
+					category.id
+				}: ${(error as ApiError)?.message ?? 'Unknown error'}`,
+			);
+		}
+	}
+
+	private async syncUpdatedCategory(
+		id: string,
+		category: Category,
+	): Promise<void> {
+		try {
+			await this.api.categories.update(id, {
+				name: category.name,
+				color: category.color,
+				icon: category.icon,
+				updatedAt: category.updatedAt,
+			});
+		} catch (error) {
+			console.warn(
+				`[CategoryRepository] Failed to sync updated category ${id}: ${
+					(error as ApiError)?.message ?? 'Unknown error'
+				}`,
+			);
+		}
+	}
+
+	private async syncDeletedCategory(id: string): Promise<void> {
+		try {
+			await this.api.categories.delete(id);
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError?.status !== 404) {
+				console.warn(
+					`[CategoryRepository] Failed to sync deleted category ${id}: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
+			}
+		}
+	}
+
+	private async syncClearedCategories(): Promise<void> {
+		try {
+			await this.api.categories.clear();
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError?.status !== 404) {
+				console.warn(
+					`[CategoryRepository] Failed to sync cleared categories: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
+			}
+		}
+	}
 
 	private async executeQuery<T>(
 		query: string,
@@ -44,7 +118,7 @@ export class CategoryRepository
 		);
 		notifyTableChanged('categories');
 
-		return {
+		const created: Category = {
 			id,
 			ownerId,
 			name,
@@ -53,6 +127,10 @@ export class CategoryRepository
 			createdAt: now,
 			updatedAt: now,
 		};
+
+		await this.syncCreatedCategory(created);
+
+		return created;
 	}
 
 	async update(
@@ -90,16 +168,22 @@ export class CategoryRepository
 		]);
 		notifyTableChanged('categories');
 
-		return {
+		const updated: Category = {
 			...existing,
 			name,
 			color,
 			icon,
 			updatedAt: now,
 		};
+
+		await this.syncUpdatedCategory(id, updated);
+
+		return updated;
 	}
 
 	async delete(id: string): Promise<void> {
+		await this.syncDeletedCategory(id);
+
 		await executeTransaction(this.db, [
 			{
 				sql: 'DELETE FROM categories WHERE id = ?',
@@ -149,6 +233,8 @@ export class CategoryRepository
 	}
 
 	async clearAll(): Promise<void> {
+		await this.syncClearedCategories();
+
 		await executeTransaction(this.db, [
 			{
 				sql: 'DELETE FROM categories',

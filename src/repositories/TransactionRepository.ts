@@ -71,7 +71,11 @@ export class TransactionRepository
 		} catch (error) {
 			const apiError = error as ApiError;
 			if (apiError?.status !== 404) {
-				throw error;
+				console.warn(
+					`[TransactionRepository] Failed to sync deleted transaction ${id}: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
 			}
 		}
 	}
@@ -82,7 +86,11 @@ export class TransactionRepository
 		} catch (error) {
 			const apiError = error as ApiError;
 			if (apiError?.status !== 404) {
-				throw error;
+				console.warn(
+					`[TransactionRepository] Failed to sync cleared transactions: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
 			}
 		}
 	}

@@ -229,13 +229,13 @@ const SettingsScreen = () => {
 					style: 'destructive',
 					onPress: async () => {
 						await new ClearAccounts(
-							new AccountRepository(db),
+							new AccountRepository(db, userId, api),
 						).execute();
 					},
 				},
 			],
 		);
-	}, [db]);
+	}, [api, db, userId]);
 
 	const clearBudgets = useCallback(() => {
 		if (!db) {
@@ -252,13 +252,13 @@ const SettingsScreen = () => {
 					style: 'destructive',
 					onPress: async () => {
 						await new ClearBudgets(
-							new BudgetRepository(db),
+							new BudgetRepository(db, userId, api),
 						).execute();
 					},
 				},
 			],
 		);
-	}, [db]);
+	}, [api, db, userId]);
 
 	const clearCategories = useCallback(() => {
 		if (!db) {
@@ -275,13 +275,13 @@ const SettingsScreen = () => {
 					style: 'destructive',
 					onPress: async () => {
 						await new ClearCategories(
-							new CategoryRepository(db),
+							new CategoryRepository(db, userId, api),
 						).execute();
 					},
 				},
 			],
 		);
-	}, [db]);
+	}, [api, db, userId]);
 
 	return (
 		<ThemedScreen>

@@ -42,7 +42,7 @@ export const useDevDataReset = (db: DB, api: ApiClient) => {
 		DevSettings.addMenuItem('Clear Accounts (Dev)', async () => {
 			try {
 				await new ClearAccounts(
-					new AccountRepository(db),
+					new AccountRepository(db, null, api),
 				).execute();
 				dbLog.debug('Dev menu cleared accounts');
 			} catch (error) {
@@ -55,7 +55,9 @@ export const useDevDataReset = (db: DB, api: ApiClient) => {
 
 		DevSettings.addMenuItem('Clear Budgets (Dev)', async () => {
 			try {
-				await new ClearBudgets(new BudgetRepository(db)).execute();
+				await new ClearBudgets(
+					new BudgetRepository(db, null, api),
+				).execute();
 				dbLog.debug('Dev menu cleared budgets');
 			} catch (error) {
 				dbLog.error('Failed to clear budgets from dev menu', error);
@@ -65,7 +67,7 @@ export const useDevDataReset = (db: DB, api: ApiClient) => {
 		DevSettings.addMenuItem('Clear Categories (Dev)', async () => {
 			try {
 				await new ClearCategories(
-					new CategoryRepository(db),
+					new CategoryRepository(db, null, api),
 				).execute();
 				dbLog.debug('Dev menu cleared categories');
 			} catch (error) {

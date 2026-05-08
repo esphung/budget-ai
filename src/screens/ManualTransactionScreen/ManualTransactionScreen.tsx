@@ -77,7 +77,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 
 		const ensureDefaultAccount = async () => {
 			const useCase = new EnsureDefaultAccount(
-				new AccountRepository(db, userId),
+				new AccountRepository(db, userId, api),
 			);
 			await useCase.execute();
 		};
@@ -86,7 +86,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 			console.error('Failed to load accounts', error);
 			setErrorMessage('Unable to load accounts.');
 		});
-	}, [db, userId]);
+	}, [api, db, userId]);
 
 	useEffect(() => {
 		if (!db) {
@@ -99,6 +99,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 				const loadedCategories = await new CategoryRepository(
 					db,
 					userId,
+					api,
 				).list();
 				setCategories(loadedCategories);
 			} catch (error) {
@@ -107,7 +108,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		};
 
 		loadCategories();
-	}, [db, userId]);
+	}, [api, db, userId]);
 
 	useEffect(() => {
 		if (!accounts.length) {
@@ -138,7 +139,11 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		try {
 			const normalizedCategory = category.trim();
 			if (normalizedCategory) {
-				const categoryRepo = new CategoryRepository(db, userId);
+				const categoryRepo = new CategoryRepository(
+					db,
+					userId,
+					api,
+				);
 				const hasCategory = (await categoryRepo.list()).some(
 					(existingCategory) =>
 						existingCategory.name.toLowerCase() ===
