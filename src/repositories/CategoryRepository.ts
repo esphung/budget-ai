@@ -1,6 +1,7 @@
 import { notifyTableChanged } from '@db/databaseChangeNotifier';
 import { executeTransaction } from '@db/executeTransaction';
 import { DB, Scalar } from '@op-engineering/op-sqlite';
+import { ApiClient, type ApiError } from '@services/ApiClient';
 import { nowIso } from '@utils/dateUtil';
 import { generateUniqueId } from '@utils/randomIdUtils';
 import type { Repository } from 'types/Repository';
@@ -9,7 +10,80 @@ import { Category, NewCategoryInput } from 'types/Category';
 export class CategoryRepository
 	implements Repository<NewCategoryInput, Category>
 {
-	constructor(private db: DB) {}
+	constructor(
+		private db: DB,
+		private userId: string | null = null,
+		private api: ApiClient,
+	) {}
+
+	private async syncCreatedCategory(category: Category): Promise<void> {
+		try {
+			await this.api.categories.create({
+				id: category.id,
+				name: category.name,
+				color: category.color,
+				icon: category.icon,
+				createdAt: category.createdAt,
+				updatedAt: category.updatedAt,
+			});
+		} catch (error) {
+			console.warn(
+				`[CategoryRepository] Failed to sync created category ${
+					category.id
+				}: ${(error as ApiError)?.message ?? 'Unknown error'}`,
+			);
+		}
+	}
+
+	private async syncUpdatedCategory(
+		id: string,
+		category: Category,
+	): Promise<void> {
+		try {
+			await this.api.categories.update(id, {
+				name: category.name,
+				color: category.color,
+				icon: category.icon,
+				updatedAt: category.updatedAt,
+			});
+		} catch (error) {
+			console.warn(
+				`[CategoryRepository] Failed to sync updated category ${id}: ${
+					(error as ApiError)?.message ?? 'Unknown error'
+				}`,
+			);
+		}
+	}
+
+	private async syncDeletedCategory(id: string): Promise<void> {
+		try {
+			await this.api.categories.delete(id);
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError?.status !== 404) {
+				console.warn(
+					`[CategoryRepository] Failed to sync deleted category ${id}: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
+			}
+		}
+	}
+
+	private async syncClearedCategories(): Promise<void> {
+		try {
+			await this.api.categories.clear();
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError?.status !== 404) {
+				console.warn(
+					`[CategoryRepository] Failed to sync cleared categories: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
+			}
+		}
+	}
 
 	private async executeQuery<T>(
 		query: string,
@@ -25,31 +99,38 @@ export class CategoryRepository
 		const name = input.name.trim();
 		const color = input.color?.trim() || null;
 		const icon = input.icon?.trim() || null;
+		const ownerId = this.userId ?? input.ownerId ?? null;
 
 		await this.db.execute(
 			`
 			INSERT INTO categories (
 				id,
+				owner_id,
 				name,
 				color,
 				icon,
 				created_at,
 				updated_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 		`,
-			[id, name, color, icon, now, now],
+			[id, ownerId, name, color, icon, now, now],
 		);
 		notifyTableChanged('categories');
 
-		return {
+		const created: Category = {
 			id,
+			ownerId,
 			name,
 			color,
 			icon,
 			createdAt: now,
 			updatedAt: now,
 		};
+
+		await this.syncCreatedCategory(created);
+
+		return created;
 	}
 
 	async update(
@@ -87,16 +168,22 @@ export class CategoryRepository
 		]);
 		notifyTableChanged('categories');
 
-		return {
+		const updated: Category = {
 			...existing,
 			name,
 			color,
 			icon,
 			updatedAt: now,
 		};
+
+		await this.syncUpdatedCategory(id, updated);
+
+		return updated;
 	}
 
 	async delete(id: string): Promise<void> {
+		await this.syncDeletedCategory(id);
+
 		await executeTransaction(this.db, [
 			{
 				sql: 'DELETE FROM categories WHERE id = ?',
@@ -107,27 +194,36 @@ export class CategoryRepository
 	}
 
 	async list(): Promise<Category[]> {
+		const ownerFilter = this.userId ? 'WHERE owner_id = ?' : '';
+		const args = this.userId ? [this.userId] : [];
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			color: string | null;
 			icon: string | null;
 			created_at: string;
 			updated_at: string;
-		}>(`
+		}>(
+			`
 			SELECT
 				id,
+				owner_id,
 				name,
 				color,
 				icon,
 				created_at,
 				updated_at
 			FROM categories
+			${ownerFilter}
 			ORDER BY name ASC
-		`);
+		`,
+			args,
+		);
 
 		return rows.map((row) => ({
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			name: String(row.name),
 			color: row.color ? String(row.color) : null,
 			icon: row.icon ? String(row.icon) : null,
@@ -137,6 +233,8 @@ export class CategoryRepository
 	}
 
 	async clearAll(): Promise<void> {
+		await this.syncClearedCategories();
+
 		await executeTransaction(this.db, [
 			{
 				sql: 'DELETE FROM categories',
@@ -147,8 +245,11 @@ export class CategoryRepository
 	}
 
 	private async getById(id: string): Promise<Category | null> {
+		const ownerFilter = this.userId ? 'AND owner_id = ?' : '';
+		const args = this.userId ? [id, this.userId] : [id];
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			color: string | null;
 			icon: string | null;
@@ -158,6 +259,7 @@ export class CategoryRepository
 			`
 			SELECT
 				id,
+				owner_id,
 				name,
 				color,
 				icon,
@@ -165,9 +267,10 @@ export class CategoryRepository
 				updated_at
 			FROM categories
 			WHERE id = ?
+			${ownerFilter}
 			LIMIT 1
 		`,
-			[id],
+			args,
 		);
 
 		if (!rows[0]) {
@@ -177,6 +280,7 @@ export class CategoryRepository
 		const row = rows[0];
 		return {
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			name: String(row.name),
 			color: row.color ? String(row.color) : null,
 			icon: row.icon ? String(row.icon) : null,

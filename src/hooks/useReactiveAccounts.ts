@@ -15,7 +15,10 @@ const ACCOUNTS_QUERY = `
 	ORDER BY name ASC
 `;
 
-export function useReactiveAccounts(db: DB | null): Account[] {
+export function useReactiveAccounts(
+	db: DB | null,
+	ownerId: string | null = null,
+): Account[] {
 	const [accounts, setAccounts] = useState<Account[]>([]);
 	const [updateTrigger, setUpdateTrigger] = useState(0);
 
@@ -27,7 +30,15 @@ export function useReactiveAccounts(db: DB | null): Account[] {
 
 		const fetchAccounts = async () => {
 			try {
-				const result = await db.execute(ACCOUNTS_QUERY);
+				const query = ownerId
+					? `${ACCOUNTS_QUERY.trim().replace(
+							'ORDER BY name ASC',
+							'WHERE owner_id = ? ORDER BY name ASC',
+					  )}`
+					: ACCOUNTS_QUERY;
+				const result = ownerId
+					? await db.execute(query, [ownerId])
+					: await db.execute(query);
 				setAccounts(result.rows as Account[]);
 			} catch (error) {
 				console.error('Error fetching accounts:', error);
@@ -36,7 +47,7 @@ export function useReactiveAccounts(db: DB | null): Account[] {
 		};
 
 		fetchAccounts();
-	}, [db, updateTrigger]);
+	}, [db, ownerId, updateTrigger]);
 
 	useEffect(() => {
 		const unsubscribe = subscribeToTableChanges('accounts', () => {
@@ -51,9 +62,17 @@ export function useReactiveAccounts(db: DB | null): Account[] {
 			return;
 		}
 
+		const query = ownerId
+			? `${ACCOUNTS_QUERY.trim().replace(
+					'ORDER BY name ASC',
+					'WHERE owner_id = ? ORDER BY name ASC',
+			  )}`
+			: ACCOUNTS_QUERY;
+		const argumentsArray = ownerId ? [ownerId] : [];
+
 		const unsubscribe = db.reactiveExecute({
-			query: ACCOUNTS_QUERY,
-			arguments: [],
+			query,
+			arguments: argumentsArray,
 			fireOn: [{ table: 'accounts' }],
 			callback: () => {
 				setUpdateTrigger((prev) => prev + 1);
@@ -63,7 +82,7 @@ export function useReactiveAccounts(db: DB | null): Account[] {
 		return () => {
 			unsubscribe?.();
 		};
-	}, [db]);
+	}, [db, ownerId]);
 
 	return useMemo(() => [...accounts], [accounts]);
 }

@@ -8,6 +8,7 @@ export type AccountType =
 
 export type Account = {
 	id: string;
+	ownerId: string | null;
 	name: string;
 	accountType: AccountType;
 	currency: string;
@@ -16,6 +17,7 @@ export type Account = {
 };
 
 export type NewAccountInput = {
+	ownerId?: string | null;
 	name: string;
 	accountType?: AccountType;
 	currency?: string;

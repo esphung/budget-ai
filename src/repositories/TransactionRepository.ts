@@ -1,21 +1,106 @@
 import { notifyTableChanged } from '@db/databaseChangeNotifier';
 import { executeTransaction } from '@db/executeTransaction';
 import { DB, Scalar } from '@op-engineering/op-sqlite';
+import { ApiClient, type ApiError } from '@services/ApiClient';
 import { nowIso } from '@utils/dateUtil';
 import { repositoryLog } from '@utils/logUtils';
 import { generateUniqueId } from '@utils/randomIdUtils';
 import type { Repository } from 'types/Repository';
 import { NewTransactionInput, Transaction } from 'types/Transaction';
 
+function isDuplicateTransactionIdError(
+	error: ApiError | undefined,
+): boolean {
+	if (!error) {
+		return false;
+	}
+
+	if (error.status === 409) {
+		return true;
+	}
+
+	const message = (error.message ?? '').toLowerCase();
+	return (
+		error.status === 400 &&
+		message.includes('unique constraint failed') &&
+		message.includes('transactions.id')
+	);
+}
+
 export class TransactionRepository
 	implements Repository<NewTransactionInput, Transaction>
 {
-	constructor(private db: DB) {}
+	constructor(
+		private db: DB,
+		private userId: string | null = null,
+		private api: ApiClient,
+	) {}
+
+	private async syncCreatedTransaction(transaction: Transaction) {
+		try {
+			await this.api.transactions.create({
+				id: transaction.id,
+				accountId: transaction.accountId,
+				amount: transaction.amount,
+				merchant: transaction.merchant,
+				category: transaction.category,
+				transactionType: transaction.transactionType,
+				date: transaction.date,
+				source: transaction.source,
+				createdAt: transaction.createdAt,
+			});
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (isDuplicateTransactionIdError(apiError)) {
+				return;
+			}
+
+			console.warn(
+				`[TransactionRepository] Failed to sync created transaction ${
+					transaction.id
+				} (${apiError?.status ?? 0}): ${
+					apiError?.message ?? 'Unknown error'
+				}`,
+			);
+		}
+	}
+
+	private async syncDeletedTransaction(id: string): Promise<void> {
+		try {
+			await this.api.transactions.delete(id);
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError?.status !== 404) {
+				console.warn(
+					`[TransactionRepository] Failed to sync deleted transaction ${id}: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
+			}
+		}
+	}
+
+	private async syncClearedTransactions(): Promise<void> {
+		try {
+			await this.api.transactions.clear();
+		} catch (error) {
+			const apiError = error as ApiError;
+			if (apiError?.status !== 404) {
+				console.warn(
+					`[TransactionRepository] Failed to sync cleared transactions: ${
+						apiError?.message ?? 'Unknown error'
+					}`,
+				);
+			}
+		}
+	}
 
 	delete: (id: string) => Promise<void> = async (_id) => {
 		if (!this.db) {
 			throw new Error('Database not initialized');
 		}
+
+		await this.syncDeletedTransaction(_id);
 
 		await executeTransaction(this.db, [
 			{
@@ -47,12 +132,14 @@ export class TransactionRepository
 		const transactionDate = input.date ?? createdAt;
 		const merchant = input.merchant?.trim() || null;
 		const category = input.category?.trim() || null;
+		const ownerId = this.userId ?? input.ownerId ?? null;
 
 		await executeTransaction(this.db, [
 			{
 				sql: `
 				INSERT INTO transactions (
 					id,
+					owner_id,
 					account_id,
 					amount,
 					merchant,
@@ -60,12 +147,14 @@ export class TransactionRepository
 					transaction_type,
 					source,
 					date,
-					created_at
+					created_at,
+					sync_status
 				)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`,
 				args: [
 					id,
+					ownerId,
 					input.accountId ?? null,
 					Math.abs(input.amount),
 					merchant,
@@ -74,13 +163,15 @@ export class TransactionRepository
 					input.source,
 					transactionDate,
 					createdAt,
+					'pending',
 				],
 			},
 		]);
 		notifyTableChanged('transactions');
 
-		return {
+		const transaction: Transaction = {
 			id,
+			ownerId,
 			accountId: input.accountId ?? null,
 			amount: Math.abs(input.amount),
 			merchant,
@@ -88,8 +179,13 @@ export class TransactionRepository
 			transactionType: input.transactionType,
 			date: transactionDate,
 			source: input.source,
+			syncStatus: 'pending',
 			createdAt,
 		};
+
+		await this.syncCreatedTransaction(transaction);
+
+		return transaction;
 	}
 
 	async update(
@@ -98,6 +194,7 @@ export class TransactionRepository
 	): Promise<Transaction> {
 		const existingRows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			account_id: string | null;
 			amount: number;
 			merchant: string | null;
@@ -111,6 +208,7 @@ export class TransactionRepository
 			`
 			SELECT
 				id,
+				owner_id,
 				account_id,
 				amount,
 				merchant,
@@ -136,6 +234,10 @@ export class TransactionRepository
 			input.accountId === undefined
 				? existing.account_id
 				: input.accountId ?? null;
+		const ownerId =
+			input.ownerId === undefined
+				? existing.owner_id
+				: input.ownerId ?? null;
 		const amount =
 			input.amount === undefined
 				? Number(existing.amount)
@@ -163,7 +265,8 @@ export class TransactionRepository
 						category = ?,
 						transaction_type = ?,
 						source = ?,
-						date = ?
+						date = ?,
+						sync_status = ?
 					WHERE id = ?
 				`,
 				args: [
@@ -174,6 +277,7 @@ export class TransactionRepository
 					transactionType,
 					source,
 					date,
+					'pending',
 					id,
 				],
 			},
@@ -182,6 +286,7 @@ export class TransactionRepository
 
 		return {
 			id: String(existing.id),
+			ownerId,
 			accountId,
 			amount,
 			merchant,
@@ -190,18 +295,17 @@ export class TransactionRepository
 			date,
 			source: source as Transaction['source'],
 			createdAt: String(existing.created_at),
-			syncStatus: existing.sync_status
-				? (String(
-						existing.sync_status,
-				  ) as Transaction['syncStatus'])
-				: 'synced',
+			syncStatus: 'pending',
 		};
 	}
 
 	async list(): Promise<Transaction[]> {
 		repositoryLog.debug('Fetching all transactions');
+		const ownerFilter = this.userId ? 'WHERE owner_id = ?' : '';
+		const args = this.userId ? [this.userId] : [];
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			account_id: string | null;
 			amount: number;
 			merchant: string | null;
@@ -211,9 +315,11 @@ export class TransactionRepository
 			created_at: string;
 			sync_status?: string;
 			source?: string;
-		}>(`
+		}>(
+			`
 			SELECT
 				id,
+				owner_id,
 				account_id,
 				amount,
 				merchant,
@@ -224,11 +330,15 @@ export class TransactionRepository
 				sync_status,
 				source
 			FROM transactions
+			${ownerFilter}
 			ORDER BY date DESC, created_at DESC
-		`);
+		`,
+			args,
+		);
 
 		return rows.map((row) => ({
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			accountId: row.account_id ? String(row.account_id) : null,
 			amount: Number(row.amount),
 			merchant: row.merchant ? String(row.merchant) : null,
@@ -253,10 +363,15 @@ export class TransactionRepository
 		if (!this.db) {
 			throw new Error('Database not initialized');
 		}
+
+		await this.syncClearedTransactions();
+
+		const ownerFilter = this.userId ? 'WHERE owner_id = ?' : '';
+		const args = this.userId ? [this.userId] : [];
 		await executeTransaction(this.db, [
 			{
-				sql: 'DELETE FROM transactions',
-				args: [],
+				sql: `DELETE FROM transactions ${ownerFilter}`,
+				args,
 			},
 		]);
 		notifyTableChanged('transactions');

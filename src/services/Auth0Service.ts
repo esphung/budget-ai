@@ -1,4 +1,5 @@
 import Auth0 from 'react-native-auth0';
+import { parseJwtUserId } from '@utils/jwtUtils';
 
 type Auth0Config = {
 	domain: string;
@@ -11,7 +12,7 @@ const AUTH0_CONFIG: Auth0Config = {
 };
 
 export type AuthService = {
-	login: () => Promise<string>;
+	login: () => Promise<{ token: string; userId: string }>;
 	logout: () => Promise<void>;
 };
 
@@ -47,7 +48,7 @@ export class Auth0Service implements AuthService {
 		}
 	}
 
-	async login(): Promise<string> {
+	async login(): Promise<{ token: string; userId: string }> {
 		this.assertConfigured();
 
 		const credentials = await this.client.webAuth.authorize({
@@ -56,14 +57,31 @@ export class Auth0Service implements AuthService {
 
 		await this.client.credentialsManager.saveCredentials(credentials);
 
-		const token = credentials.accessToken ?? credentials.idToken;
+		const token = credentials.idToken ?? credentials.accessToken;
 		if (!token) {
 			throw new Error(
 				'Auth0 login succeeded but no token was returned.',
 			);
 		}
 
-		return token;
+		let userId = parseJwtUserId(credentials.idToken ?? null);
+
+		if (!userId && credentials.accessToken) {
+			const profile = await this.client.auth.userInfo({
+				token: credentials.accessToken,
+			});
+			if (profile?.sub) {
+				userId = String(profile.sub);
+			}
+		}
+
+		if (!userId) {
+			throw new Error(
+				'Auth0 login succeeded but user id (sub) was not available.',
+			);
+		}
+
+		return { token, userId };
 	}
 
 	async logout(): Promise<void> {

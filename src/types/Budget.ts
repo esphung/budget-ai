@@ -1,5 +1,6 @@
 export type Budget = {
 	id: string;
+	ownerId: string | null;
 	name: string;
 	amount: number;
 	categoryId: string | null;
@@ -10,6 +11,7 @@ export type Budget = {
 };
 
 export type NewBudgetInput = {
+	ownerId?: string | null;
 	name: string;
 	amount: number;
 	categoryId?: string | null;

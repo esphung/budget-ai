@@ -45,11 +45,14 @@ export function AuthProvider({
 			const persistedToken = await storage.loadItem(
 				StorageKey.AuthToken,
 			);
+			const persistedUserId = await storage.loadItem(
+				StorageKey.AuthUserId,
+			);
 			console.debug(
 				'[AuthProvider] Loaded persisted token:',
 				persistedToken,
 			);
-			actions.setToken(persistedToken);
+			actions.setToken(persistedToken, persistedUserId);
 		}
 		loadPersisted();
 	}, [actions]);

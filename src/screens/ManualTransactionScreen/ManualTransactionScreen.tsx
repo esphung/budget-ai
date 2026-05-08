@@ -7,6 +7,8 @@ import {
 	AppStackScreens,
 } from '@navigation/AppStack/AppStack';
 import { useDatabase } from '@providers/DatabaseProvider';
+import { useAuthStore } from '@providers/AuthProvider';
+import { useApiClient } from '@providers/ApiClientProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { AccountRepository } from '@repositories/AccountRepository';
 import { CategoryRepository } from '@repositories/CategoryRepository';
@@ -44,6 +46,8 @@ const toDateInputValue = (date = new Date()) => {
 
 const ManualTransactionScreen = ({ navigation }: Props) => {
 	const { db } = useDatabase();
+	const { userId } = useAuthStore();
+	const { api } = useApiClient();
 	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { keyboardShift, dismissKeyboardOnTouchCapture } =
@@ -64,7 +68,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
-	const accounts = useReactiveAccounts(db);
+	const accounts = useReactiveAccounts(db, userId);
 
 	useEffect(() => {
 		if (!db) {
@@ -73,7 +77,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 
 		const ensureDefaultAccount = async () => {
 			const useCase = new EnsureDefaultAccount(
-				new AccountRepository(db),
+				new AccountRepository(db, userId, api),
 			);
 			await useCase.execute();
 		};
@@ -82,7 +86,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 			console.error('Failed to load accounts', error);
 			setErrorMessage('Unable to load accounts.');
 		});
-	}, [db]);
+	}, [api, db, userId]);
 
 	useEffect(() => {
 		if (!db) {
@@ -94,6 +98,8 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 			try {
 				const loadedCategories = await new CategoryRepository(
 					db,
+					userId,
+					api,
 				).list();
 				setCategories(loadedCategories);
 			} catch (error) {
@@ -102,7 +108,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		};
 
 		loadCategories();
-	}, [db]);
+	}, [api, db, userId]);
 
 	useEffect(() => {
 		if (!accounts.length) {
@@ -133,7 +139,11 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		try {
 			const normalizedCategory = category.trim();
 			if (normalizedCategory) {
-				const categoryRepo = new CategoryRepository(db);
+				const categoryRepo = new CategoryRepository(
+					db,
+					userId,
+					api,
+				);
 				const hasCategory = (await categoryRepo.list()).some(
 					(existingCategory) =>
 						existingCategory.name.toLowerCase() ===
@@ -148,7 +158,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 			}
 
 			const useCase = new CreateManualTransaction(
-				new TransactionRepository(db),
+				new TransactionRepository(db, userId, api),
 			);
 			const result = await useCase.execute({
 				amount,
@@ -179,11 +189,13 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		category,
 		date,
 		db,
+		api,
 		isSaving,
 		merchant,
 		navigation,
 		selectedAccountId,
 		transactionType,
+		userId,
 	]);
 
 	if (!db) {

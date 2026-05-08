@@ -12,6 +12,7 @@ import {
 	AppStackParamList,
 	AppStackScreens,
 } from '@navigation/AppStack/AppStack';
+import { useApiClient } from '@providers/ApiClientProvider';
 import { useAuthStore } from '@providers/AuthProvider';
 import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
@@ -47,7 +48,8 @@ type Props = NativeStackScreenProps<
 
 const HomeScreen = (_props: Props) => {
 	// hooks
-	const { logout } = useAuthStore();
+	const { logout, userId } = useAuthStore();
+	const { api } = useApiClient();
 	const { colors } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { db } = useDatabase();
@@ -56,7 +58,7 @@ const HomeScreen = (_props: Props) => {
 		db,
 		threadId,
 	);
-	const transactions = useReactiveTransactions(db);
+	const transactions = useReactiveTransactions(db, userId);
 	const [activeView, setActiveView] = useState<'chat' | 'transactions'>(
 		'chat',
 	);
@@ -76,6 +78,7 @@ const HomeScreen = (_props: Props) => {
 	const tableTransactions = useMemo(() => {
 		return transactions.map((transaction) => ({
 			...transaction,
+			ownerId: transaction.ownerId ?? null,
 			id: transaction.id,
 			name: transaction.merchant || 'Transaction',
 			amount: transaction.amount,
@@ -114,14 +117,14 @@ const HomeScreen = (_props: Props) => {
 						style: 'destructive',
 						onPress: async () => {
 							await new DeleteTransaction(
-								new TransactionRepository(db),
+								new TransactionRepository(db, userId, api),
 							).execute(transactionId);
 						},
 					},
 				],
 			);
 		},
-		[db],
+		[api, db, userId],
 	);
 
 	// side effects
