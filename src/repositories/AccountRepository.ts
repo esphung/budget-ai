@@ -9,7 +9,10 @@ import type { Repository } from 'types/Repository';
 export class AccountRepository
 	implements Repository<NewAccountInput, Account>
 {
-	constructor(private db: DB) {}
+	constructor(
+		private db: DB,
+		private userId: string | null = null,
+	) {}
 
 	getAll: () => Promise<Account[]> = async () => this.list();
 
@@ -24,6 +27,7 @@ export class AccountRepository
 	async list(): Promise<Account[]> {
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			account_type: string;
 			currency: string;
@@ -32,6 +36,7 @@ export class AccountRepository
 		}>(`
 			SELECT
 				id,
+				owner_id,
 				name,
 				account_type,
 				currency,
@@ -43,6 +48,7 @@ export class AccountRepository
 
 		return rows.map((row) => ({
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			name: String(row.name),
 			accountType: row.account_type as Account['accountType'],
 			currency: String(row.currency),
@@ -56,25 +62,36 @@ export class AccountRepository
 		const now = nowIso();
 		const accountType = input.accountType ?? 'cash';
 		const currency = input.currency ?? 'USD';
+		const ownerId = this.userId ?? input.ownerId ?? null;
 
 		await this.db.execute(
 			`
 			INSERT INTO accounts (
 				id,
+				owner_id,
 				name,
 				account_type,
 				currency,
 				created_at,
 				updated_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 		`,
-			[id, input.name.trim(), accountType, currency, now, now],
+			[
+				id,
+				ownerId,
+				input.name.trim(),
+				accountType,
+				currency,
+				now,
+				now,
+			],
 		);
 		notifyTableChanged('accounts');
 
 		return {
 			id,
+			ownerId,
 			name: input.name.trim(),
 			accountType,
 			currency,
@@ -89,6 +106,7 @@ export class AccountRepository
 	): Promise<Account> {
 		const existing = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			account_type: string;
 			currency: string;
@@ -98,6 +116,7 @@ export class AccountRepository
 			`
 			SELECT
 				id,
+				owner_id,
 				name,
 				account_type,
 				currency,
@@ -121,6 +140,10 @@ export class AccountRepository
 			input.accountType ??
 			(String(row.account_type) as Account['accountType']);
 		const currency = input.currency ?? String(row.currency);
+		const ownerId =
+			input.ownerId === undefined
+				? row.owner_id
+				: input.ownerId ?? null;
 
 		await executeTransaction(this.db, [
 			{
@@ -139,6 +162,7 @@ export class AccountRepository
 
 		return {
 			id: String(row.id),
+			ownerId,
 			name,
 			accountType,
 			currency,
@@ -160,6 +184,7 @@ export class AccountRepository
 	async ensureDefaultAccount(): Promise<Account> {
 		const existing = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			account_type: string;
 			currency: string;
@@ -169,6 +194,7 @@ export class AccountRepository
 			`
 			SELECT
 				id,
+				owner_id,
 				name,
 				account_type,
 				currency,
@@ -185,6 +211,7 @@ export class AccountRepository
 			const row = existing[0];
 			return {
 				id: String(row.id),
+				ownerId: row.owner_id ? String(row.owner_id) : null,
 				name: String(row.name),
 				accountType: row.account_type as Account['accountType'],
 				currency: String(row.currency),

@@ -1,6 +1,7 @@
 import AppStack from '@navigation/AppStack/AppStack';
 import AuthStack from '@navigation/AuthStack/AuthStack';
 import { navigationRef } from '@navigation/navigationService';
+import { useBackfillOwnerId } from '@hooks/useBackfillOwnerId';
 import { useAuthStore } from '@providers/AuthProvider';
 import { DatabaseProvider, useDatabase } from '@providers/DatabaseProvider';
 import { NavigationContainer } from '@react-navigation/native';
@@ -12,8 +13,10 @@ const dbService = DatabaseService.getInstance('budgetai.db', 'default');
 
 const DatabaseAppStack = () => {
 	const { db } = useDatabase();
+	const userId = useAuthStore((s) => s.userId);
 
 	useDevDataReset(db);
+	useBackfillOwnerId(db, userId);
 
 	return <AppStack />;
 };

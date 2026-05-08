@@ -9,7 +9,7 @@ import { Category, NewCategoryInput } from 'types/Category';
 export class CategoryRepository
 	implements Repository<NewCategoryInput, Category>
 {
-	constructor(private db: DB) {}
+	constructor(private db: DB, private userId: string | null = null) {}
 
 	private async executeQuery<T>(
 		query: string,
@@ -25,25 +25,28 @@ export class CategoryRepository
 		const name = input.name.trim();
 		const color = input.color?.trim() || null;
 		const icon = input.icon?.trim() || null;
+		const ownerId = this.userId ?? input.ownerId ?? null;
 
 		await this.db.execute(
 			`
 			INSERT INTO categories (
 				id,
+				owner_id,
 				name,
 				color,
 				icon,
 				created_at,
 				updated_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 		`,
-			[id, name, color, icon, now, now],
+			[id, ownerId, name, color, icon, now, now],
 		);
 		notifyTableChanged('categories');
 
 		return {
 			id,
+			ownerId,
 			name,
 			color,
 			icon,
@@ -109,6 +112,7 @@ export class CategoryRepository
 	async list(): Promise<Category[]> {
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			color: string | null;
 			icon: string | null;
@@ -117,6 +121,7 @@ export class CategoryRepository
 		}>(`
 			SELECT
 				id,
+				owner_id,
 				name,
 				color,
 				icon,
@@ -128,6 +133,7 @@ export class CategoryRepository
 
 		return rows.map((row) => ({
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			name: String(row.name),
 			color: row.color ? String(row.color) : null,
 			icon: row.icon ? String(row.icon) : null,
@@ -149,6 +155,7 @@ export class CategoryRepository
 	private async getById(id: string): Promise<Category | null> {
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			color: string | null;
 			icon: string | null;
@@ -158,6 +165,7 @@ export class CategoryRepository
 			`
 			SELECT
 				id,
+				owner_id,
 				name,
 				color,
 				icon,
@@ -177,6 +185,7 @@ export class CategoryRepository
 		const row = rows[0];
 		return {
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			name: String(row.name),
 			color: row.color ? String(row.color) : null,
 			icon: row.icon ? String(row.icon) : null,

@@ -7,6 +7,7 @@ import {
 	AppStackScreens,
 } from '@navigation/AppStack/AppStack';
 import { useDatabase } from '@providers/DatabaseProvider';
+import { useAuthStore } from '@providers/AuthProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { AccountRepository } from '@repositories/AccountRepository';
 import { CategoryRepository } from '@repositories/CategoryRepository';
@@ -44,6 +45,7 @@ const toDateInputValue = (date = new Date()) => {
 
 const ManualTransactionScreen = ({ navigation }: Props) => {
 	const { db } = useDatabase();
+	const { userId } = useAuthStore();
 	const { colors, isDarkMode } = useTheme();
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const { keyboardShift, dismissKeyboardOnTouchCapture } =
@@ -73,7 +75,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 
 		const ensureDefaultAccount = async () => {
 			const useCase = new EnsureDefaultAccount(
-				new AccountRepository(db),
+				new AccountRepository(db, userId),
 			);
 			await useCase.execute();
 		};
@@ -82,7 +84,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 			console.error('Failed to load accounts', error);
 			setErrorMessage('Unable to load accounts.');
 		});
-	}, [db]);
+	}, [db, userId]);
 
 	useEffect(() => {
 		if (!db) {
@@ -94,6 +96,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 			try {
 				const loadedCategories = await new CategoryRepository(
 					db,
+					userId,
 				).list();
 				setCategories(loadedCategories);
 			} catch (error) {
@@ -102,7 +105,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		};
 
 		loadCategories();
-	}, [db]);
+	}, [db, userId]);
 
 	useEffect(() => {
 		if (!accounts.length) {
@@ -133,7 +136,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		try {
 			const normalizedCategory = category.trim();
 			if (normalizedCategory) {
-				const categoryRepo = new CategoryRepository(db);
+				const categoryRepo = new CategoryRepository(db, userId);
 				const hasCategory = (await categoryRepo.list()).some(
 					(existingCategory) =>
 						existingCategory.name.toLowerCase() ===
@@ -148,7 +151,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 			}
 
 			const useCase = new CreateManualTransaction(
-				new TransactionRepository(db),
+				new TransactionRepository(db, userId),
 			);
 			const result = await useCase.execute({
 				amount,
@@ -184,6 +187,7 @@ const ManualTransactionScreen = ({ navigation }: Props) => {
 		navigation,
 		selectedAccountId,
 		transactionType,
+		userId,
 	]);
 
 	if (!db) {

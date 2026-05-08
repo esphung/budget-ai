@@ -6,6 +6,7 @@ import { AIMessage } from '@db/types';
 import { useBackendHealth } from '@hooks/useBackendHealth';
 import useKeyboardShift from '@hooks/useKeyboardShift';
 import { useApiClient } from '@providers/ApiClientProvider';
+import { useAuthStore } from '@providers/AuthProvider';
 import { useDatabase } from '@providers/DatabaseProvider';
 import { useTheme } from '@providers/ThemeProvider';
 import { AIConversationRepository } from '@repositories/AIConversationRepository';
@@ -42,6 +43,7 @@ const AiChatView = ({
 	const styles = useMemo(() => createStyles(colors), [colors]);
 	const api = useApiClient((s) => s);
 	const { db } = useDatabase();
+	const { userId } = useAuthStore();
 	const { backendStatus } = useBackendHealth(api.health.check);
 
 	const onMessageSend = useCallback(async () => {
@@ -57,9 +59,9 @@ const AiChatView = ({
 
 				await new AIActionHandler(
 					new AIConversationRepository(db),
-					new TransactionRepository(db),
+					new TransactionRepository(db, userId),
 					api,
-					new CategoryRepository(db),
+					new CategoryRepository(db, userId),
 				).sendMessageAndApplyActions({
 					threadId: threadId,
 					userText: trimmed,
@@ -76,7 +78,7 @@ const AiChatView = ({
 				setIsAwaitingAiResponse(false);
 			}
 		}
-	}, [text, backendStatus, isAwaitingAiResponse, threadId, db, api]);
+	}, [text, backendStatus, isAwaitingAiResponse, threadId, db, api, userId]);
 
 	const contentView = useMemo(() => {
 		if (!threadId) {

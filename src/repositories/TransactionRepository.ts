@@ -10,7 +10,10 @@ import { NewTransactionInput, Transaction } from 'types/Transaction';
 export class TransactionRepository
 	implements Repository<NewTransactionInput, Transaction>
 {
-	constructor(private db: DB) {}
+	constructor(
+		private db: DB,
+		private userId: string | null = null,
+	) {}
 
 	delete: (id: string) => Promise<void> = async (_id) => {
 		if (!this.db) {
@@ -47,12 +50,14 @@ export class TransactionRepository
 		const transactionDate = input.date ?? createdAt;
 		const merchant = input.merchant?.trim() || null;
 		const category = input.category?.trim() || null;
+		const ownerId = this.userId ?? input.ownerId ?? null;
 
 		await executeTransaction(this.db, [
 			{
 				sql: `
 				INSERT INTO transactions (
 					id,
+					owner_id,
 					account_id,
 					amount,
 					merchant,
@@ -62,10 +67,11 @@ export class TransactionRepository
 					date,
 					created_at
 				)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`,
 				args: [
 					id,
+					ownerId,
 					input.accountId ?? null,
 					Math.abs(input.amount),
 					merchant,
@@ -81,6 +87,7 @@ export class TransactionRepository
 
 		return {
 			id,
+			ownerId,
 			accountId: input.accountId ?? null,
 			amount: Math.abs(input.amount),
 			merchant,
@@ -98,6 +105,7 @@ export class TransactionRepository
 	): Promise<Transaction> {
 		const existingRows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			account_id: string | null;
 			amount: number;
 			merchant: string | null;
@@ -111,6 +119,7 @@ export class TransactionRepository
 			`
 			SELECT
 				id,
+				owner_id,
 				account_id,
 				amount,
 				merchant,
@@ -136,6 +145,10 @@ export class TransactionRepository
 			input.accountId === undefined
 				? existing.account_id
 				: input.accountId ?? null;
+		const ownerId =
+			input.ownerId === undefined
+				? existing.owner_id
+				: input.ownerId ?? null;
 		const amount =
 			input.amount === undefined
 				? Number(existing.amount)
@@ -182,6 +195,7 @@ export class TransactionRepository
 
 		return {
 			id: String(existing.id),
+			ownerId,
 			accountId,
 			amount,
 			merchant,
@@ -202,6 +216,7 @@ export class TransactionRepository
 		repositoryLog.debug('Fetching all transactions');
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			account_id: string | null;
 			amount: number;
 			merchant: string | null;
@@ -214,6 +229,7 @@ export class TransactionRepository
 		}>(`
 			SELECT
 				id,
+				owner_id,
 				account_id,
 				amount,
 				merchant,
@@ -229,6 +245,7 @@ export class TransactionRepository
 
 		return rows.map((row) => ({
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			accountId: row.account_id ? String(row.account_id) : null,
 			amount: Number(row.amount),
 			merchant: row.merchant ? String(row.merchant) : null,

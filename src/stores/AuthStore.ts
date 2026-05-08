@@ -1,14 +1,16 @@
 import { StorageKey } from '@enums/StorageKey';
 import { Auth0Service, type AuthService } from '@services/Auth0Service';
 import type { StorageService } from '@services/StorageService';
+import { parseJwtUserId } from '@utils/jwtUtils';
 import type { Dispatch } from 'react';
 
 export type AuthState = {
 	token: string | null;
+	userId: string | null;
 };
 
 export type AuthActions = {
-	setToken: (newToken: string | null) => void;
+	setToken: (newToken: string | null, userId?: string | null) => void;
 	login: () => Promise<void>;
 	logout: () => Promise<void>;
 };
@@ -16,7 +18,11 @@ export type AuthActions = {
 export type AuthStore = AuthState & AuthActions;
 
 export type AuthAction =
-	| { type: 'SET_TOKEN'; token: string | null }
+	| {
+			type: 'SET_SESSION';
+			token: string | null;
+			userId: string | null;
+	  }
 	| { type: 'LOGOUT' };
 
 export type AuthStoreFactory = {
@@ -33,6 +39,7 @@ export const createAuthStore = (
 ): AuthStoreFactory => {
 	const initialState: AuthState = {
 		token: null,
+		userId: null,
 	};
 
 	return {
@@ -42,10 +49,14 @@ export const createAuthStore = (
 
 		reducer(state: AuthState, action: AuthAction): AuthState {
 			switch (action.type) {
-				case 'SET_TOKEN':
-					return { ...state, token: action.token };
+				case 'SET_SESSION':
+					return {
+						...state,
+						token: action.token,
+						userId: action.userId,
+					};
 				case 'LOGOUT':
-					return { ...state, token: null };
+					return { ...state, token: null, userId: null };
 			}
 		},
 
@@ -53,26 +64,47 @@ export const createAuthStore = (
 			dispatch: Dispatch<AuthAction>,
 			storage: StorageService,
 		): AuthActions {
-			function setToken(token: string | null) {
-				dispatch({ type: 'SET_TOKEN', token });
-				async function persistToken(): Promise<void> {
+			function setToken(
+				token: string | null,
+				userId?: string | null,
+			) {
+				const derivedUserId = userId ?? parseJwtUserId(token);
+
+				dispatch({
+					type: 'SET_SESSION',
+					token,
+					userId: derivedUserId,
+				});
+				async function persistSession(): Promise<void> {
 					try {
 						await storage.saveItem(token, StorageKey.AuthToken);
+						await storage.saveItem(
+							derivedUserId,
+							StorageKey.AuthUserId,
+						);
 					} catch (error) {
 						console.error(
-							'[AuthStore] Failed to persist auth token:',
+							'[AuthStore] Failed to persist auth session:',
 							error,
 						);
 					}
 				}
 
-				persistToken();
+				persistSession();
 			}
 
 			async function login() {
-				const token = await authService.login();
-				dispatch({ type: 'SET_TOKEN', token });
-				await storage.saveItem(token, StorageKey.AuthToken);
+				const session = await authService.login();
+				dispatch({
+					type: 'SET_SESSION',
+					token: session.token,
+					userId: session.userId,
+				});
+				await storage.saveItem(session.token, StorageKey.AuthToken);
+				await storage.saveItem(
+					session.userId,
+					StorageKey.AuthUserId,
+				);
 			}
 
 			async function logout() {
@@ -86,6 +118,7 @@ export const createAuthStore = (
 				}
 				dispatch({ type: 'LOGOUT' });
 				await storage.clearItem(StorageKey.AuthToken);
+				await storage.clearItem(StorageKey.AuthUserId);
 			}
 
 			return { setToken, login, logout };

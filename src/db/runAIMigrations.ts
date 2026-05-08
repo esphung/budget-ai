@@ -6,6 +6,7 @@ export async function runAIMigrations(db: DB) {
 		await tx.execute(`
       CREATE TABLE IF NOT EXISTS accounts (
         id TEXT PRIMARY KEY,
+        owner_id TEXT,
         name TEXT NOT NULL,
         account_type TEXT NOT NULL,
         currency TEXT NOT NULL DEFAULT 'USD',
@@ -87,6 +88,7 @@ export async function runAIMigrations(db: DB) {
 		await tx.execute(`
       CREATE TABLE IF NOT EXISTS transactions (
         id TEXT PRIMARY KEY,
+        owner_id TEXT,
         account_id TEXT,
         amount REAL NOT NULL,
         merchant TEXT,
@@ -107,6 +109,7 @@ export async function runAIMigrations(db: DB) {
 		await tx.execute(`
       CREATE TABLE IF NOT EXISTS categories (
         id TEXT PRIMARY KEY,
+        owner_id TEXT,
         name TEXT NOT NULL UNIQUE,
         color TEXT,
         icon TEXT,
@@ -119,6 +122,7 @@ export async function runAIMigrations(db: DB) {
 		await tx.execute(`
       CREATE TABLE IF NOT EXISTS budgets (
         id TEXT PRIMARY KEY,
+        owner_id TEXT,
         name TEXT NOT NULL,
         amount REAL NOT NULL,
         category_id TEXT,
@@ -172,6 +176,12 @@ export async function runAIMigrations(db: DB) {
 			(row) => String(row.name) === columnName,
 		);
 
+	if (!hasTransactionColumn('owner_id')) {
+		await db.execute(
+			'ALTER TABLE transactions ADD COLUMN owner_id TEXT',
+		);
+	}
+
 	if (!hasTransactionColumn('account_id')) {
 		await db.execute(
 			'ALTER TABLE transactions ADD COLUMN account_id TEXT',
@@ -186,6 +196,33 @@ export async function runAIMigrations(db: DB) {
 
 	if (!hasTransactionColumn('source')) {
 		await db.execute('ALTER TABLE transactions ADD COLUMN source TEXT');
+	}
+
+	// Post-migration checks for accounts table
+	const accountColumns = await db.execute('PRAGMA table_info(accounts)');
+	const hasAccountColumn = (columnName: string) =>
+		accountColumns.rows.some((row) => String(row.name) === columnName);
+
+	if (!hasAccountColumn('owner_id')) {
+		await db.execute('ALTER TABLE accounts ADD COLUMN owner_id TEXT');
+	}
+
+	// Post-migration checks for categories table
+	const categoryColumns = await db.execute('PRAGMA table_info(categories)');
+	const hasCategoryColumn = (columnName: string) =>
+		categoryColumns.rows.some((row) => String(row.name) === columnName);
+
+	if (!hasCategoryColumn('owner_id')) {
+		await db.execute('ALTER TABLE categories ADD COLUMN owner_id TEXT');
+	}
+
+	// Post-migration checks for budgets table
+	const budgetColumns = await db.execute('PRAGMA table_info(budgets)');
+	const hasBudgetColumn = (columnName: string) =>
+		budgetColumns.rows.some((row) => String(row.name) === columnName);
+
+	if (!hasBudgetColumn('owner_id')) {
+		await db.execute('ALTER TABLE budgets ADD COLUMN owner_id TEXT');
 	}
 
 	await db.execute(`

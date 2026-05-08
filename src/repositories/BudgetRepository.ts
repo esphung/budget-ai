@@ -9,7 +9,10 @@ import { Budget, NewBudgetInput } from 'types/Budget';
 export class BudgetRepository
 	implements Repository<NewBudgetInput, Budget>
 {
-	constructor(private db: DB) {}
+	constructor(
+		private db: DB,
+		private userId: string | null = null,
+	) {}
 
 	private async executeQuery<T>(
 		query: string,
@@ -23,11 +26,13 @@ export class BudgetRepository
 		const id = generateUniqueId('bdgt');
 		const now = nowIso();
 		const name = input.name.trim();
+		const ownerId = this.userId ?? input.ownerId ?? null;
 
 		await this.db.execute(
 			`
 			INSERT INTO budgets (
 				id,
+				owner_id,
 				name,
 				amount,
 				category_id,
@@ -36,10 +41,11 @@ export class BudgetRepository
 				created_at,
 				updated_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 			[
 				id,
+				ownerId,
 				name,
 				Math.abs(input.amount),
 				input.categoryId ?? null,
@@ -53,6 +59,7 @@ export class BudgetRepository
 
 		return {
 			id,
+			ownerId,
 			name,
 			amount: Math.abs(input.amount),
 			categoryId: input.categoryId ?? null,
@@ -134,6 +141,7 @@ export class BudgetRepository
 	async list(): Promise<Budget[]> {
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			amount: number;
 			category_id: string | null;
@@ -144,6 +152,7 @@ export class BudgetRepository
 		}>(`
 			SELECT
 				id,
+				owner_id,
 				name,
 				amount,
 				category_id,
@@ -157,6 +166,7 @@ export class BudgetRepository
 
 		return rows.map((row) => ({
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			name: String(row.name),
 			amount: Number(row.amount),
 			categoryId: row.category_id ? String(row.category_id) : null,
@@ -180,6 +190,7 @@ export class BudgetRepository
 	private async getById(id: string): Promise<Budget | null> {
 		const rows = await this.executeQuery<{
 			id: string;
+			owner_id: string | null;
 			name: string;
 			amount: number;
 			category_id: string | null;
@@ -191,6 +202,7 @@ export class BudgetRepository
 			`
 			SELECT
 				id,
+				owner_id,
 				name,
 				amount,
 				category_id,
@@ -212,6 +224,7 @@ export class BudgetRepository
 		const row = rows[0];
 		return {
 			id: String(row.id),
+			ownerId: row.owner_id ? String(row.owner_id) : null,
 			name: String(row.name),
 			amount: Number(row.amount),
 			categoryId: row.category_id ? String(row.category_id) : null,

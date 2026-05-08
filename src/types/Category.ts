@@ -1,5 +1,6 @@
 export type Category = {
 	id: string;
+	ownerId: string | null;
 	name: string;
 	color: string | null;
 	icon: string | null;
@@ -8,6 +9,7 @@ export type Category = {
 };
 
 export type NewCategoryInput = {
+	ownerId?: string | null;
 	name: string;
 	color?: string | null;
 	icon?: string | null;
